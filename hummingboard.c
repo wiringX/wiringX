@@ -341,7 +341,7 @@ int hummingboardI2CSetup(int devId) {
 	}
 
 	if(ioctl(fd, I2C_SLAVE, devId) < 0) {
-		fprintf(stderr, "hummingboard->I2CSetup: Unable to set %s to slave mode\n", device, strerror(errno));
+		fprintf(stderr, "hummingboard->I2CSetup: Unable to set %s to slave mode: %s\n", device, strerror(errno));
 		return -1;
 	}
 
