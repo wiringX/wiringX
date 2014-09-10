@@ -72,6 +72,14 @@ int digitalRead(int pin);
 void isr(int pin, int mode);
 int waitForInterrupt(int pin, int ms);
 int wiringXGC(void);
+int wiringXISR(int pin, int mode);
 int wiringXSetup(void);
+int wiringXI2CRead(int fd);
+int wiringXI2CReadReg8(int fd, int reg);
+int wiringXI2CReadReg16(int fd, int reg);
+int wiringXI2CWrite(int fd, int data);
+int wiringXI2CWriteReg8(int fd, int reg, int data);
+int wiringXI2CWriteReg16(int fd, int reg, int data);
+int wiringXI2CSetup(int devId);
 
 #endif

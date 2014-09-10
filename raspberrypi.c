@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-	
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -226,68 +226,81 @@ static int changeOwner(char *file) {
 
 static int piBoardRev(void) {
 	FILE *cpuFd;
-	char line[120];
+	char line[120], revision[120], hardware[120], name[120];
 	char *c;
 	static int boardRev = -1;
 
-	if(boardRev != -1) {
-		return boardRev ;
-	}
-
 	if((cpuFd = fopen("/proc/cpuinfo", "r")) == NULL) {
-		fprintf(stderr, "raspberrypi->identify: Unable to open /proc/cpuinfo\n");
-		return -1;
+		fprintf(stderr, "hummingboard->identify: Unable open /proc/cpuinfo\n");
 	}
 
 	while(fgets(line, 120, cpuFd) != NULL) {
-		if(strncmp (line, "Revision", 8) == 0) {
-			break;
+		if(strncmp(line, "Revision", 8) == 0) {
+			strcpy(revision, line);
+		}
+		if(strncmp(line, "Hardware", 8) == 0) {
+			strcpy(hardware, line);
 		}
 	}
 
-	fclose(cpuFd);
+	fclose(cpuFd) ;
 
-	if(strncmp(line, "Revision", 8) != 0) {
-		fprintf(stderr, "raspberrypi->identify: No \"Revision\" line\n");
-		return -1;
-	}
+	sscanf(hardware, "Hardware%*[ \t]:%*[ ]%[a-zA-Z0-9 ./()]%*[\n]", name);
 
-	// Chomp trailing CR/NL
-
-	for(c = &line[strlen(line) - 1] ; (*c == '\n') || (*c == '\r') ; --c) {
-		*c = 0;
-	}
-
-	// Scan to first digit
-	for(c = line; *c; ++c) {
-		if(isdigit(*c)) {
-			break;
+	if(strstr(name, "BCM2708") != NULL) {
+		if(boardRev != -1) {
+			return boardRev ;
 		}
-	}
 
-	if(!isdigit(*c)) {
-		fprintf(stderr, "raspberrypi->identify: No numeric revision string\n");
-		return -1;
-	}
+		if((cpuFd = fopen("/proc/cpuinfo", "r")) == NULL) {
+			fprintf(stderr, "raspberrypi->identify: Unable to open /proc/cpuinfo\n");
+			return -1;
+		}
 
-	// Make sure its long enough
+		while(fgets(line, 120, cpuFd) != NULL) {
+			if(strncmp(line, "Revision", 8) == 0) {
+				break;
+			}
+		}
 
-	if(strlen(c) < 4) {
-		fprintf(stderr, "raspberrypi->identify: Bogus \"Revision\" line (too small)\n");
-		return -1;
-	}
+		fclose(cpuFd);
 
-	// Isolate  last 4 characters:
+		if(strncmp(line, "Revision", 8) != 0) {
+			fprintf(stderr, "raspberrypi->identify: No \"Revision\" line\n");
+			return -1;
+		}
 
-	c = c + strlen(c) - 4;
+		for(c = &line[strlen(line) - 1] ; (*c == '\n') || (*c == '\r') ; --c) {
+			*c = 0;
+		}
 
-	if((strcmp(c, "0002") == 0) || (strcmp(c, "0003") == 0)) {
-		boardRev = 1;
+		for(c = line; *c; ++c) {
+			if(isdigit(*c)) {
+				break;
+			}
+		}
+
+		if(!isdigit(*c)) {
+			fprintf(stderr, "raspberrypi->identify: No numeric revision string\n");
+			return -1;
+		}
+
+		if(strlen(c) < 4) {
+			fprintf(stderr, "raspberrypi->identify: Bogus \"Revision\" line (too small)\n");
+			return -1;
+		}
+
+		c = c + strlen(c) - 4;
+
+		if((strcmp(c, "0002") == 0) || (strcmp(c, "0003") == 0)) {
+			boardRev = 1;
+		} else {
+			boardRev = 2;
+		}
+		return boardRev;
 	} else {
-		boardRev = 2;
+		return -1;
 	}
-
-	return boardRev;
 }
 
 static int piBoardId(int *model, int *rev, int *mem, int *maker, int *overVolted) {
@@ -503,6 +516,7 @@ static int raspberrypiPinMode(int pin, int mode) {
 	int fSel, shift;
 
 	if((pin & PI_GPIO_MASK) == 0) {
+		pinModes[pin] = mode;
 		if(wiringPiMode == WPI_MODE_PINS)
 			pin = pinToGpio[pin];
 		else if(wiringPiMode == WPI_MODE_PHYS)
@@ -518,7 +532,6 @@ static int raspberrypiPinMode(int pin, int mode) {
 		} else if(mode == OUTPUT) {
 			*(gpio + fSel) = (*(gpio + fSel) & ~(7 << shift)) | (1 << shift);
 		}
-		pinModes[pin] = mode;
 	}
 	return 0;
 }
@@ -622,7 +635,7 @@ static int raspberrypiWaitForInterrupt(int pin, int ms) {
 	if(pinModes[pin] != SYS) {
 		fprintf(stderr, "raspberrypi->waitForInterrupt: Trying to read from pin %d, but it's not configured as interrupt\n", pin);
 		return -1;
-	}	
+	}
 
 	if(sysFds[pin] == -1) {
 		fprintf(stderr, "raspberrypi->waitForInterrupt: GPIO %d not set as interrupt\n", pin);
@@ -644,7 +657,7 @@ static int raspberrypiGC(void) {
 	int i = 0, fd = 0;
 	char path[30];
 	FILE *f = NULL;
-	
+
 	for(i=0;i<NUM_PINS;i++) {
 		if(wiringPiMode == WPI_MODE_PINS || wiringPiMode == WPI_MODE_PHYS || wiringPiMode != WPI_MODE_GPIO) {
 			pinMode(i, INPUT);

@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-	
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -32,6 +32,7 @@
 #include "raspberrypi.h"
 
 struct devices_t *device = NULL;
+static int setup = -2;
 
 void device_register(struct devices_t **dev, const char *name) {
 	*dev = malloc(sizeof(struct devices_t));
@@ -147,7 +148,7 @@ int wiringXISR(int pin, int mode) {
 				wiringXGC();
 			} else {
 				return x;
-			}		
+			}
 		} else {
 			fprintf(stderr, "%s: device doesn't support isr\n", device->name);
 			wiringXGC();
@@ -283,24 +284,29 @@ int wiringXI2CSetup(int devId) {
 }
 
 int wiringXSetup(void) {
-	hummingboardInit();
-	raspberrypiInit();
+	if(setup == -2) {
+		hummingboardInit();
+		raspberrypiInit();
 
-	int match = 0;
-	struct devices_t *tmp = devices;
-	while(tmp) {
-		if(tmp->identify() >= 0) {
-			device = tmp;
-			match = 1;
-			break;
+		int match = 0;
+		struct devices_t *tmp = devices;
+		while(tmp) {
+			if(tmp->identify() >= 0) {
+				device = tmp;
+				match = 1;
+				break;
+			}
+			tmp = tmp->next;
 		}
-		tmp = tmp->next;
-	}
 
-	if(match == 0) {
-		fprintf(stderr, "wiringX: hardware not supported\n");
-		wiringXGC();
-		return -1;
+		if(match == 0) {
+			fprintf(stderr, "wiringX: hardware not supported\n");
+			wiringXGC();
+			return -1;
+		}
+		setup = device->setup();
+		return setup;
+	} else {
+		return setup;
 	}
-	return device->setup();
 }
