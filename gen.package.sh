@@ -33,7 +33,6 @@ mv debs/armhf/control.new debs/armhf/control
 echo 2.0 > debs/armhf/debian-binary
 
 DIR="debs/armhf/";
-FILE=$(echo $DIR | sed -ne"s/.*pilight-hardware-\(.*\)/\1/p");
 VERSION=$(git log --oneline | wc -l);
 VERSION=$(echo $VERSION-$(git log --oneline | head -n 1 | awk '{print $1}'));
 DESC="GPIO interface for the Hummingboard and Raspberry Pi";
@@ -73,8 +72,6 @@ if [[ $1 == "purge" ]]; then
 
 fi
 EOF
-		sed -e "s/@name@/$FILE.so/g" postrm > postrm.new
-		mv postrm.new postrm
 		
 cat <<\EOF > preinst
 #!/bin/bash

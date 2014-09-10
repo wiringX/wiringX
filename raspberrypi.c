@@ -708,11 +708,15 @@ int raspberrypiI2CSetup(int devId) {
 	else
 		device = "/dev/i2c-1";
 
-	if((fd = open(device, O_RDWR)) < 0)
+	if((fd = open(device, O_RDWR)) < 0) {
+		fprintf(stderr, "raspberrypi->I2CSetup: Unable to open %s: %s\n", device, strerror(errno));
 		return -1;
+	}
 
-	if(ioctl(fd, I2C_SLAVE, devId) < 0)
+	if(ioctl(fd, I2C_SLAVE, devId) < 0) {
+		fprintf(stderr, "raspberrypi->I2CSetup: Unable to set %s to slave mode\n", device, strerror(errno));
 		return -1;
+	}
 
 	return fd;
 }

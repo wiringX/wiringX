@@ -90,7 +90,7 @@ static int setup(void) {
 
 static int hummingboardPinMode(int pin, int direction) {
 	if(!gpio) {
-		fprintf(stderr, "hummingboard->pinMode: Please run wiringHBSetup before running pinMode\n");
+		fprintf(stderr, "hummingboard->pinMode: Please run wiringXSetup before running pinMode\n");
 		exit(0);
 	}
 	*((unsigned long *)(gpio + GPIO_MUX_REG + pinToMuxAddr[pin] )) = FUNC_GPIO;
@@ -176,7 +176,7 @@ static int hummingboardISR(int pin, int mode) {
 	} else if(mode == INT_EDGE_BOTH) {
 		sMode = "both";
 	} else {
-		fprintf(stderr, "wiringHB: Invalid mode. Should be INT_EDGE_BOTH, INT_EDGE_RISING, or INT_EDGE_FALLING\n");
+		fprintf(stderr, "hummingboard->isr: Invalid mode. Should be INT_EDGE_BOTH, INT_EDGE_RISING, or INT_EDGE_FALLING\n");
 		return -1;
 	}
 
@@ -190,13 +190,13 @@ static int hummingboardISR(int pin, int mode) {
 	}
 
 	if(!match) {
-		fprintf(stderr, "wiringHB: Invalid GPIO: %d\n", pin);
+		fprintf(stderr, "hummingboard->isr: Invalid GPIO: %d\n", pin);
 		return -1;
 	}
 
 	if(fd < 0) {
 		if((f = fopen("/sys/class/gpio/export", "w")) == NULL) {
-			fprintf(stderr, "wiringHB: Unable to open GPIO export interface: %s\n", strerror(errno));
+			fprintf(stderr, "hummingboard->isr: Unable to open GPIO export interface: %s\n", strerror(errno));
 			return -1;
 		}
 
@@ -206,7 +206,7 @@ static int hummingboardISR(int pin, int mode) {
 
 	sprintf(path, "/sys/class/gpio/gpio%d/direction", pinsToGPIO[pin]);
 	if((f = fopen(path, "w")) == NULL) {
-		fprintf(stderr, "wiringHB: Unable to open GPIO direction interface for pin %d: %s\n", pin, strerror(errno));
+		fprintf(stderr, "hummingboard->isr: Unable to open GPIO direction interface for pin %d: %s\n", pin, strerror(errno));
 		return -1;
 	}
 
@@ -215,7 +215,7 @@ static int hummingboardISR(int pin, int mode) {
 
 	sprintf(path, "/sys/class/gpio/gpio%d/edge", pinsToGPIO[pin]);
 	if((f = fopen(path, "w")) == NULL) {
-		fprintf(stderr, "wiringHB: Unable to open GPIO edge interface for pin %d: %s\n", pin, strerror(errno));
+		fprintf(stderr, "hummingboard->isr: Unable to open GPIO edge interface for pin %d: %s\n", pin, strerror(errno));
 		return -1;
 	}
 
@@ -228,13 +228,13 @@ static int hummingboardISR(int pin, int mode) {
 	} else if(strcasecmp (sMode, "both") == 0) {
 		fprintf(f, "both\n");
 	} else {
-		fprintf(stderr, "wiringHB: Invalid mode: %s. Should be rising, falling or both\n", sMode);
+		fprintf(stderr, "hummingboard->isr: Invalid mode: %s. Should be rising, falling or both\n", sMode);
 		return -1;
 	}
 
 	sprintf(path, "/sys/class/gpio/gpio%d/value", pinsToGPIO[pin]);
 	if((sysFds[pin] = open(path, O_RDONLY)) < 0) {
-		fprintf(stderr, "wiringHB: Unable to open GPIO value interface: %s\n", strerror(errno));
+		fprintf(stderr, "hummingboard->isr: Unable to open GPIO value interface: %s\n", strerror(errno));
 		return -1;
 	}
 	changeOwner(path);
@@ -335,11 +335,15 @@ int hummingboardI2CSetup(int devId) {
 
 	device = "/dev/i2c-0";
 
-	if((fd = open(device, O_RDWR)) < 0)
+	if((fd = open(device, O_RDWR)) < 0) {
+		fprintf(stderr, "hummingboard->I2CSetup: Unable to open %s: %s\n", device, strerror(errno));
 		return -1;
+	}
 
-	if(ioctl(fd, I2C_SLAVE, devId) < 0)
+	if(ioctl(fd, I2C_SLAVE, devId) < 0) {
+		fprintf(stderr, "hummingboard->I2CSetup: Unable to set %s to slave mode\n", device, strerror(errno));
 		return -1;
+	}
 
 	return fd;
 }
