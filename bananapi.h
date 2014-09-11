@@ -15,13 +15,13 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _WIRING_X_HUMMINGBOARD_H_
-#define _WIRING_X_HUMMINGBOARD_H_
+#ifndef _WIRING_X_BANANAPI_H_
+#define _WIRING_X_BANANAPI_H_
 
 #include "wiringX.h"
 
-struct devices_t *hummingboard;
+struct devices_t *bananapi;
 
-void hummingboardInit(void);
+void bananapiInit(void);
 
 #endif
