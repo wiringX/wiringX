@@ -77,7 +77,7 @@ static int wiringPiMode = WPI_MODE_UNINITIALISED;
 
 static volatile uint32_t *gpio;
 
-static int pinModes[NUM_PINS] = { 0 };
+static int pinModes[NUM_PINS];
 
 static uint8_t gpioToShift[] = {
 	0, 3, 6, 9, 12, 15, 18, 21, 24, 27,
@@ -736,6 +736,9 @@ int raspberrypiI2CSetup(int devId) {
 }
 
 void raspberrypiInit(void) {
+
+	memset(pinModes, -1, NUM_PINS);
+
 	device_register(&raspberrypi, "raspberrypi");
 	raspberrypi->setup=&setup;
 	raspberrypi->pinMode=&raspberrypiPinMode;

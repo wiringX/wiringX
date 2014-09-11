@@ -61,7 +61,7 @@ static int wiringPiMode = WPI_MODE_UNINITIALISED;
 
 static volatile uint32_t *gpio;
 
-static int pinModes[NUM_PINS] = { 0 };
+static int pinModes[NUM_PINS];
 
 static int BP_PIN_MASK[9][32] = {
 	{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, }, //PA
@@ -572,6 +572,9 @@ int bananapiI2CSetup(int devId) {
 }
 
 void bananapiInit(void) {
+
+	memset(pinModes, -1, NUM_PINS);
+
 	device_register(&bananapi, "bananapi");
 	bananapi->setup=&setup;
 	bananapi->pinMode=&bananapiPinMode;
