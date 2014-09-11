@@ -62,12 +62,12 @@ cat <<\EOF > postrm
 
 if [[ $1 == "purge" ]]; then
 
-	if [ -f /usr/local/lib/wiringx* ]; then
-		rm /usr/local/lib/wiringx* 1>/dev/null 2>/dev/null;
+	if [ -f /usr/local/lib/wiringX* ]; then
+		rm /usr/local/lib/wiringX* 1>/dev/null 2>/dev/null;
 	fi
 	
-	if [ -f /usr/local/include/wiringx.h ]; then
-		rm /usr/local/include/wiringx.h 1>/dev/null 2>/dev/null;
+	if [ -f /usr/local/include/wiringX.h ]; then
+		rm /usr/local/include/wiringX.h 1>/dev/null 2>/dev/null;
 	fi	
 
 fi
