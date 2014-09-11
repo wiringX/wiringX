@@ -69,7 +69,6 @@ void device_register(struct devices_t **device, const char *name);
 void pinMode(int pin, int mode);
 void digitalWrite(int pin, int value);
 int digitalRead(int pin);
-void isr(int pin, int mode);
 int waitForInterrupt(int pin, int ms);
 int wiringXGC(void);
 int wiringXISR(int pin, int mode);

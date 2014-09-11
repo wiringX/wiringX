@@ -30,6 +30,7 @@
 #include "wiringX.h"
 #include "hummingboard.h"
 #include "raspberrypi.h"
+#include "bananapi.h"
 
 struct devices_t *device = NULL;
 static int setup = -2;
@@ -287,6 +288,7 @@ int wiringXSetup(void) {
 	if(setup == -2) {
 		hummingboardInit();
 		raspberrypiInit();
+		bananapiInit();
 
 		int match = 0;
 		struct devices_t *tmp = devices;

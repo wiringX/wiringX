@@ -19,8 +19,8 @@ Description: test
 
 EOF
 
-cp libwiringx.{a,so} debs/armhf/usr/local/lib/
-cp wiringX.h debs/armhf/usr/local/include/wiringx.h
+cp libwiringX.{a,so} debs/armhf/usr/local/lib/
+cp wiringX.h debs/armhf/usr/local/include/
 
 SIZE=$(du -c debs/armhf/usr/ | grep total | awk '{print $1}');
 

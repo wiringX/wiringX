@@ -88,11 +88,11 @@ add_library(sources OBJECT ${sources})
 add_library(wiringx_static STATIC $<TARGET_OBJECTS:sources>)
 add_library(wiringx_shared SHARED $<TARGET_OBJECTS:sources>)
 
-set_target_properties(wiringx_shared wiringx_static PROPERTIES OUTPUT_NAME wiringx)
+set_target_properties(wiringx_shared wiringx_static PROPERTIES OUTPUT_NAME wiringX)
 
-install(FILES libwiringx.so DESTINATION lib/)
-install(FILES libwiringx.a DESTINATION lib/)
-install(FILES wiringHB.h DESTINATION include/)
+install(FILES libwiringX.so DESTINATION lib/)
+install(FILES libwiringX.a DESTINATION lib/)
+install(FILES wiringX.h DESTINATION include/)
 
 WRITE_UNINSTALL_TARGET_SCRIPT()
 configure_file("${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake.in"
