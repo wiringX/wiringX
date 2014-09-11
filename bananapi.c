@@ -388,8 +388,8 @@ static int bananapiDigitalRead(int pin) {
 	int i = pin - (bank << 5);
 	uint32_t phyaddr = SUNXI_GPIO_BASE + (bank * 36) + 0x10; // +0x10 -> data reg
 
-	if(pinModes[pin] != OUTPUT) {
-		fprintf(stderr, "bananapi->digitalWrite: Trying to write to pin %d, but it's not configured as output\n", pin);
+	if(pinModes[pin] != INPUT) {
+		fprintf(stderr, "bananapi->digitalRead: Trying to write to pin %d, but it's not configured as input\n", pin);
 		return -1;
 	}
 
