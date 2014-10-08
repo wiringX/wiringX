@@ -306,6 +306,7 @@ int wiringXSetup(void) {
 			wiringXGC();
 			return -1;
 		}
+		printf("running on a %s\n", device->name);
 		setup = device->setup();
 		return setup;
 	} else {
