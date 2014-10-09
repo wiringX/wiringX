@@ -61,7 +61,7 @@ static int wiringPiMode = WPI_MODE_UNINITIALISED;
 
 static volatile uint32_t *gpio;
 
-static int pinModes[NUM_PINS];
+static int pinModes[278];
 
 static int BP_PIN_MASK[9][32] = {
 	{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, }, //PA
@@ -382,12 +382,7 @@ static int setup(void)	{
 
 static int bananapiDigitalRead(int pin) {
 	uint32_t regval = 0, phyaddr = 0;
-	int bank = 0, i = 0, offset = 0;
-
-	if(pinModes[pin] != INPUT) {
-		fprintf(stderr, "bananapi->digitalRead: Trying to write to pin %d, but it's not configured as input\n", pin);
-		return -1;
-	}
+	int bank = 0, i = 0;
 
 	if((pin & PI_GPIO_MASK) == 0) {
 		if(wiringPiMode == WPI_MODE_PINS)
@@ -405,6 +400,11 @@ static int bananapiDigitalRead(int pin) {
 		phyaddr = SUNXI_GPIO_BASE + (bank * 36) + 0x10; // +0x10 -> data reg
 
 		if(BP_PIN_MASK[bank][i] != -1) {
+			if(pinModes[BP_PIN_MASK[bank][i]] != INPUT) {
+				fprintf(stderr, "bananapi->digitalRead: Trying to write to pin %d, but it's not configured as input\n", pin);
+				return -1;
+			}
+
 			regval = readl(phyaddr);
 			regval = regval >> i;
 			regval &= 1;
@@ -416,12 +416,7 @@ static int bananapiDigitalRead(int pin) {
 
 static int bananapiDigitalWrite(int pin, int value) {
 	uint32_t regval = 0, phyaddr = 0;
-	int bank = 0, i = 0, offset = 0;
-
-	if(pinModes[pin] != OUTPUT) {
-		fprintf(stderr, "bananapi->digitalWrite: Trying to write to pin %d, but it's not configured as output\n", pin);
-		return -1;
-	}
+	int bank = 0, i = 0;
 
 	if((pin & PI_GPIO_MASK) == 0) {
 		if(wiringPiMode == WPI_MODE_PINS)
@@ -439,6 +434,10 @@ static int bananapiDigitalWrite(int pin, int value) {
 		phyaddr = SUNXI_GPIO_BASE + (bank * 36) + 0x10; // +0x10 -> data reg
 
 		if(BP_PIN_MASK[bank][i] != -1) {
+			if(pinModes[BP_PIN_MASK[bank][i]] != OUTPUT) {
+				fprintf(stderr, "bananapi->digitalWrite: Trying to write to pin %d, but it's not configured as output\n", pin);
+				return -1;
+			}
 			regval = readl(phyaddr);
 
 			if(value == LOW) {
@@ -460,6 +459,7 @@ static int bananapiPinMode(int pin, int mode) {
 	int bank = 0, i = 0, offset = 0;
 
 	if((pin & PI_GPIO_MASK) == 0) {
+
 		if(wiringPiMode == WPI_MODE_PINS)
 			pin = pinToGpioR3[pin] ;
 		else if(wiringPiMode == WPI_MODE_PHYS)
@@ -476,7 +476,8 @@ static int bananapiPinMode(int pin, int mode) {
 		phyaddr = SUNXI_GPIO_BASE + (bank * 36) + ((i >> 3) << 2);
 
 		if(BP_PIN_MASK[bank][i] != -1) {
-			pinModes[pin] = mode;
+			pinModes[BP_PIN_MASK[bank][i]] = mode;
+
 			regval = readl(phyaddr);
 
 			if(mode == INPUT) {
@@ -525,7 +526,6 @@ static int bananapiGC(void) {
 	}
 	return 0;
 }
-
 
 int bananapiI2CRead(int fd) {
 	return i2c_smbus_read_byte(fd);
