@@ -128,7 +128,7 @@ static int identify(void) {
 	fclose(cpuFd) ;
 
 	sscanf(hardware, "Hardware%*[ \t]:%*[ ]%[a-zA-Z0-9 ./()]%*[\n]", name);
-	if(strstr(name, "Freescale i.MX6") != NULL 
+	if(strstr(name, "Freescale i.MX6") != NULL
 	   || strstr(name, "SolidRun i.MX6") != NULL
 	   || strstr(name, "HummingBoard") != NULL) {
 		return 0;
