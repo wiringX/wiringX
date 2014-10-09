@@ -270,7 +270,7 @@ int hummingboardWaitForInterrupt(int pin, int ms) {
 
 	x = poll(&polls, 1, ms);
 
-	(void)read(sysFds[pin], &c, 4);
+	(void)read(sysFds[pin], &c, 1);
 	lseek(sysFds[pin], 0, SEEK_SET);
 
 	return x;
