@@ -196,13 +196,12 @@ static int changeOwner(char *file) {
 }
 
 static int bananapiISR(int pin, int mode) {
-	int i = 0, fd = 0, count = 0;
+	int i = 0, fd = 0, count = 0, npin = pinToGpioR2[pin];
 	const char *sMode = NULL;
 	char path[30], c;
 	FILE *f = NULL;
-
-	pin = pinToGpioR2[pin];
-	pinModes[pin] = SYS;
+	
+	pinModes[npin] = SYS;
 
 	if(mode == INT_EDGE_FALLING) {
 		sMode = "falling" ;
@@ -215,12 +214,12 @@ static int bananapiISR(int pin, int mode) {
 		return -1;
 	}
 
-	if(edge[pin] == -1) {
+	if(edge[npin] == -1) {
 		// Not supported
 		return -1;
 	}	
 	
-	sprintf(path, "/sys/class/gpio/gpio%d/value", pin);
+	sprintf(path, "/sys/class/gpio/gpio%d/value", npin);
 
 	if((fd = open(path, O_RDWR)) < 0) {
 		if((f = fopen("/sys/class/gpio/export", "w")) == NULL) {
@@ -228,11 +227,11 @@ static int bananapiISR(int pin, int mode) {
 			exit(0);
 		}
 
-		fprintf(f, "%d\n", pin);
+		fprintf(f, "%d\n", npin);
 		fclose(f);
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d/direction", pin);
+	sprintf(path, "/sys/class/gpio/gpio%d/direction", npin);
 	if((f = fopen(path, "w")) == NULL) {
 		fprintf(stderr, "bananapi->isr: Unable to open GPIO direction interface for pin %d: %s\n", pin, strerror(errno));
 		return -1;
@@ -241,7 +240,7 @@ static int bananapiISR(int pin, int mode) {
 	fprintf(f, "in\n");
 	fclose(f);
 
-	sprintf(path, "/sys/class/gpio/gpio%d/edge", pin);
+	sprintf(path, "/sys/class/gpio/gpio%d/edge", npin);
 	if((f = fopen(path, "w")) == NULL) {
 		fprintf(stderr, "bananapi->isr: Unable to open GPIO edge interface for pin %d: %s\n", pin, strerror(errno));
 		return -1;
@@ -260,14 +259,14 @@ static int bananapiISR(int pin, int mode) {
 		return -1;
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d/value", pin);
+	sprintf(path, "/sys/class/gpio/gpio%d/value", npin);
 	if((sysFds[pin] = open(path, O_RDONLY)) < 0) {
 		fprintf(stderr, "bananapi->isr: Unable to open GPIO value interface: %s\n", strerror(errno));
 		return -1;
 	}
 	changeOwner(path);
 
-	sprintf(path, "/sys/class/gpio/gpio%d/edge", pin);
+	sprintf(path, "/sys/class/gpio/gpio%d/edge", npin);
 	changeOwner(path);
 
 	fclose(f);
@@ -282,13 +281,11 @@ static int bananapiISR(int pin, int mode) {
 }
 
 static int bananapiWaitForInterrupt(int pin, int ms) {
-	int x = 0;
+	int x = 0, npin = pinToGpioR2[pin];
 	uint8_t c = 0;
 	struct pollfd polls;
 
-	pin = pinToGpioR2[pin];
-
-	if(pinModes[pin] != SYS) {
+	if(pinModes[npin] != SYS) {
 		fprintf(stderr, "bananapi->waitForInterrupt: Trying to read from pin %d, but it's not configured as interrupt\n", pin);
 		return -1;
 	}
