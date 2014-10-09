@@ -55,7 +55,7 @@
 #define SUNXI_GPIO_BASE		(0x01C20800)
 #define GPIO_BASE_BP		(0x01C20000)
 
-#define	NUM_PINS		0x40
+#define	NUM_PINS		32
 
 static int wiringPiMode = WPI_MODE_UNINITIALISED;
 
@@ -164,7 +164,7 @@ static int physToGpioR3[64] = {
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // ... 63
 };
 
-uint32_t readl(uint32_t addr) {
+static uint32_t readl(uint32_t addr) {
 	uint32_t val = 0;
 	uint32_t mmap_base = (addr & ~MAP_MASK);
 	uint32_t mmap_seek = ((addr - mmap_base) >> 2);
@@ -172,7 +172,7 @@ uint32_t readl(uint32_t addr) {
 	return val;
 }
 
-void writel(uint32_t val, uint32_t addr) {
+static void writel(uint32_t val, uint32_t addr) {
 	uint32_t mmap_base = (addr & ~MAP_MASK);
 	uint32_t mmap_seek = ((addr - mmap_base) >> 2);
 	*(gpio + mmap_seek) = val;
@@ -213,17 +213,16 @@ static int bananapiISR(int pin, int mode) {
 		return -1;
 	}
 
-
 	FILE *f = NULL;
 	for(i=0;i<NUM_PINS;i++) {
 		if(pin == i) {
-			sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGpio[i]);
+			sprintf(path, "/sys/class/gpio/gpio%d/value", i);
 			fd = open(path, O_RDWR);
 			match = 1;
 		}
 	}
 
-	if(edge[pinToGpio[pin]] == -1) {
+	if(edge[pin] == -1) {
 		// Not supported
 		return -1;
 	}
@@ -239,11 +238,11 @@ static int bananapiISR(int pin, int mode) {
 			exit(0);
 		}
 
-		fprintf(f, "%d\n", pinToGpio[pin]);
+		fprintf(f, "%d\n", pin);
 		fclose(f);
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d/direction", pinToGpio[pin]);
+	sprintf(path, "/sys/class/gpio/gpio%d/direction", pin);
 	if((f = fopen(path, "w")) == NULL) {
 		fprintf(stderr, "bananapi->isr: Unable to open GPIO direction interface for pin %d: %s\n", pin, strerror(errno));
 		return -1;
@@ -252,7 +251,7 @@ static int bananapiISR(int pin, int mode) {
 	fprintf(f, "in\n");
 	fclose(f);
 
-	sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGpio[pin]);
+	sprintf(path, "/sys/class/gpio/gpio%d/edge", pin);
 	if((f = fopen(path, "w")) == NULL) {
 		fprintf(stderr, "bananapi->isr: Unable to open GPIO edge interface for pin %d: %s\n", pin, strerror(errno));
 		return -1;
@@ -271,14 +270,14 @@ static int bananapiISR(int pin, int mode) {
 		return -1;
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGpio[pin]);
+	sprintf(path, "/sys/class/gpio/gpio%d/value", pin);
 	if((sysFds[pin] = open(path, O_RDONLY)) < 0) {
 		fprintf(stderr, "bananapi->isr: Unable to open GPIO value interface: %s\n", strerror(errno));
 		return -1;
 	}
 	changeOwner(path);
 
-	sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGpio[pin]);
+	sprintf(path, "/sys/class/gpio/gpio%d/edge", pin);
 	changeOwner(path);
 
 	fclose(f);
@@ -361,7 +360,7 @@ static int setup(void)	{
 		physToGpio = physToGpioR3;
 	}
 
-	if((fd = open ("/dev/mem", O_RDWR | O_SYNC | O_CLOEXEC) ) < 0) {
+	if((fd = open("/dev/mem", O_RDWR | O_SYNC | O_CLOEXEC) ) < 0) {
 		fprintf(stderr, "bananapi->setup: Unable to open /dev/mem\n");
 		return -1;
 	}
@@ -465,7 +464,7 @@ static int bananapiPinMode(int pin, int mode) {
 		else if(wiringPiMode == WPI_MODE_PHYS)
 			pin = physToGpioR3[pin] ;
 		else if(wiringPiMode == WPI_MODE_GPIO)
-			pin=pinToBCMR3[pin]; //need map A20 to bcm
+			pin = pinToBCMR3[pin]; //need map A20 to bcm
 		else
 			return -1;
 
@@ -506,7 +505,7 @@ static int bananapiGC(void) {
 		if(wiringPiMode == WPI_MODE_PINS || wiringPiMode == WPI_MODE_PHYS || wiringPiMode != WPI_MODE_GPIO) {
 			pinMode(i, INPUT);
 		}
-		sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGpio[i]);
+		sprintf(path, "/sys/class/gpio/gpio%d/value", i);
 		if((fd = open(path, O_RDWR)) > 0) {
 			if((f = fopen("/sys/class/gpio/unexport", "w")) == NULL) {
 				fprintf(stderr, "bananapi->gc: Unable to open GPIO unexport interface: %s\n", strerror(errno));
@@ -527,31 +526,31 @@ static int bananapiGC(void) {
 	return 0;
 }
 
-int bananapiI2CRead(int fd) {
+static int bananapiI2CRead(int fd) {
 	return i2c_smbus_read_byte(fd);
 }
 
-int bananapiI2CReadReg8(int fd, int reg) {
+static int bananapiI2CReadReg8(int fd, int reg) {
 	return i2c_smbus_read_byte_data(fd, reg);
 }
 
-int bananapiI2CReadReg16(int fd, int reg) {
+static int bananapiI2CReadReg16(int fd, int reg) {
 	return i2c_smbus_read_word_data(fd, reg);
 }
 
-int bananapiI2CWrite(int fd, int data) {
+static int bananapiI2CWrite(int fd, int data) {
 	return i2c_smbus_write_byte(fd, data);
 }
 
-int bananapiI2CWriteReg8(int fd, int reg, int data) {
+static int bananapiI2CWriteReg8(int fd, int reg, int data) {
 	return i2c_smbus_write_byte_data(fd, reg, data);
 }
 
-int bananapiI2CWriteReg16(int fd, int reg, int data) {
+static int bananapiI2CWriteReg16(int fd, int reg, int data) {
 	return i2c_smbus_write_word_data(fd, reg, data);
 }
 
-int bananapiI2CSetup(int devId) {
+static int bananapiI2CSetup(int devId) {
 	int rev = 0, fd = 0;
 	const char *device = NULL;
 
@@ -580,7 +579,7 @@ int bananapiI2CSetup(int devId) {
 
 void bananapiInit(void) {
 
-	memset(pinModes, -1, NUM_PINS);
+	memset(pinModes, -1, 278);
 
 	device_register(&bananapi, "bananapi");
 	bananapi->setup=&setup;

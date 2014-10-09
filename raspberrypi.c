@@ -684,31 +684,31 @@ static int raspberrypiGC(void) {
 	return 0;
 }
 
-int raspberrypiI2CRead(int fd) {
+static int raspberrypiI2CRead(int fd) {
 	return i2c_smbus_read_byte(fd);
 }
 
-int raspberrypiI2CReadReg8(int fd, int reg) {
+static int raspberrypiI2CReadReg8(int fd, int reg) {
 	return i2c_smbus_read_byte_data(fd, reg);
 }
 
-int raspberrypiI2CReadReg16(int fd, int reg) {
+static int raspberrypiI2CReadReg16(int fd, int reg) {
 	return i2c_smbus_read_word_data(fd, reg);
 }
 
-int raspberrypiI2CWrite(int fd, int data) {
+static int raspberrypiI2CWrite(int fd, int data) {
 	return i2c_smbus_write_byte(fd, data);
 }
 
-int raspberrypiI2CWriteReg8(int fd, int reg, int data) {
+static int raspberrypiI2CWriteReg8(int fd, int reg, int data) {
 	return i2c_smbus_write_byte_data(fd, reg, data);
 }
 
-int raspberrypiI2CWriteReg16(int fd, int reg, int data) {
+static int raspberrypiI2CWriteReg16(int fd, int reg, int data) {
 	return i2c_smbus_write_word_data(fd, reg, data);
 }
 
-int raspberrypiI2CSetup(int devId) {
+static int raspberrypiI2CSetup(int devId) {
 	int rev = 0, fd = 0;
 	const char *device = NULL;
 
