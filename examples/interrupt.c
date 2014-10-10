@@ -19,10 +19,12 @@ int main(void) {
 	pthread_t pth;
 
 	wiringXSetup();
-	pthread_create(&pth, NULL, interrupt, NULL);
 
 	pinMode(0, OUTPUT);
 	wiringXISR(1, INT_EDGE_BOTH);
+
+	pthread_create(&pth, NULL, interrupt, NULL);
+
 	while(1) {
 		digitalWrite(0, HIGH);
 		sleep(1);
