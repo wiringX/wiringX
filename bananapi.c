@@ -201,7 +201,7 @@ static int bananapiISR(int pin, int mode) {
 	char path[35], c;
 	FILE *f = NULL;
 	
-	pinModes[npin] = SYS;
+	pinModes[pin] = SYS;
 
 	if(mode == INT_EDGE_FALLING) {
 		sMode = "falling" ;
@@ -285,7 +285,7 @@ static int bananapiWaitForInterrupt(int pin, int ms) {
 	uint8_t c = 0;
 	struct pollfd polls;
 
-	if(pinModes[npin] != SYS) {
+	if(pinModes[pin] != SYS) {
 		fprintf(stderr, "bananapi->waitForInterrupt: Trying to read from pin %d, but it's not configured as interrupt\n", pin);
 		return -1;
 	}
@@ -388,7 +388,7 @@ static int bananapiDigitalRead(int pin) {
 		phyaddr = SUNXI_GPIO_BASE + (bank * 36) + 0x10; // +0x10 -> data reg
 
 		if(BP_PIN_MASK[bank][i] != -1) {
-			if(pinModes[BP_PIN_MASK[bank][i]] != INPUT) {
+			if(pinModes[pin] != INPUT) {
 				fprintf(stderr, "bananapi->digitalRead: Trying to write to pin %d, but it's not configured as input\n", pin);
 				return -1;
 			}
@@ -422,7 +422,7 @@ static int bananapiDigitalWrite(int pin, int value) {
 		phyaddr = SUNXI_GPIO_BASE + (bank * 36) + 0x10; // +0x10 -> data reg
 
 		if(BP_PIN_MASK[bank][i] != -1) {
-			if(pinModes[BP_PIN_MASK[bank][i]] != OUTPUT) {
+			if(pinModes[pin] != OUTPUT) {
 				fprintf(stderr, "bananapi->digitalWrite: Trying to write to pin %d, but it's not configured as output\n", pin);
 				return -1;
 			}
@@ -464,7 +464,7 @@ static int bananapiPinMode(int pin, int mode) {
 		phyaddr = SUNXI_GPIO_BASE + (bank * 36) + ((i >> 3) << 2);
 
 		if(BP_PIN_MASK[bank][i] != -1) {
-			pinModes[BP_PIN_MASK[bank][i]] = mode;
+			pinModes[pin] = mode;
 
 			regval = readl(phyaddr);
 
@@ -491,18 +491,19 @@ static int bananapiGC(void) {
 	FILE *f = NULL;
 
 	for(i=0;i<NUM_PINS;i++) {
-		if(wiringPiMode == WPI_MODE_PINS || wiringPiMode == WPI_MODE_PHYS || wiringPiMode != WPI_MODE_GPIO) {
+		if(pinModes[i] == OUTPUT) {
 			pinMode(i, INPUT);
-		}
-		sprintf(path, "/sys/class/gpio/gpio%d/value", i);
-		if((fd = open(path, O_RDWR)) > 0) {
-			if((f = fopen("/sys/class/gpio/unexport", "w")) == NULL) {
-				fprintf(stderr, "bananapi->gc: Unable to open GPIO unexport interface: %s\n", strerror(errno));
-			}
+		} else if(pinModes[i] == SYS) {
+			sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGpioR2[i]);
+			if((fd = open(path, O_RDWR)) > 0) {
+				if((f = fopen("/sys/class/gpio/unexport", "w")) == NULL) {
+					fprintf(stderr, "bananapi->gc: Unable to open GPIO unexport interface: %s\n", strerror(errno));
+				}
 
-			fprintf(f, "%d\n", pinToGpio[i]);
-			fclose(f);
-			close(fd);
+				fprintf(f, "%d\n", pinToGpioR2[i]);
+				fclose(f);
+				close(fd);
+			}
 		}
 		if(sysFds[i] > 0) {
 			close(sysFds[i]);
