@@ -37,7 +37,9 @@
 #include "radxa.h"
 #include "i2c-dev.h"
 
-#define NUM_PINS	80
+#define NUM_PINS	127
+
+#define PIN_BASE	160
 
 #define RK_GPIO0	0
 #define RK_GPIO1	1
@@ -174,7 +176,7 @@ static inline unsigned int __raw_readl(const volatile void *addr)
 #define readl(addr) __raw_readl(addr)
 
 #ifndef __raw_writel
-static inline void __raw_writel(unsigned int b, volatile void *addr) 
+static inline void __raw_writel(unsigned int b, volatile void *addr)
 {
 	*(volatile unsigned int *) addr = b;
 }
@@ -206,18 +208,11 @@ static struct rockchip_pin_ctrl rk3188_pin_ctrl = {
 	.grf_base		= (void *)0x20008000,
 };
 
-static int headerToGPIO[80] = {
-	-1, -1, -1, -1, -1, -1, 167, 166, 169, 161,
-	285, 284, 192, 193, 194, 195, -1, -1, 191, 205,
-	188, 202, 190, 203, -1, 204, 165, 189, -1, -1,
-	217, 216, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, 250, 251, 249, -1, 248,
-	168, 162, 286, 207, 199, 196, 198, 197, -1, -1,
-};
-
-static int sysFds[80] = {
+static int sysFds[NUM_PINS+1] = {
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -229,8 +224,9 @@ struct rockchip_pin_ctrl *rkxx_pin_ctrl = &rk3188_pin_ctrl;
 static struct rockchip_pin_bank *pin_to_bank(unsigned pin) {
 	struct rockchip_pin_bank *b = rkxx_pin_ctrl->pin_banks;
 
-	while(pin >= (b->pin_base + b->nr_pins))
+	while(pin >= (b->pin_base + b->nr_pins)) {
 		b++;
+	}
 
 	return b;
 }
@@ -254,7 +250,7 @@ static int map_reg(void *reg, void **reg_mapped) {
 
 	pc = (void *) mmap(0, pagesize * 2, PROT_READ | PROT_WRITE, MAP_SHARED, fd, addr_start);
 
-	if (pc == MAP_FAILED) {
+	if(pc == MAP_FAILED) {
 		return -E_MEM_MAP;
 	}
     close(fd);
@@ -293,8 +289,8 @@ int rockchip_gpio_set_mux(unsigned int pin, unsigned int mux) {
 	/* get basic quadrupel of mux registers and the correct reg inside */
 	mask = (bank->iomux[iomux_num].type & IOMUX_WIDTH_4BIT) ? 0xf : 0x3;
 	offset = bank->iomux[iomux_num].offset;
-	if (bank->iomux[iomux_num].type & IOMUX_WIDTH_4BIT) {
-		if ((pin % 8) >= 4)
+	if(bank->iomux[iomux_num].type & IOMUX_WIDTH_4BIT) {
+		if((pin % 8) >= 4)
 			offset += 0x4;
 		bit = (pin % 4) * 4;
 	} else {
@@ -326,23 +322,17 @@ static int changeOwner(char *file) {
 }
 
 static int radxaISR(int pin, int mode) {
-	int i = 0, fd = 0, count = 0, npin = -1;
+	int i = 0, fd = 0, count = 0, npin = pin-PIN_BASE;
 	const char *sMode = NULL;
 	char path[35], c;
 	FILE *f = NULL;
 
-	for(i=0;i<NUM_PINS;i++) {
-		if(headerToGPIO[i] == pin) {
-			npin = i;
-			break;
-		}
-	}
-
 	if(npin == -1) {
+		fprintf(stderr, "radxa->isr: Invalid pin number %d (160 >= pin <= 287)\n", pin);
 		return -1;
 	}
 
-	pinModes[npin] = SYS;	
+	pinModes[npin] = SYS;
 
 	if(mode == INT_EDGE_FALLING) {
 		sMode = "falling" ;
@@ -354,7 +344,7 @@ static int radxaISR(int pin, int mode) {
 		fprintf(stderr, "radxa->isr: Invalid mode. Should be INT_EDGE_BOTH, INT_EDGE_RISING, or INT_EDGE_FALLING\n");
 		return -1;
 	}
-	
+
 	sprintf(path, "/sys/class/gpio/gpio%d/value", pin);
 
 	if((fd = open(path, O_RDWR)) < 0) {
@@ -388,7 +378,7 @@ static int radxaISR(int pin, int mode) {
 		fprintf(f, "rising\n");
 	} else if(strcasecmp(sMode, "falling") == 0) {
 		fprintf(f, "falling\n");
-	} else if(strcasecmp (sMode, "both") == 0) {
+	} else if(strcasecmp(sMode, "both") == 0) {
 		fprintf(f, "both\n");
 	} else {
 		fprintf(stderr, "radxa->isr: Invalid mode: %s. Should be rising, falling or both\n", sMode);
@@ -417,21 +407,15 @@ static int radxaISR(int pin, int mode) {
 }
 
 static int radxaWaitForInterrupt(int pin, int ms) {
-	int x = 0, npin = -1, i = 0;
+	int x = 0, npin = pin-PIN_BASE;
 	uint8_t c = 0;
 	struct pollfd polls;
 
-	for(i=0;i<NUM_PINS;i++) {
-		if(headerToGPIO[i] == pin) {
-			npin = i;
-			break;
-		}
-	}
-
 	if(npin == -1) {
+		fprintf(stderr, "radxa->waitForInterrupt: Invalid pin number %d (160 >= pin <= 287)\n", pin);
 		return -1;
 	}
-	
+
 	if(pinModes[npin] != SYS) {
 		fprintf(stderr, "radxa->waitForInterrupt: Trying to read from pin %d, but it's not configured as interrupt\n", pin);
 		return -1;
@@ -453,7 +437,7 @@ static int radxaWaitForInterrupt(int pin, int ms) {
 	return x;
 }
 
-static int piBoardRev(void) {
+static int radxaBoardRev(void) {
 	FILE *cpuFd;
 	char line[120];
 	char *d;
@@ -549,26 +533,20 @@ static int setup(void)	{
 }
 
 static int radxaDigitalRead(int pin) {
-    unsigned int data, i = 0;
-	int npin = -1;
+    unsigned int data;
+	int npin = pin-PIN_BASE;
 	struct rockchip_pin_bank *bank = pin_to_bank(pin);
 	int offset = pin - bank->pin_base;
 
-	for(i=0;i<NUM_PINS;i++) {
-		if(headerToGPIO[i] == pin) {
-			npin = i;
-			break;
-		}
-	}
-
 	if(npin == -1) {
+		fprintf(stderr, "radxa->digitalRead: Invalid pin number %d (160 >= pin <= 287)\n", pin);
 		return -1;
 	}
 
 	if(pinModes[pin] != INPUT) {
 		fprintf(stderr, "radxa->digitalRead: Trying to write to pin %d, but it's not configured as input\n", pin);
 		return -1;
-	}	
+	}
 
 	data = readl(bank->reg_mapped_base + GPIO_EXT_PORT);
 	data >>= offset;
@@ -577,20 +555,14 @@ static int radxaDigitalRead(int pin) {
 }
 
 static int radxaDigitalWrite(int pin, int value) {
-	unsigned int data, i = 0;
-	int npin = -1;
+	unsigned int data;
+	int npin = pin-PIN_BASE;
 	struct rockchip_pin_bank *bank = pin_to_bank(pin);
 	void *reg = bank->reg_mapped_base + GPIO_SWPORT_DR;
 	int offset = pin - bank->pin_base;
 
-	for(i=0;i<NUM_PINS;i++) {
-		if(headerToGPIO[i] == pin) {
-			npin = i;
-			break;
-		}
-	}
-
 	if(npin == -1) {
+		fprintf(stderr, "radxa->digitalWrite: Invalid pin number %d (160 >= pin <= 287)\n", pin);
 		return -1;
 	}
 
@@ -611,22 +583,16 @@ static int radxaDigitalWrite(int pin, int value) {
 
 static int radxaPinMode(int pin, int mode) {
 	struct rockchip_pin_bank *bank = pin_to_bank(pin);
-	int ret, offset, npin = -1, i = 0;
+	int ret, offset, npin = -1;
 	unsigned int data;
 
-	for(i=0;i<NUM_PINS;i++) {
-		if(headerToGPIO[i] == pin) {
-			npin = i;
-			break;
-		}
-	}
-
 	if(npin == -1) {
+		fprintf(stderr, "radxa->pinMode: Invalid pin number %d (160 >= pin <= 287)\n", pin);	
 		return -1;
 	}
 
 	pinModes[npin] = mode;
-	
+
 	ret = rockchip_gpio_set_mux(pin, RK_FUNC_GPIO);
 	if(ret < 0) {
 		return ret;
@@ -656,13 +622,13 @@ static int radxaGC(void) {
 		if(pinModes[i] == OUTPUT) {
 			pinMode(i, INPUT);
 		} else if(pinModes[i] == SYS) {
-			sprintf(path, "/sys/class/gpio/gpio%d/value", headerToGPIO[i]);
+			sprintf(path, "/sys/class/gpio/gpio%d/value", i+PIN_BASE);
 			if((fd = open(path, O_RDWR)) > 0) {
 				if((f = fopen("/sys/class/gpio/unexport", "w")) == NULL) {
 					fprintf(stderr, "radxa->gc: Unable to open GPIO unexport interface: %s\n", strerror(errno));
 				}
 
-				fprintf(f, "%d\n", headerToGPIO[i]);
+				fprintf(f, "%d\n", i+PIN_BASE);
 				fclose(f);
 				close(fd);
 			}
@@ -703,7 +669,7 @@ static int radxaI2CSetup(int devId) {
 	int rev = 0, fd = 0;
 	const char *device = NULL;
 
-	if((rev = piBoardRev()) < 0) {
+	if((rev = radxaBoardRev()) < 0) {
 		fprintf(stderr, "radxa->I2CSetup: Unable to determine Pi board revision\n");
 		return -1;
 	}
@@ -723,14 +689,14 @@ static int radxaI2CSetup(int devId) {
 
 void radxaInit(void) {
 
-	memset(pinModes, -1, 278);
+	memset(pinModes, -1, NUM_PINS);
 
 	device_register(&radxa, "radxa");
 	radxa->setup=&setup;
 	radxa->pinMode=&radxaPinMode;
 	radxa->digitalWrite=&radxaDigitalWrite;
 	radxa->digitalRead=&radxaDigitalRead;
-	radxa->identify=&piBoardRev;
+	radxa->identify=&radxaBoardRev;
 	radxa->isr=&radxaISR;
 	radxa->waitForInterrupt=&radxaWaitForInterrupt;
 	radxa->I2CRead=&radxaI2CRead;
