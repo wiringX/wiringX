@@ -191,10 +191,16 @@ static int sysFds[NUM_PINS+1] = {
 };
 
 static int validGPIO[NUM_PINS+1] = {
-	167, 166, 169, 161, 285, 284, 192, 193, 194, 195,
-	191, 205, 188, 202, 190, 203, 204, 165, 189, 217,
-	216, 250, 251, 249, 248, 168, 162, 286, 207, 199,
-	196, 198, 197,
+	167, 166, 169,
+	// 161, pin seems unwriteable
+	285, 284, 192, 193, 194,
+	// 195, pin seems unwriteable
+	191, 205, 188, 202, 190, 203, 204,
+	// 165,  pin seems unwriteable
+	189, 217,
+	216,
+	// 250, 251, 249, 248, 168, 162, 286, 207, 199, pins seems unwriteable
+	// 196, 198, 197, pins seems unwriteable
 	172, 174, 175, // radxa onboard LEDs
 };
 
@@ -314,7 +320,7 @@ static int radxaISR(int pin, int mode) {
 	if(npin < 0) {
 		fprintf(stderr, "radxa->isr: Invalid pin number %d (160 >= pin <= 287)\n", pin);
 		return -1;
-	}	
+	}
 
 	for(i=0;i<NUM_PINS;i++) {
 		if(onboardLEDs[i] == pin) {
@@ -609,7 +615,7 @@ static int radxaDigitalWrite(int pin, int value) {
 	if(match == 0) {
 		fprintf(stderr, "radxa->digitalWrite: Invalid pin number %d\n", pin);
 		return -1;
-	}	
+	}
 
 	if(pinModes[npin] != OUTPUT) {
 		fprintf(stderr, "radxa->digitalWrite: Trying to write to pin %d, but it's not configured as output\n", pin);
@@ -632,7 +638,7 @@ static int radxaPinMode(int pin, int mode) {
 	unsigned int data;
 
 	if(npin < 0) {
-		fprintf(stderr, "radxa->pinMode: Invalid pin number %d (160 >= pin <= 287)\n", pin);	
+		fprintf(stderr, "radxa->pinMode: Invalid pin number %d (160 >= pin <= 287)\n", pin);
 		return -1;
 	}
 
@@ -640,7 +646,7 @@ static int radxaPinMode(int pin, int mode) {
 		if(onboardLEDs[i] == pin && mode == INPUT) {
 			fprintf(stderr, "radxa->pinMode: The onboard LEDs cannot be used as input\n");
 			return -1;
-		}	
+		}
 		if(validGPIO[i] == pin) {
 			match = 1;
 			break;
