@@ -582,7 +582,7 @@ static int radxaDigitalWrite(int pin, int value) {
 }
 
 static int radxaPinMode(int pin, int mode) {
-	int ret, offset, npin = npin-PIN_BASE;
+	int ret, offset, npin = pin-PIN_BASE;
 	struct rockchip_pin_bank *bank = pin_to_bank(npin);
 	unsigned int data;
 
