@@ -41,36 +41,12 @@
 
 #define PIN_BASE	160
 
-#define RK_GPIO0	0
-#define RK_GPIO1	1
-#define RK_GPIO2	2
-#define RK_GPIO3	3
-#define RK_GPIO4	4
-#define RK_GPIO6	6
-
 #define RK_FUNC_GPIO	0
-#define RK_FUNC_1		1
-#define RK_FUNC_2		2
-
-#define ROCKCHIP_GPIO_INPUT		1
-#define ROCKCHIP_GPIO_OUTPUT	0
-
-#define ROCKCHIP_PULL_UP		0
-#define ROCKCHIP_PULL_DOWN		1
 
 /* GPIO control registers */
 #define GPIO_SWPORT_DR		0x00
 #define GPIO_SWPORT_DDR		0x04
-#define GPIO_INTEN			0x30
-#define GPIO_INTMASK		0x34
-#define GPIO_INTTYPE_LEVEL	0x38
-#define GPIO_INT_POLARITY	0x3c
-#define GPIO_INT_STATUS		0x40
-#define GPIO_INT_RAWSTATUS	0x44
-#define GPIO_DEBOUNCE		0x48
-#define GPIO_PORTS_EOI		0x4c
 #define GPIO_EXT_PORT		0x50
-#define GPIO_LS_SYNC		0x60
 
 #define BIT(nr) (1UL << (nr))
 
@@ -190,7 +166,7 @@ static inline void __raw_writel(unsigned int b, volatile void *addr)
 #define E_MUX_UNROUTED		614
 #define E_MUX_GPIOONLY		615
 
-static int pinModes[NUM_PINS];
+static int pinModes[128];
 
 static struct rockchip_pin_bank rk3188_pin_banks[] = {
 	PIN_BANK_IOMUX_FLAGS(0, 0x2000a000, 32, "gpio0", IOMUX_GPIO_ONLY, IOMUX_GPIO_ONLY, 0, 0),
@@ -214,7 +190,7 @@ static int sysFds[NUM_PINS+1] = {
 	-1, -1, -1, -1,
 };
 
-static int validGPIO[37] = {
+static int validGPIO[NUM_PINS+1] = {
 	167, 166, 169, 161, 285, 284, 192, 193, 194, 195,
 	191, 205, 188, 202, 190, 203, 204, 165, 189, 217,
 	216, 250, 251, 249, 248, 168, 162, 286, 207, 199,
@@ -362,10 +338,11 @@ static int radxaISR(int pin, int mode) {
 		sMode = "falling" ;
 	} else if(mode == INT_EDGE_RISING) {
 		sMode = "rising" ;
-	} else if(mode == INT_EDGE_BOTH) {
+	} /*else if(mode == INT_EDGE_BOTH) {
 		sMode = "both";
-	} else {
-		fprintf(stderr, "radxa->isr: Invalid mode. Should be INT_EDGE_BOTH, INT_EDGE_RISING, or INT_EDGE_FALLING\n");
+	} */else {
+		// Somehow the radxa doesn't support the BOTH interrupt EDGE
+		fprintf(stderr, "radxa->isr: Invalid mode. Should be INT_EDGE_RISING or INT_EDGE_FALLING\n");
 		return -1;
 	}
 
@@ -704,7 +681,7 @@ static int radxaGC(void) {
 
 	for(i=0;i<NUM_PINS;i++) {
 		if(pinModes[i] == OUTPUT) {
-			pinMode(i, INPUT);
+			pinMode(i+PIN_BASE, INPUT);
 		} else if(pinModes[i] == SYS) {
 			sprintf(path, "/sys/class/gpio/gpio%d/value", i+PIN_BASE);
 			if((fd = open(path, O_RDWR)) > 0) {
@@ -773,7 +750,7 @@ static int radxaI2CSetup(int devId) {
 
 void radxaInit(void) {
 
-	memset(pinModes, -1, NUM_PINS);
+	memset(pinModes, -1, 128);
 
 	device_register(&radxa, "radxa");
 	radxa->setup=&setup;
