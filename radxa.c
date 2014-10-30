@@ -327,7 +327,7 @@ static int radxaISR(int pin, int mode) {
 	char path[35], c;
 	FILE *f = NULL;
 
-	if(npin == -1) {
+	if(npin < 0) {
 		fprintf(stderr, "radxa->isr: Invalid pin number %d (160 >= pin <= 287)\n", pin);
 		return -1;
 	}
@@ -411,7 +411,7 @@ static int radxaWaitForInterrupt(int pin, int ms) {
 	uint8_t c = 0;
 	struct pollfd polls;
 
-	if(npin == -1) {
+	if(npin < 0) {
 		fprintf(stderr, "radxa->waitForInterrupt: Invalid pin number %d (160 >= pin <= 287)\n", pin);
 		return -1;
 	}
@@ -538,7 +538,7 @@ static int radxaDigitalRead(int pin) {
 	struct rockchip_pin_bank *bank = pin_to_bank(pin);
 	int offset = pin - bank->pin_base;
 
-	if(npin == -1) {
+	if(npin < 0) {
 		fprintf(stderr, "radxa->digitalRead: Invalid pin number %d (160 >= pin <= 287)\n", pin);
 		return -1;
 	}
@@ -561,7 +561,7 @@ static int radxaDigitalWrite(int pin, int value) {
 	void *reg = bank->reg_mapped_base + GPIO_SWPORT_DR;
 	int offset = pin - bank->pin_base;
 
-	if(npin == -1) {
+	if(npin < 0) {
 		fprintf(stderr, "radxa->digitalWrite: Invalid pin number %d (160 >= pin <= 287)\n", pin);
 		return -1;
 	}
@@ -583,10 +583,10 @@ static int radxaDigitalWrite(int pin, int value) {
 
 static int radxaPinMode(int pin, int mode) {
 	struct rockchip_pin_bank *bank = pin_to_bank(pin);
-	int ret, offset, npin = -1;
+	int ret, offset, npin = pin-PIN_BASE;
 	unsigned int data;
 
-	if(npin == -1) {
+	if(npin < 0) {
 		fprintf(stderr, "radxa->pinMode: Invalid pin number %d (160 >= pin <= 287)\n", pin);	
 		return -1;
 	}
