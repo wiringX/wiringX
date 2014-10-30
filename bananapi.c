@@ -1,5 +1,6 @@
 /*
 	Copyright (c) 2014 CurlyMo <curlymoo1@gmail.com>
+	              2014 lemaker http://www.lemaker.org
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -281,7 +282,7 @@ static int bananapiISR(int pin, int mode) {
 }
 
 static int bananapiWaitForInterrupt(int pin, int ms) {
-	int x = 0, npin = pinToGpioR2[pin];
+	int x = 0;
 	uint8_t c = 0;
 	struct pollfd polls;
 
