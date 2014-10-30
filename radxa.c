@@ -37,7 +37,7 @@
 #include "radxa.h"
 #include "i2c-dev.h"
 
-#define NUM_PINS	127
+#define NUM_PINS	37
 
 #define PIN_BASE	160
 
@@ -190,7 +190,7 @@ static inline void __raw_writel(unsigned int b, volatile void *addr)
 #define E_MUX_UNROUTED		614
 #define E_MUX_GPIOONLY		615
 
-static int pinModes[80];
+static int pinModes[NUM_PINS];
 
 static struct rockchip_pin_bank rk3188_pin_banks[] = {
 	PIN_BANK_IOMUX_FLAGS(0, 0x2000a000, 32, "gpio0", IOMUX_GPIO_ONLY, IOMUX_GPIO_ONLY, 0, 0),
@@ -211,12 +211,19 @@ static struct rockchip_pin_ctrl rk3188_pin_ctrl = {
 static int sysFds[NUM_PINS+1] = {
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1,
+};
+
+static int validGPIO[37] = {
+	167, 166, 169, 161, 285, 284, 192, 193, 194, 195,
+	191, 205, 188, 202, 190, 203, 204, 165, 189, 217,
+	216, 250, 251, 249, 248, 168, 162, 286, 207, 199,
+	196, 198, 197,
+	172, 174, 175, // radxa onboard LEDs
+};
+
+static int onboardLEDs[4] = {
+	172, 174, 175,
 };
 
 struct rockchip_pin_ctrl *rkxx_pin_ctrl = &rk3188_pin_ctrl;
@@ -323,12 +330,29 @@ static int changeOwner(char *file) {
 
 static int radxaISR(int pin, int mode) {
 	int i = 0, fd = 0, count = 0, npin = pin-PIN_BASE;
+	int match = 0;
 	const char *sMode = NULL;
 	char path[35], c;
 	FILE *f = NULL;
 
 	if(npin < 0) {
 		fprintf(stderr, "radxa->isr: Invalid pin number %d (160 >= pin <= 287)\n", pin);
+		return -1;
+	}	
+
+	for(i=0;i<NUM_PINS;i++) {
+		if(onboardLEDs[i] == pin) {
+			fprintf(stderr, "radxa->isr: The onboard LEDs cannot be used as interrupts\n");
+			return -1;
+		}
+		if(validGPIO[i] == pin) {
+			match = 1;
+			break;
+		}
+	}
+
+	if(match == 0) {
+		fprintf(stderr, "radxa->isr: Invalid pin number %d\n", pin);
 		return -1;
 	}
 
@@ -407,12 +431,28 @@ static int radxaISR(int pin, int mode) {
 }
 
 static int radxaWaitForInterrupt(int pin, int ms) {
-	int x = 0, npin = pin-PIN_BASE;
+	int x = 0, npin = pin-PIN_BASE, i = 0, match = 0;
 	uint8_t c = 0;
 	struct pollfd polls;
 
 	if(npin < 0) {
 		fprintf(stderr, "radxa->waitForInterrupt: Invalid pin number %d (160 >= pin <= 287)\n", pin);
+		return -1;
+	}
+
+	for(i=0;i<NUM_PINS;i++) {
+		if(onboardLEDs[i] == pin) {
+			fprintf(stderr, "radxa->waitForInterrupt: The onboard LEDs cannot be used as interrupts\n");
+			return -1;
+		}
+		if(validGPIO[i] == pin) {
+			match = 1;
+			break;
+		}
+	}
+
+	if(match == 0) {
+		fprintf(stderr, "radxa->waitForInterrupt: Invalid pin number %d\n", pin);
 		return -1;
 	}
 
@@ -534,12 +574,28 @@ static int setup(void)	{
 
 static int radxaDigitalRead(int pin) {
     unsigned int data;
-	int npin = pin-PIN_BASE;
+	int npin = pin-PIN_BASE, i = 0, match = 0;
 	struct rockchip_pin_bank *bank = pin_to_bank(npin);
 	int offset = npin - bank->pin_base;
 
 	if(npin < 0) {
 		fprintf(stderr, "radxa->digitalRead: Invalid pin number %d (160 >= pin <= 287)\n", pin);
+		return -1;
+	}
+
+	for(i=0;i<NUM_PINS;i++) {
+		if(onboardLEDs[i] == pin) {
+			fprintf(stderr, "radxa->digitalRead: The onboard LEDs cannot be used as input\n");
+			return -1;
+		}
+		if(validGPIO[i] == pin) {
+			match = 1;
+			break;
+		}
+	}
+
+	if(match == 0) {
+		fprintf(stderr, "radxa->digitalRead: Invalid pin number %d\n", pin);
 		return -1;
 	}
 
@@ -556,7 +612,7 @@ static int radxaDigitalRead(int pin) {
 
 static int radxaDigitalWrite(int pin, int value) {
 	unsigned int data;
-	int npin = pin-PIN_BASE;
+	int npin = pin-PIN_BASE, i = 0, match = 0;
 	struct rockchip_pin_bank *bank = pin_to_bank(npin);
 	void *reg = bank->reg_mapped_base + GPIO_SWPORT_DR;
 	int offset = npin - bank->pin_base;
@@ -565,6 +621,18 @@ static int radxaDigitalWrite(int pin, int value) {
 		fprintf(stderr, "radxa->digitalWrite: Invalid pin number %d (160 >= pin <= 287)\n", pin);
 		return -1;
 	}
+
+	for(i=0;i<NUM_PINS;i++) {
+		if(validGPIO[i] == pin) {
+			match = 1;
+			break;
+		}
+	}
+
+	if(match == 0) {
+		fprintf(stderr, "radxa->digitalWrite: Invalid pin number %d\n", pin);
+		return -1;
+	}	
 
 	if(pinModes[npin] != OUTPUT) {
 		fprintf(stderr, "radxa->digitalWrite: Trying to write to pin %d, but it's not configured as output\n", pin);
@@ -582,12 +650,28 @@ static int radxaDigitalWrite(int pin, int value) {
 }
 
 static int radxaPinMode(int pin, int mode) {
-	int ret, offset, npin = pin-PIN_BASE;
+	int ret, offset, npin = pin-PIN_BASE, i = 0, match = 0;
 	struct rockchip_pin_bank *bank = pin_to_bank(npin);
 	unsigned int data;
 
 	if(npin < 0) {
 		fprintf(stderr, "radxa->pinMode: Invalid pin number %d (160 >= pin <= 287)\n", pin);	
+		return -1;
+	}
+
+	for(i=0;i<NUM_PINS;i++) {
+		if(onboardLEDs[i] == pin && mode == INPUT) {
+			fprintf(stderr, "radxa->pinMode: The onboard LEDs cannot be used as input\n");
+			return -1;
+		}	
+		if(validGPIO[i] == pin) {
+			match = 1;
+			break;
+		}
+	}
+
+	if(match == 0) {
+		fprintf(stderr, "radxa->pinMode: Invalid pin number %d\n", pin);
 		return -1;
 	}
 
