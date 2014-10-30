@@ -535,15 +535,15 @@ static int setup(void)	{
 static int radxaDigitalRead(int pin) {
     unsigned int data;
 	int npin = pin-PIN_BASE;
-	struct rockchip_pin_bank *bank = pin_to_bank(pin);
-	int offset = pin - bank->pin_base;
+	struct rockchip_pin_bank *bank = pin_to_bank(npin);
+	int offset = npin - bank->pin_base;
 
 	if(npin < 0) {
 		fprintf(stderr, "radxa->digitalRead: Invalid pin number %d (160 >= pin <= 287)\n", pin);
 		return -1;
 	}
 
-	if(pinModes[pin] != INPUT) {
+	if(pinModes[npin] != INPUT) {
 		fprintf(stderr, "radxa->digitalRead: Trying to write to pin %d, but it's not configured as input\n", pin);
 		return -1;
 	}
@@ -557,9 +557,9 @@ static int radxaDigitalRead(int pin) {
 static int radxaDigitalWrite(int pin, int value) {
 	unsigned int data;
 	int npin = pin-PIN_BASE;
-	struct rockchip_pin_bank *bank = pin_to_bank(pin);
+	struct rockchip_pin_bank *bank = pin_to_bank(npin);
 	void *reg = bank->reg_mapped_base + GPIO_SWPORT_DR;
-	int offset = pin - bank->pin_base;
+	int offset = npin - bank->pin_base;
 
 	if(npin < 0) {
 		fprintf(stderr, "radxa->digitalWrite: Invalid pin number %d (160 >= pin <= 287)\n", pin);
@@ -582,8 +582,8 @@ static int radxaDigitalWrite(int pin, int value) {
 }
 
 static int radxaPinMode(int pin, int mode) {
-	struct rockchip_pin_bank *bank = pin_to_bank(pin);
-	int ret, offset, npin = pin-PIN_BASE;
+	int ret, offset, npin = npin-PIN_BASE;
+	struct rockchip_pin_bank *bank = pin_to_bank(npin);
 	unsigned int data;
 
 	if(npin < 0) {
@@ -593,7 +593,7 @@ static int radxaPinMode(int pin, int mode) {
 
 	pinModes[npin] = mode;
 
-	ret = rockchip_gpio_set_mux(pin, RK_FUNC_GPIO);
+	ret = rockchip_gpio_set_mux(npin, RK_FUNC_GPIO);
 	if(ret < 0) {
 		return ret;
 	}
@@ -601,7 +601,7 @@ static int radxaPinMode(int pin, int mode) {
 	data = readl(bank->reg_mapped_base + GPIO_SWPORT_DDR);
 
 	/* set bit to 1 for output, 0 for input */
-	offset = pin - bank->pin_base;
+	offset = npin - bank->pin_base;
 	if(mode == INPUT) {
 		data |= BIT(offset);
 	} else {
