@@ -285,6 +285,10 @@ int wiringXI2CSetup(int devId) {
 	return -1;
 }
 
+char *wiringXPlatform(void) {
+	return device->name;
+}
+
 int wiringXSetup(void) {
 	if(setup == -2) {
 		hummingboardInit();

@@ -314,7 +314,7 @@ static int radxaISR(int pin, int mode) {
 	int i = 0, fd = 0, count = 0, npin = pin-PIN_BASE;
 	int match = 0;
 	const char *sMode = NULL;
-	char path[35], c;
+	char path[35], c, line[120];
 	FILE *f = NULL;
 
 	if(npin < 0) {
@@ -391,6 +391,26 @@ static int radxaISR(int pin, int mode) {
 		fprintf(stderr, "radxa->isr: Invalid mode: %s. Should be rising, falling or both\n", sMode);
 		return -1;
 	}
+	fclose(f);
+
+	if((f = fopen(path, "r")) == NULL) {
+		fprintf(stderr, "radxa->isr: Unable to open GPIO edge interface for pin %d: %s\n", pin, strerror(errno));
+		return -1;
+	}
+
+	match = 0;
+	while(fgets(line, 120, f) != NULL) {
+		if(strstr(line, sMode) != NULL) {
+			match = 1;
+			break;
+		}
+	}
+	fclose(f);
+
+	if(match == 0) {
+		fprintf(stderr, "radxa->isr: Failed to set interrupt edge to %s\n", sMode);
+		return -1;	
+	}
 
 	sprintf(path, "/sys/class/gpio/gpio%d/value", pin);
 	if((sysFds[npin] = open(path, O_RDONLY)) < 0) {
@@ -401,8 +421,6 @@ static int radxaISR(int pin, int mode) {
 
 	sprintf(path, "/sys/class/gpio/gpio%d/edge", pin);
 	changeOwner(path);
-
-	fclose(f);
 
 	ioctl(fd, FIONREAD, &count);
 	for(i=0; i<count; ++i) {

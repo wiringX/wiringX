@@ -3,7 +3,7 @@ wiringX
 
 wiringX is a modular approach to several GPIO interfaces.
 wiringX will export all common GPIO functions also found libraries such as wiringPi
-and wiringHB, but when using wiringX is will automatically determine what device 
+and wiringHB, but when using wiringX it will automatically determine what device 
 your program is running on and use the appropriate GPIO functions. So when using 
 wiringX, your program will just work in regard of GPIO functionality.
 
@@ -43,5 +43,8 @@ Make sure you have cmake in both cases installed:
 sudo apt-get install cmake
 ```
 
-Pin numbering is the same as with wiringPi:
+Pin numbering of the Raspberry Pi, Hummingboard and BananaPi can be found here:
 https://projects.drogon.net/raspberry-pi/wiringpi/pins/
+
+Pin numbering for the Radxa Rock can be found here:
+http://radxa.com/Rock/extension_header

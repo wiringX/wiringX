@@ -197,9 +197,10 @@ static int changeOwner(char *file) {
 }
 
 static int bananapiISR(int pin, int mode) {
-	int i = 0, fd = 0, count = 0, npin = pinToGpioR2[pin];
+	int i = 0, fd = 0, count = 0;
+	int npin = pinToGpioR2[pin], match = 0;
 	const char *sMode = NULL;
-	char path[35], c;
+	char path[35], c, line[120];
 	FILE *f = NULL;
 	
 	pinModes[pin] = SYS;
@@ -259,6 +260,25 @@ static int bananapiISR(int pin, int mode) {
 		fprintf(stderr, "bananapi->isr: Invalid mode: %s. Should be rising, falling or both\n", sMode);
 		return -1;
 	}
+	fclose(f);
+
+	if((f = fopen(path, "r")) == NULL) {
+		fprintf(stderr, "bananapi->isr: Unable to open GPIO edge interface for pin %d: %s\n", pin, strerror(errno));
+		return -1;
+	}
+
+	while(fgets(line, 120, f) != NULL) {
+		if(strstr(line, sMode) != NULL) {
+			match = 1;
+			break;
+		}
+	}
+	fclose(f);
+
+	if(match == 0) {
+		fprintf(stderr, "bananapi->isr: Failed to set interrupt edge to %s\n", sMode);
+		return -1;	
+	}
 
 	sprintf(path, "/sys/class/gpio/gpio%d/value", npin);
 	if((sysFds[pin] = open(path, O_RDONLY)) < 0) {
@@ -269,8 +289,6 @@ static int bananapiISR(int pin, int mode) {
 
 	sprintf(path, "/sys/class/gpio/gpio%d/edge", npin);
 	changeOwner(path);
-
-	fclose(f);
 
 	ioctl(fd, FIONREAD, &count);
 	for(i=0; i<count; ++i) {
