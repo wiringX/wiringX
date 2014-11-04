@@ -64,7 +64,7 @@
  *	    an initial offset value the relevant source offset can be reset
  *	    to a new value for autocalculating the following iomux registers.
  */
-struct rockchip_iomux {
+static struct rockchip_iomux {
 	int				type;
 	int				offset;
 };
@@ -87,7 +87,7 @@ struct rockchip_iomux {
  * @grange: gpio range
  * @slock: spinlock for the gpio bank
  */
-struct rockchip_pin_bank {
+static struct rockchip_pin_bank {
 	void 			*reg_base;
 	int				irq;
 	int				pin_base;
@@ -100,7 +100,7 @@ struct rockchip_pin_bank {
 	void			*reg_mapped_base;
 };
 
-struct rockchip_pin_ctrl {
+static struct rockchip_pin_ctrl {
 	struct rockchip_pin_bank	*pin_banks;
 	unsigned int	nr_banks;
 	unsigned int	nr_pins;
@@ -208,7 +208,7 @@ static int onboardLEDs[4] = {
 	172, 174, 175,
 };
 
-struct rockchip_pin_ctrl *rkxx_pin_ctrl = &rk3188_pin_ctrl;
+static struct rockchip_pin_ctrl *rkxx_pin_ctrl = &rk3188_pin_ctrl;
 
 static struct rockchip_pin_bank *pin_to_bank(unsigned pin) {
 	struct rockchip_pin_bank *b = rkxx_pin_ctrl->pin_banks;
@@ -249,7 +249,7 @@ static int map_reg(void *reg, void **reg_mapped) {
 	return 0;
 }
 
-int rockchip_gpio_set_mux(unsigned int pin, unsigned int mux) {
+static int rockchip_gpio_set_mux(unsigned int pin, unsigned int mux) {
 	struct rockchip_pin_ctrl *info = rkxx_pin_ctrl;
 	struct rockchip_pin_bank *bank = pin_to_bank(pin);
 	int iomux_num = (pin / 8);
@@ -600,7 +600,7 @@ static int radxaDigitalRead(int pin) {
 		return -1;
 	}
 
-	if(pinModes[npin] != INPUT) {
+	if(pinModes[npin] != INPUT && pinModes[npin] != SYS) {
 		fprintf(stderr, "radxa->digitalRead: Trying to write to pin %d, but it's not configured as input\n", pin);
 		return -1;
 	}

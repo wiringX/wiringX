@@ -312,7 +312,7 @@ static int piBoardId(int *model, int *rev, int *mem, int *maker, int *overVolted
 	(void)piBoardRev();	// Call this first to make sure all's OK. Don't care about the result.
 
 	if((cpuFd = fopen("/proc/cpuinfo", "r")) == NULL) {
-		fprintf(stderr, "raspberrypi->piBoardId: Unable to open /proc/cpuinfo");
+		fprintf(stderr, "raspberrypi->piBoardId: Unable to open /proc/cpuinfo\n");
 		return -1;
 	}
 
@@ -469,7 +469,7 @@ static int setup(void) {
 }
 
 static int raspberrypiDigitalRead(int pin) {
-	if(pinModes[pin] != INPUT) {
+	if(pinModes[pin] != INPUT && pinModes[pin] != SYS) {
 		fprintf(stderr, "raspberrypi->digitalRead: Trying to write to pin %d, but it's not configured as input\n", pin);
 		return -1;
 	}
