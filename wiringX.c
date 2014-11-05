@@ -294,7 +294,7 @@ int wiringXValidGPIO(int gpio) {
 		if(device->validGPIO) {
 			return device->validGPIO(gpio);
 		} else {
-			logprintf(LOG_ERR, "%s: device doesn't support gpio number validation", device->name);
+			fprintf(stderr, "%s: device doesn't support gpio number validation\n", device->name);
 			wiringXGC();
 		}
 	}
