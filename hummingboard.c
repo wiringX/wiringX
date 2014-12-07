@@ -170,6 +170,7 @@ static int hummingboardISR(int pin, int mode) {
 	const char *sMode = NULL;
 	char path[35], c, line[120];
 	pinModes[pin] = SYS;
+	FILE *f = NULL;
 
 	if(mode == INT_EDGE_FALLING) {
 		sMode = "falling" ;
@@ -182,19 +183,8 @@ static int hummingboardISR(int pin, int mode) {
 		return -1;
 	}
 
-	FILE *f = NULL;
-	for(i=0;i<NUM_PINS;i++) {
-		if(pin == i) {
-			sprintf(path, "/sys/class/gpio/gpio%d/value", pinsToGPIO[i]);
-			fd = open(path, O_RDWR);
-			match = 1;
-		}
-	}
-
-	if(!match) {
-		fprintf(stderr, "hummingboard->isr: Invalid GPIO: %d\n", pin);
-		return -1;
-	}
+	sprintf(path, "/sys/class/gpio/gpio%d/value", pinsToGPIO[i]);
+	fd = open(path, O_RDWR);
 
 	if(fd < 0) {
 		if((f = fopen("/sys/class/gpio/export", "w")) == NULL) {

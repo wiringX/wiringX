@@ -511,7 +511,7 @@ static int radxaBoardRev(void) {
 	}
 }
 
-static int setup(void)	{
+static int radxaSetup(void)	{
 	int grf_offs, pmu_offs, i, j;
 	int ret;
 
@@ -787,7 +787,7 @@ void radxaInit(void) {
 	memset(pinModes, -1, 128);
 
 	device_register(&radxa, "radxa");
-	radxa->setup=&setup;
+	radxa->setup=&radxaSetup;
 	radxa->pinMode=&radxaPinMode;
 	radxa->digitalWrite=&radxaDigitalWrite;
 	radxa->digitalRead=&radxaDigitalRead;

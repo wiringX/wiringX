@@ -197,8 +197,8 @@ static int changeOwner(char *file) {
 }
 
 static int bananapiISR(int pin, int mode) {
-	int i = 0, fd = 0, count = 0;
-	int npin = pinToGpioR2[pin], match = 0;
+	int i = 0, fd = 0, match = 0, count = 0;
+	int npin = pinToGpioR2[pin];
 	const char *sMode = NULL;
 	char path[35], c, line[120];
 	FILE *f = NULL;
@@ -222,7 +222,6 @@ static int bananapiISR(int pin, int mode) {
 	}	
 	
 	sprintf(path, "/sys/class/gpio/gpio%d/value", npin);
-
 	if((fd = open(path, O_RDWR)) < 0) {
 		if((f = fopen("/sys/class/gpio/export", "w")) == NULL) {
 			fprintf(stderr, "bananapi->isr: Unable to open GPIO export interface\n");
@@ -351,7 +350,7 @@ static int piBoardRev(void) {
 	for(d = &line[strlen(line) - 1]; (*d == '\n') || (*d == '\r') ; --d)
 		*d = 0 ;
 
-	if(strstr(line, "sun7i") != NULL) {
+	if(strstr(line, "sun7i") != NULL || strstr(line, "sun4i") != NULL) {
 		return 0;
 	} else {
 		return -1;
