@@ -344,9 +344,9 @@ static int radxaISR(int pin, int mode) {
 		sMode = "falling" ;
 	} else if(mode == INT_EDGE_RISING) {
 		sMode = "rising" ;
-	} /*else if(mode == INT_EDGE_BOTH) {
+	} else if(mode == INT_EDGE_BOTH) {
 		sMode = "both";
-	} */else {
+	} else {
 		// Somehow the radxa doesn't support the BOTH interrupt EDGE
 		fprintf(stderr, "radxa->isr: Invalid mode. Should be INT_EDGE_RISING or INT_EDGE_FALLING\n");
 		return -1;
