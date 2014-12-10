@@ -39,8 +39,6 @@
 
 #define NUM_PINS	37
 
-#define PIN_BASE	160
-
 #define RK_FUNC_GPIO	0
 
 /* GPIO control registers */
@@ -191,21 +189,17 @@ static int sysFds[NUM_PINS+1] = {
 };
 
 static int validGPIO[NUM_PINS+1] = {
-	167, 166, 169,
-	// 161, pin seems unwriteable
-	285, 284, 192, 193, 194,
-	// 195, pin seems unwriteable
-	191, 205, 188, 202, 190, 203, 204,
-	// 165,  pin seems unwriteable
-	189, 217,
-	216,
-	// 250, 251, 249, 248, 168, 162, 286, 207, 199, pins seems unwriteable
-	// 196, 198, 197, pins seems unwriteable
-	172, 174, 175, // radxa onboard LEDs
+	0, 1, 2, // 3,
+	4, 5, 6, 7, 8, 9,
+	10, 11, 12, 13, 14, 15, 16,
+	17, 18, 19, 20,
+	21, 22, 23, 24, 25, 26, 27, 28, 29,
+	30, 31, 32,
+	33, 34, 35
 };
 
 static int onboardLEDs[4] = {
-	172, 174, 175,
+	33, 34, 35
 };
 
 static struct rockchip_pin_ctrl *rkxx_pin_ctrl = &rk3188_pin_ctrl;
@@ -311,14 +305,14 @@ static int changeOwner(char *file) {
 }
 
 static int radxaISR(int pin, int mode) {
-	int i = 0, fd = 0, count = 0, npin = pin-PIN_BASE;
+	int i = 0, fd = 0, count = 0;
 	int match = 0;
 	const char *sMode = NULL;
 	char path[35], c, line[120];
 	FILE *f = NULL;
 
-	if(npin < 0) {
-		fprintf(stderr, "radxa->isr: Invalid pin number %d (160 >= pin <= 287)\n", pin);
+	if(pin < 0 || pin > 35) {
+		fprintf(stderr, "radxa->isr: Invalid pin number %d (0 >= pin <= 35)\n", pin);
 		return -1;
 	}
 
@@ -338,7 +332,7 @@ static int radxaISR(int pin, int mode) {
 		return -1;
 	}
 
-	pinModes[npin] = SYS;
+	pinModes[pin] = SYS;
 
 	if(mode == INT_EDGE_FALLING) {
 		sMode = "falling" ;
@@ -347,7 +341,6 @@ static int radxaISR(int pin, int mode) {
 	} else if(mode == INT_EDGE_BOTH) {
 		sMode = "both";
 	} else {
-		// Somehow the radxa doesn't support the BOTH interrupt EDGE
 		fprintf(stderr, "radxa->isr: Invalid mode. Should be INT_EDGE_RISING or INT_EDGE_FALLING\n");
 		return -1;
 	}
@@ -413,7 +406,7 @@ static int radxaISR(int pin, int mode) {
 	}
 
 	sprintf(path, "/sys/class/gpio/gpio%d/value", pin);
-	if((sysFds[npin] = open(path, O_RDONLY)) < 0) {
+	if((sysFds[pin] = open(path, O_RDONLY)) < 0) {
 		fprintf(stderr, "radxa->isr: Unable to open GPIO value interface: %s\n", strerror(errno));
 		return -1;
 	}
@@ -432,12 +425,12 @@ static int radxaISR(int pin, int mode) {
 }
 
 static int radxaWaitForInterrupt(int pin, int ms) {
-	int x = 0, npin = pin-PIN_BASE, i = 0, match = 0;
+	int x = 0, i = 0, match = 0;
 	uint8_t c = 0;
 	struct pollfd polls;
 
-	if(npin < 0) {
-		fprintf(stderr, "radxa->waitForInterrupt: Invalid pin number %d (160 >= pin <= 287)\n", pin);
+	if(pin < 0 || pin > 35) {
+		fprintf(stderr, "radxa->waitForInterrupt: Invalid pin number %d (0 >= pin <= 35)\n", pin);
 		return -1;
 	}
 
@@ -457,23 +450,23 @@ static int radxaWaitForInterrupt(int pin, int ms) {
 		return -1;
 	}
 
-	if(pinModes[npin] != SYS) {
+	if(pinModes[pin] != SYS) {
 		fprintf(stderr, "radxa->waitForInterrupt: Trying to read from pin %d, but it's not configured as interrupt\n", pin);
 		return -1;
 	}
 
-	if(sysFds[npin] == -1) {
+	if(sysFds[pin] == -1) {
 		fprintf(stderr, "radxa->waitForInterrupt: GPIO %d not set as interrupt\n", pin);
 		return -1;
 	}
 
-	polls.fd = sysFds[npin];
+	polls.fd = sysFds[pin];
 	polls.events = POLLPRI;
 
 	x = poll(&polls, 1, ms);
 
-	(void)read(sysFds[npin], &c, 1);
-	lseek(sysFds[npin], 0, SEEK_SET);
+	(void)read(sysFds[pin], &c, 1);
+	lseek(sysFds[pin], 0, SEEK_SET);
 
 	return x;
 }
@@ -575,13 +568,13 @@ static int radxaSetup(void)	{
 }
 
 static int radxaDigitalRead(int pin) {
-    unsigned int data;
-	int npin = pin-PIN_BASE, i = 0, match = 0;
-	struct rockchip_pin_bank *bank = pin_to_bank(npin);
-	int offset = npin - bank->pin_base;
+	unsigned int data;
+	int i = 0, match = 0;
+	struct rockchip_pin_bank *bank = pin_to_bank(pin);
+	int offset = pin - bank->pin_base;
 
-	if(npin < 0) {
-		fprintf(stderr, "radxa->digitalRead: Invalid pin number %d (160 >= pin <= 287)\n", pin);
+	if(pin < 0 || pin > 35) {
+		fprintf(stderr, "radxa->digitalRead: Invalid pin number %d (0 >= pin <= 35)\n", pin);
 		return -1;
 	}
 
@@ -601,7 +594,7 @@ static int radxaDigitalRead(int pin) {
 		return -1;
 	}
 
-	if(pinModes[npin] != INPUT && pinModes[npin] != SYS) {
+	if(pinModes[pin] != INPUT && pinModes[pin] != SYS) {
 		fprintf(stderr, "radxa->digitalRead: Trying to write to pin %d, but it's not configured as input\n", pin);
 		return -1;
 	}
@@ -614,13 +607,13 @@ static int radxaDigitalRead(int pin) {
 
 static int radxaDigitalWrite(int pin, int value) {
 	unsigned int data;
-	int npin = pin-PIN_BASE, i = 0, match = 0;
-	struct rockchip_pin_bank *bank = pin_to_bank(npin);
+	int i = 0, match = 0;
+	struct rockchip_pin_bank *bank = pin_to_bank(pin);
 	void *reg = bank->reg_mapped_base + GPIO_SWPORT_DR;
-	int offset = npin - bank->pin_base;
+	int offset = pin - bank->pin_base;
 
-	if(npin < 0) {
-		fprintf(stderr, "radxa->digitalWrite: Invalid pin number %d (160 >= pin <= 287)\n", pin);
+	if(pin < 0 || pin > 35) {
+		fprintf(stderr, "radxa->digitalWrite: Invalid pin number %d (0 >= pin <= 35)\n", pin);
 		return -1;
 	}
 
@@ -636,7 +629,7 @@ static int radxaDigitalWrite(int pin, int value) {
 		return -1;
 	}
 
-	if(pinModes[npin] != OUTPUT) {
+	if(pinModes[pin] != OUTPUT) {
 		fprintf(stderr, "radxa->digitalWrite: Trying to write to pin %d, but it's not configured as output\n", pin);
 		return -1;
 	}
@@ -652,12 +645,12 @@ static int radxaDigitalWrite(int pin, int value) {
 }
 
 static int radxaPinMode(int pin, int mode) {
-	int ret, offset, npin = pin-PIN_BASE, i = 0, match = 0;
-	struct rockchip_pin_bank *bank = pin_to_bank(npin);
+	int ret, offset, i = 0, match = 0;
+	struct rockchip_pin_bank *bank = pin_to_bank(pin);
 	unsigned int data;
 
-	if(npin < 0) {
-		fprintf(stderr, "radxa->pinMode: Invalid pin number %d (160 >= pin <= 287)\n", pin);
+	if(pin < 0 || pin > 35) {
+		fprintf(stderr, "radxa->pinMode: Invalid pin number %d (0 >= pin <= 35)\n", pin);
 		return -1;
 	}
 
@@ -677,9 +670,9 @@ static int radxaPinMode(int pin, int mode) {
 		return -1;
 	}
 
-	pinModes[npin] = mode;
+	pinModes[pin] = mode;
 
-	ret = rockchip_gpio_set_mux(npin, RK_FUNC_GPIO);
+	ret = rockchip_gpio_set_mux(pin, RK_FUNC_GPIO);
 	if(ret < 0) {
 		return ret;
 	}
@@ -687,7 +680,7 @@ static int radxaPinMode(int pin, int mode) {
 	data = readl(bank->reg_mapped_base + GPIO_SWPORT_DDR);
 
 	/* set bit to 1 for output, 0 for input */
-	offset = npin - bank->pin_base;
+	offset = pin - bank->pin_base;
 	if(mode != INPUT) {
 		data |= BIT(offset);
 	} else {
@@ -706,15 +699,15 @@ static int radxaGC(void) {
 
 	for(i=0;i<NUM_PINS;i++) {
 		if(pinModes[i] == OUTPUT) {
-			pinMode(i+PIN_BASE, INPUT);
+			pinMode(i, INPUT);
 		} else if(pinModes[i] == SYS) {
-			sprintf(path, "/sys/class/gpio/gpio%d/value", i+PIN_BASE);
+			sprintf(path, "/sys/class/gpio/gpio%d/value", i);
 			if((fd = open(path, O_RDWR)) > 0) {
 				if((f = fopen("/sys/class/gpio/unexport", "w")) == NULL) {
 					fprintf(stderr, "radxa->gc: Unable to open GPIO unexport interface: %s\n", strerror(errno));
 				}
 
-				fprintf(f, "%d\n", i+PIN_BASE);
+				fprintf(f, "%d\n", i);
 				fclose(f);
 				close(fd);
 			}
