@@ -27,6 +27,7 @@
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
+#include <time.h>
 #include <sys/wait.h>
 
 #include "wiringX.h"

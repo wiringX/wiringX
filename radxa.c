@@ -193,7 +193,7 @@ static int pinToGPIO[NUM_PINS+1] = {
 	45, 28, 42, 30, 43, 44, 5, 29, 57, 56,
 	90, 91, 89, 88, 8, 2, 126, 47, 39, 36, 38, 37,
 	12, 14, 15
-}
+};
 
 static int validGPIO[NUM_PINS+1] = {
 	0, 1, 2, // 3,
@@ -324,7 +324,7 @@ static int radxaISR(int pin, int mode) {
 	}
 
 	for(i=0;i<NUM_PINS;i++) {
-		if(onboardLEDs[i] == gpioToPin[pin]) {
+		if(onboardLEDs[i] == pinToGPIO[pin]) {
 			fprintf(stderr, "radxa->isr: The onboard LEDs cannot be used as interrupts\n");
 			return -1;
 		}
@@ -352,7 +352,7 @@ static int radxaISR(int pin, int mode) {
 		return -1;
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d/value", gpioToPin[pin]);
+	sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]);
 
 	if((fd = open(path, O_RDWR)) < 0) {
 		if((f = fopen("/sys/class/gpio/export", "w")) == NULL) {
@@ -360,11 +360,11 @@ static int radxaISR(int pin, int mode) {
 			exit(0);
 		}
 
-		fprintf(f, "%d\n", gpioToPin[pin]);
+		fprintf(f, "%d\n", pinToGPIO[pin]);
 		fclose(f);
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d/direction", gpioToPin[pin]);
+	sprintf(path, "/sys/class/gpio/gpio%d/direction", pinToGPIO[pin]);
 	if((f = fopen(path, "w")) == NULL) {
 		fprintf(stderr, "radxa->isr: Unable to open GPIO direction interface for pin %d: %s\n", pin, strerror(errno));
 		return -1;
@@ -373,7 +373,7 @@ static int radxaISR(int pin, int mode) {
 	fprintf(f, "in\n");
 	fclose(f);
 
-	sprintf(path, "/sys/class/gpio/gpio%d/edge", gpioToPin[pin]);
+	sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGPIO[pin]);
 	if((f = fopen(path, "w")) == NULL) {
 		fprintf(stderr, "radxa->isr: Unable to open GPIO edge interface for pin %d: %s\n", pin, strerror(errno));
 		return -1;
@@ -412,14 +412,14 @@ static int radxaISR(int pin, int mode) {
 		return -1;	
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d/value", gpioToPin[pin]);
+	sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]);
 	if((sysFds[pin] = open(path, O_RDONLY)) < 0) {
 		fprintf(stderr, "radxa->isr: Unable to open GPIO value interface: %s\n", strerror(errno));
 		return -1;
 	}
 	changeOwner(path);
 
-	sprintf(path, "/sys/class/gpio/gpio%d/edge", gpioToPin[pin]);
+	sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGPIO[pin]);
 	changeOwner(path);
 
 	ioctl(fd, FIONREAD, &count);
@@ -442,7 +442,7 @@ static int radxaWaitForInterrupt(int pin, int ms) {
 	}
 
 	for(i=0;i<NUM_PINS;i++) {
-		if(onboardLEDs[i] == gpioToPin[pin]) {
+		if(onboardLEDs[i] == pinToGPIO[pin]) {
 			fprintf(stderr, "radxa->waitForInterrupt: The onboard LEDs cannot be used as interrupts\n");
 			return -1;
 		}
@@ -577,8 +577,8 @@ static int radxaSetup(void)	{
 static int radxaDigitalRead(int pin) {
 	unsigned int data;
 	int i = 0, match = 0;
-	struct rockchip_pin_bank *bank = pin_to_bank(gpioToPin[pin]);
-	int offset = gpioToPin[pin] - bank->pin_base;
+	struct rockchip_pin_bank *bank = pin_to_bank(pinToGPIO[pin]);
+	int offset = pinToGPIO[pin] - bank->pin_base;
 
 	if(pin < 0 || pin > 35) {
 		fprintf(stderr, "radxa->digitalRead: Invalid pin number %d (0 >= pin <= 35)\n", pin);
@@ -586,7 +586,7 @@ static int radxaDigitalRead(int pin) {
 	}
 
 	for(i=0;i<NUM_PINS;i++) {
-		if(onboardLEDs[i] == gpioToPin[pin]) {
+		if(onboardLEDs[i] == pinToGPIO[pin]) {
 			fprintf(stderr, "radxa->digitalRead: The onboard LEDs cannot be used as input\n");
 			return -1;
 		}
@@ -615,9 +615,9 @@ static int radxaDigitalRead(int pin) {
 static int radxaDigitalWrite(int pin, int value) {
 	unsigned int data;
 	int i = 0, match = 0;
-	struct rockchip_pin_bank *bank = pin_to_bank(gpioToPin[pin]);
+	struct rockchip_pin_bank *bank = pin_to_bank(pinToGPIO[pin]);
 	void *reg = bank->reg_mapped_base + GPIO_SWPORT_DR;
-	int offset = gpioToPin[pin] - bank->pin_base;
+	int offset = pinToGPIO[pin] - bank->pin_base;
 
 	if(pin < 0 || pin > 35) {
 		fprintf(stderr, "radxa->digitalWrite: Invalid pin number %d (0 >= pin <= 35)\n", pin);
@@ -662,7 +662,7 @@ static int radxaPinMode(int pin, int mode) {
 	}
 
 	for(i=0;i<NUM_PINS;i++) {
-		if(onboardLEDs[i] == gpioToPin[pin] && mode == INPUT) {
+		if(onboardLEDs[i] == pinToGPIO[pin] && mode == INPUT) {
 			fprintf(stderr, "radxa->pinMode: The onboard LEDs cannot be used as input\n");
 			return -1;
 		}
@@ -679,7 +679,7 @@ static int radxaPinMode(int pin, int mode) {
 
 	pinModes[pin] = mode;
 
-	ret = rockchip_gpio_set_mux(gpioToPin[pin], RK_FUNC_GPIO);
+	ret = rockchip_gpio_set_mux(pinToGPIO[pin], RK_FUNC_GPIO);
 	if(ret < 0) {
 		return ret;
 	}
@@ -687,7 +687,7 @@ static int radxaPinMode(int pin, int mode) {
 	data = readl(bank->reg_mapped_base + GPIO_SWPORT_DDR);
 
 	/* set bit to 1 for output, 0 for input */
-	offset = gpioToPin[pin] - bank->pin_base;
+	offset = pinToGPIO[pin] - bank->pin_base;
 	if(mode != INPUT) {
 		data |= BIT(offset);
 	} else {
@@ -708,13 +708,13 @@ static int radxaGC(void) {
 		if(pinModes[i] == OUTPUT) {
 			pinMode(i, INPUT);
 		} else if(pinModes[i] == SYS) {
-			sprintf(path, "/sys/class/gpio/gpio%d/value", gpioToPin[i]);
+			sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[i]);
 			if((fd = open(path, O_RDWR)) > 0) {
 				if((f = fopen("/sys/class/gpio/unexport", "w")) == NULL) {
 					fprintf(stderr, "radxa->gc: Unable to open GPIO unexport interface: %s\n", strerror(errno));
 				}
 
-				fprintf(f, "%d\n", gpioToPin[i]);
+				fprintf(f, "%d\n", pinToGPIO[i]);
 				fclose(f);
 				close(fd);
 			}
