@@ -67,6 +67,7 @@ typedef struct devices_t {
 struct devices_t *devices;
 
 void device_register(struct devices_t **device, const char *name);
+void delayMicroseconds(unsigned int howLong);
 void pinMode(int pin, int mode);
 void digitalWrite(int pin, int value);
 int digitalRead(int pin);
