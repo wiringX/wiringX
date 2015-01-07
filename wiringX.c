@@ -71,6 +71,7 @@ void delayMicroseconds(unsigned int howLong) {
 
 void device_register(struct devices_t **dev, const char *name) {
 	*dev = malloc(sizeof(struct devices_t));
+	(*dev)->name = NULL;
 	(*dev)->pinMode = NULL;
 	(*dev)->digitalWrite = NULL;
 	(*dev)->digitalRead = NULL;
