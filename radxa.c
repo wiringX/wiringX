@@ -348,7 +348,7 @@ static int radxaISR(int pin, int mode) {
 	} else if(mode == INT_EDGE_BOTH) {
 		sMode = "both";
 	} else {
-		fprintf(stderr, "radxa->isr: Invalid mode. Should be INT_EDGE_RISING or INT_EDGE_FALLING\n");
+		fprintf(stderr, "radxa->isr: Invalid mode. Should be INT_EDGE_RISING, INT_EDGE_FALLING, or INT_EDGE_BOTH\n");
 		return -1;
 	}
 
@@ -388,7 +388,7 @@ static int radxaISR(int pin, int mode) {
 	} else if(strcasecmp(sMode, "both") == 0) {
 		fprintf(f, "both\n");
 	} else {
-		fprintf(stderr, "radxa->isr: Invalid mode: %s. Should be rising, falling or both\n", sMode);
+		fprintf(stderr, "radxa->isr: Could not set interrupt mode to %s\n", sMode);
 		return -1;
 	}
 	fclose(f);
