@@ -55,6 +55,13 @@ static int pinToGPIOAddr[NUM_PINS] = {
 	0x9c000 // GPIO 7 --> GPIO1_DR
 };
 
+int hummingboardValidGPIO(int pin) {
+	if(pin >= 0 && pin <= 7) {
+		return 0;
+	}
+	return -1;	
+}
+
 static int changeOwner(char *file) {
 	uid_t uid = getuid();
 	uid_t gid = getgid();
@@ -93,6 +100,12 @@ static int hummingboardPinMode(int pin, int direction) {
 		fprintf(stderr, "hummingboard->pinMode: Please run wiringXSetup before running pinMode\n");
 		exit(0);
 	}
+
+	if(hummingboardValidGPIO(pin) != 0) {
+		fprintf(stderr, "hummingboard->pinMode: Invalid pin number %d (0 >= pin <= 7)\n", pin);
+		return -1;
+	}
+
 	*((unsigned long *)(gpio + GPIO_MUX_REG + pinToMuxAddr[pin] )) = FUNC_GPIO;
 	*((unsigned long *)(gpio + GPIO_MUX_CTRL + pinToMuxAddr[pin] )) = 0xF;
 
@@ -143,6 +156,11 @@ static int hummingboardDigitalWrite(int pin, int value) {
 		return -1;
 	}
 
+	if(hummingboardValidGPIO(pin) != 0) {
+		fprintf(stderr, "hummingboard->digitalWrite: Invalid pin number %d (0 >= pin <= 7)\n", pin);
+		return -1;
+	}
+
 	if(value) {
 		*((unsigned long *)(gpio + pinToGPIOAddr[pin])) = *((unsigned long *)(gpio + pinToGPIOAddr[pin])) | (1 << pinToBin[pin]);
 	} else {
@@ -155,6 +173,11 @@ static int hummingboardDigitalWrite(int pin, int value) {
 static int hummingboardDigitalRead(int pin) {
 	if(pinModes[pin] != INPUT && pinModes[pin] != SYS) {
 		fprintf(stderr, "hummingboard->digitalRead: Trying to write to pin %d, but it's not configured as input\n", pin);
+		return -1;
+	}
+
+	if(hummingboardValidGPIO(pin) != 0) {
+		fprintf(stderr, "hummingboard->digitalRead: Invalid pin number %d (0 >= pin <= 7)\n", pin);
 		return -1;
 	}
 
@@ -171,6 +194,11 @@ static int hummingboardISR(int pin, int mode) {
 	char path[35], c, line[120];
 	pinModes[pin] = SYS;
 	FILE *f = NULL;
+
+	if(hummingboardValidGPIO(pin) != 0) {
+		fprintf(stderr, "hummingboard->isr: Invalid pin number %d (0 >= pin <= 7)\n", pin);
+		return -1;
+	}
 
 	if(mode == INT_EDGE_FALLING) {
 		sMode = "falling" ;
@@ -365,13 +393,6 @@ static int hummingboardI2CSetup(int devId) {
 	}
 
 	return fd;
-}
-
-int hummingboardValidGPIO(int pin) {
-	if(pin >= 0 && pin <= 8) {
-		return 0;
-	}
-	return 1;	
 }
 
 void hummingboardInit(void) {

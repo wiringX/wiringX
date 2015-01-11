@@ -357,7 +357,7 @@ static int radxaISR(int pin, int mode) {
 	if((fd = open(path, O_RDWR)) < 0) {
 		if((f = fopen("/sys/class/gpio/export", "w")) == NULL) {
 			fprintf(stderr, "radxa->isr: Unable to open GPIO export interface\n");
-			exit(0);
+			return -1;
 		}
 
 		fprintf(f, "%d\n", pinToGPIO[pin]);

@@ -47,7 +47,7 @@
 
 #define	PI_GPIO_MASK	(0xFFFFFFC0)
 
-#define NUM_PINS		17
+#define NUM_PINS		32
 
 #define	PI_MODEL_UNKNOWN	0
 #define	PI_MODEL_A		1
@@ -519,9 +519,9 @@ static int raspberrypiPinMode(int pin, int mode) {
 
 	if((pin & PI_GPIO_MASK) == 0) {
 		pinModes[pin] = mode;
-		if(wiringPiMode == WPI_MODE_PINS)
+		if(wiringPiMode == WPI_MODE_PINS) {
 			pin = pinToGpio[pin];
-		else if(wiringPiMode == WPI_MODE_PHYS)
+		} else if(wiringPiMode == WPI_MODE_PHYS)
 			pin = physToGpio[pin];
 		else if(wiringPiMode != WPI_MODE_GPIO)
 			return -1;
@@ -563,7 +563,7 @@ static int raspberrypiISR(int pin, int mode) {
 	if(fd < 0) {
 		if((f = fopen("/sys/class/gpio/export", "w")) == NULL) {
 			fprintf(stderr, "raspberrypi->isr: Unable to open GPIO export interface: %s\n", strerror(errno));
-			exit(0);
+			return -1;
 		}
 
 		fprintf(f, "%d\n", pinToGpio[pin]);
@@ -749,7 +749,7 @@ int raspberrypiValidGPIO(int pin) {
 	if(pinToGpio[pin] != -1) {
 		return 0;
 	}
-	return 1;	
+	return -1;
 }
 
 void raspberrypiInit(void) {
