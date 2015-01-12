@@ -35,7 +35,9 @@
 #include <sys/ioctl.h>
 
 #include "wiringX.h"
-#include "i2c-dev.h"
+#ifndef __FreeBSD__
+	#include "i2c-dev.h"
+#endif
 #include "bananapi.h"
 
 #define	WPI_MODE_PINS		 0
@@ -58,7 +60,7 @@
 
 #define	NUM_PINS		32
 
-static int wiringPiMode = WPI_MODE_UNINITIALISED;
+static int wiringBPMode = WPI_MODE_UNINITIALISED;
 
 static volatile uint32_t *gpio;
 
@@ -129,12 +131,12 @@ static int pinToBCMR3[64] = {
 	53, 52,
 	259, -1,
 	-1, 270,
-	266, 269,//9
+	266, 269, //9
 	268, 267,
 	-1, -1,
 	224, 225,
 	-1, 275,
-	226, -1,//19
+	226, -1, //19
 	-1,
 	274, 273, 244, 245, 272, -1, 274, 229, 277, 227, // ... 31
 	276, -1,-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // ... 47
@@ -192,10 +194,10 @@ static int changeOwner(char *file) {
 
 	if(chown(file, uid, gid) != 0) {
 		if(errno == ENOENT)	{
-			fprintf(stderr, "bananapi->changeOwner: File not present: %s\n", file);
+			wiringXLog(LOG_ERR, "bananapi->changeOwner: File not present: %s", file);
 			return -1;
 		} else {
-			fprintf(stderr, "bananapi->changeOwner: Unable to change ownership of %s: %s\n", file, strerror (errno));
+			wiringXLog(LOG_ERR, "bananapi->changeOwner: Unable to change ownership of %s: %s", file, strerror (errno));
 			return -1;
 		}
 	}
@@ -211,7 +213,7 @@ static int bananapiISR(int pin, int mode) {
 	FILE *f = NULL;
 
 	if(bananapiValidGPIO(pin) != 0) {
-		fprintf(stderr, "bananapi->isr: Invalid pin number %d\n", pin);
+		wiringXLog(LOG_ERR, "bananapi->isr: Invalid pin number %d", pin);
 		return -1;
 	}
 
@@ -224,19 +226,19 @@ static int bananapiISR(int pin, int mode) {
 	} else if(mode == INT_EDGE_BOTH) {
 		sMode = "both";
 	} else {
-		fprintf(stderr, "bananapi->isr: Invalid mode. Should be INT_EDGE_BOTH, INT_EDGE_RISING, or INT_EDGE_FALLING\n");
+		wiringXLog(LOG_ERR, "bananapi->isr: Invalid mode. Should be INT_EDGE_BOTH, INT_EDGE_RISING, or INT_EDGE_FALLING");
 		return -1;
 	}
 
 	if(edge[npin] == -1) {
-		// Not supported
+		wiringXLog(LOG_ERR, "bananapi->isr: Invalid GPIO: %d", pin);
 		return -1;
 	}	
 	
 	sprintf(path, "/sys/class/gpio/gpio%d/value", npin);
 	if((fd = open(path, O_RDWR)) < 0) {
 		if((f = fopen("/sys/class/gpio/export", "w")) == NULL) {
-			fprintf(stderr, "bananapi->isr: Unable to open GPIO export interface\n");
+			wiringXLog(LOG_ERR, "bananapi->isr: Unable to open GPIO export interface");
 			return -1;
 		}
 
@@ -246,7 +248,7 @@ static int bananapiISR(int pin, int mode) {
 
 	sprintf(path, "/sys/class/gpio/gpio%d/direction", npin);
 	if((f = fopen(path, "w")) == NULL) {
-		fprintf(stderr, "bananapi->isr: Unable to open GPIO direction interface for pin %d: %s\n", pin, strerror(errno));
+		wiringXLog(LOG_ERR, "bananapi->isr: Unable to open GPIO direction interface for pin %d: %s", pin, strerror(errno));
 		return -1;
 	}
 
@@ -255,7 +257,7 @@ static int bananapiISR(int pin, int mode) {
 
 	sprintf(path, "/sys/class/gpio/gpio%d/edge", npin);
 	if((f = fopen(path, "w")) == NULL) {
-		fprintf(stderr, "bananapi->isr: Unable to open GPIO edge interface for pin %d: %s\n", pin, strerror(errno));
+		wiringXLog(LOG_ERR, "bananapi->isr: Unable to open GPIO edge interface for pin %d: %s", pin, strerror(errno));
 		return -1;
 	}
 
@@ -268,13 +270,13 @@ static int bananapiISR(int pin, int mode) {
 	} else if(strcasecmp (sMode, "both") == 0) {
 		fprintf(f, "both\n");
 	} else {
-		fprintf(stderr, "bananapi->isr: Invalid mode: %s. Should be rising, falling or both\n", sMode);
+		wiringXLog(LOG_ERR, "bananapi->isr: Invalid mode: %s. Should be rising, falling or both", sMode);
 		return -1;
 	}
 	fclose(f);
 
 	if((f = fopen(path, "r")) == NULL) {
-		fprintf(stderr, "bananapi->isr: Unable to open GPIO edge interface for pin %d: %s\n", pin, strerror(errno));
+		wiringXLog(LOG_ERR, "bananapi->isr: Unable to open GPIO edge interface for pin %d: %s", pin, strerror(errno));
 		return -1;
 	}
 
@@ -287,13 +289,13 @@ static int bananapiISR(int pin, int mode) {
 	fclose(f);
 
 	if(match == 0) {
-		fprintf(stderr, "bananapi->isr: Failed to set interrupt edge to %s\n", sMode);
+		wiringXLog(LOG_ERR, "bananapi->isr: Failed to set interrupt edge to %s", sMode);
 		return -1;	
 	}
 
 	sprintf(path, "/sys/class/gpio/gpio%d/value", npin);
 	if((sysFds[pin] = open(path, O_RDONLY)) < 0) {
-		fprintf(stderr, "bananapi->isr: Unable to open GPIO value interface: %s\n", strerror(errno));
+		wiringXLog(LOG_ERR, "bananapi->isr: Unable to open GPIO value interface: %s", strerror(errno));
 		return -1;
 	}
 	changeOwner(path);
@@ -316,17 +318,17 @@ static int bananapiWaitForInterrupt(int pin, int ms) {
 	struct pollfd polls;
 
 	if(bananapiValidGPIO(pin) != 0) {
-		fprintf(stderr, "bananapi->waitForInterrupt: Invalid pin number %d\n", pin);
+		wiringXLog(LOG_ERR, "bananapi->waitForInterrupt: Invalid pin number %d", pin);
 		return -1;
 	}
 
 	if(pinModes[pin] != SYS) {
-		fprintf(stderr, "bananapi->waitForInterrupt: Trying to read from pin %d, but it's not configured as interrupt\n", pin);
+		wiringXLog(LOG_ERR, "bananapi->waitForInterrupt: Trying to read from pin %d, but it's not configured as interrupt", pin);
 		return -1;
 	}
 
 	if(sysFds[pin] == -1) {
-		fprintf(stderr, "bananapi->waitForInterrupt: GPIO %d not set as interrupt\n", pin);
+		wiringXLog(LOG_ERR, "bananapi->waitForInterrupt: GPIO %d not set as interrupt", pin);
 		return -1;
 	}
 
@@ -334,6 +336,11 @@ static int bananapiWaitForInterrupt(int pin, int ms) {
 	polls.events = POLLPRI;
 
 	x = poll(&polls, 1, ms);
+
+	/* Don't react to signals */
+	if(x == -1 && errno == EINTR) {
+		x = 0;
+	}
 
 	(void)read(sysFds[pin], &c, 1);
 	lseek(sysFds[pin], 0, SEEK_SET);
@@ -347,7 +354,7 @@ static int piBoardRev(void) {
 	char *d;
 
 	if((cpuFd = fopen("/proc/cpuinfo", "r")) == NULL) {
-		fprintf(stderr, "bananapi->identify: Unable open /proc/cpuinfo\n");
+		wiringXLog(LOG_ERR, "bananapi->identify: Unable open /proc/cpuinfo");
 		return -1;
 	}
 
@@ -360,7 +367,7 @@ static int piBoardRev(void) {
 	fclose(cpuFd);
 
 	if(strncmp(line, "Hardware", 8) != 0) {
-		fprintf(stderr, "bananapi->identify: /proc/cpuinfo has no hardware line\n");
+		wiringXLog(LOG_ERR, "bananapi->identify: /proc/cpuinfo has no hardware line");
 		return -1;
 	}
 
@@ -384,8 +391,8 @@ static int setup(void)	{
 		physToGpio = physToGpioR3;
 	}
 
-	if((fd = open("/dev/mem", O_RDWR | O_SYNC | O_CLOEXEC) ) < 0) {
-		fprintf(stderr, "bananapi->setup: Unable to open /dev/mem\n");
+	if((fd = open("/dev/mem", O_RDWR | O_SYNC | O_CLOEXEC)) < 0) {
+		wiringXLog(LOG_ERR, "bananapi->setup: Unable to open /dev/mem");
 		return -1;
 	}
 
@@ -393,12 +400,12 @@ static int setup(void)	{
 		gpio = (uint32_t *)mmap(0, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, GPIO_BASE_BP);
 
 		if((int32_t)gpio == -1) {
-			fprintf(stderr, "bananapi->setup: mmap (GPIO) failed\n");
+			wiringXLog(LOG_ERR, "bananapi->setup: mmap (GPIO) failed");
 			return -1;
 		}
 	}
 
-	wiringPiMode = WPI_MODE_PINS;
+	wiringBPMode = WPI_MODE_PINS;
 
 	return 0;
 }
@@ -408,16 +415,16 @@ static int bananapiDigitalRead(int pin) {
 	int bank = 0, i = 0;
 
 	if(bananapiValidGPIO(pin) != 0) {
-		fprintf(stderr, "bananapi->digitalRead: Invalid pin number %d\n", pin);
+		wiringXLog(LOG_ERR, "bananapi->digitalRead: Invalid pin number %d", pin);
 		return -1;
 	}
 
 	if((pin & PI_GPIO_MASK) == 0) {
-		if(wiringPiMode == WPI_MODE_PINS)
+		if(wiringBPMode == WPI_MODE_PINS)
 			pin = pinToGpioR3[pin];
-		else if (wiringPiMode == WPI_MODE_PHYS)
+		else if (wiringBPMode == WPI_MODE_PHYS)
 			pin = physToGpioR3[pin];
-		else if(wiringPiMode == WPI_MODE_GPIO)
+		else if(wiringBPMode == WPI_MODE_GPIO)
 			pin = pinToBCMR3[pin]; //need map A20 to bcm
 		else
 			return -1;
@@ -429,7 +436,7 @@ static int bananapiDigitalRead(int pin) {
 
 		if(BP_PIN_MASK[bank][i] != -1) {
 			if(pinModes[pin] != INPUT && pinModes[pin] != SYS) {
-				fprintf(stderr, "bananapi->digitalRead: Trying to write to pin %d, but it's not configured as input\n", pin);
+				wiringXLog(LOG_ERR, "bananapi->digitalRead: Trying to write to pin %d, but it's not configured as input", pin);
 				return -1;
 			}
 
@@ -447,16 +454,16 @@ static int bananapiDigitalWrite(int pin, int value) {
 	int bank = 0, i = 0;
 
 	if(bananapiValidGPIO(pin) != 0) {
-		fprintf(stderr, "bananapi->digitalWrite: Invalid pin number %d\n", pin);
+		wiringXLog(LOG_ERR, "bananapi->digitalWrite: Invalid pin number %d", pin);
 		return -1;
 	}
 	
 	if((pin & PI_GPIO_MASK) == 0) {
-		if(wiringPiMode == WPI_MODE_PINS)
+		if(wiringBPMode == WPI_MODE_PINS)
 			pin = pinToGpioR3[pin];
-		else if (wiringPiMode == WPI_MODE_PHYS)
+		else if (wiringBPMode == WPI_MODE_PHYS)
 			pin = physToGpioR3[pin];
-		else if(wiringPiMode == WPI_MODE_GPIO)
+		else if(wiringBPMode == WPI_MODE_GPIO)
 			pin = pinToBCMR3[pin]; //need map A20 to bcm
 		else
 			return -1;
@@ -468,7 +475,7 @@ static int bananapiDigitalWrite(int pin, int value) {
 
 		if(BP_PIN_MASK[bank][i] != -1) {
 			if(pinModes[pin] != OUTPUT) {
-				fprintf(stderr, "bananapi->digitalWrite: Trying to write to pin %d, but it's not configured as output\n", pin);
+				wiringXLog(LOG_ERR, "bananapi->digitalWrite: Trying to write to pin %d, but it's not configured as output", pin);
 				return -1;
 			}
 			regval = readl(phyaddr);
@@ -492,17 +499,17 @@ static int bananapiPinMode(int pin, int mode) {
 	int bank = 0, i = 0, offset = 0;
 
 	if(bananapiValidGPIO(pin) != 0) {
-		fprintf(stderr, "bananapi->pinMode: Invalid pin number %d\n", pin);
+		wiringXLog(LOG_ERR, "bananapi->pinMode: Invalid pin number %d", pin);
 		return -1;
 	}
 
 	if((pin & PI_GPIO_MASK) == 0) {
 
-		if(wiringPiMode == WPI_MODE_PINS)
+		if(wiringBPMode == WPI_MODE_PINS)
 			pin = pinToGpioR3[pin] ;
-		else if(wiringPiMode == WPI_MODE_PHYS)
+		else if(wiringBPMode == WPI_MODE_PHYS)
 			pin = physToGpioR3[pin] ;
-		else if(wiringPiMode == WPI_MODE_GPIO)
+		else if(wiringBPMode == WPI_MODE_GPIO)
 			pin = pinToBCMR3[pin]; //need map A20 to bcm
 		else
 			return -1;
@@ -547,7 +554,7 @@ static int bananapiGC(void) {
 			sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGpioR2[i]);
 			if((fd = open(path, O_RDWR)) > 0) {
 				if((f = fopen("/sys/class/gpio/unexport", "w")) == NULL) {
-					fprintf(stderr, "bananapi->gc: Unable to open GPIO unexport interface: %s\n", strerror(errno));
+					wiringXLog(LOG_ERR, "bananapi->gc: Unable to open GPIO unexport interface: %s", strerror(errno));
 				}
 
 				fprintf(f, "%d\n", pinToGpioR2[i]);
@@ -566,6 +573,7 @@ static int bananapiGC(void) {
 	return 0;
 }
 
+#ifndef __FreeBSD__
 static int bananapiI2CRead(int fd) {
 	return i2c_smbus_read_byte(fd);
 }
@@ -595,7 +603,7 @@ static int bananapiI2CSetup(int devId) {
 	const char *device = NULL;
 
 	if((rev = piBoardRev()) < 0) {
-		fprintf(stderr, "bananapi->I2CSetup: Unable to determine Pi board revision\n");
+		wiringXLog(LOG_ERR, "bananapi->I2CSetup: Unable to determine Pi board revision");
 		return -1;
 	}
 
@@ -605,23 +613,24 @@ static int bananapiI2CSetup(int devId) {
 		device = "/dev/i2c-3";
 
 	if((fd = open(device, O_RDWR)) < 0) {
-		fprintf(stderr, "bananapi->I2CSetup: Unable to open %s\n", device);
+		wiringXLog(LOG_ERR, "bananapi->I2CSetup: Unable to open %s", device);
 		return -1;
 	}
 
 	if(ioctl(fd, I2C_SLAVE, devId) < 0) {
-		fprintf(stderr, "bananapi->I2CSetup: Unable to set %s to slave mode\n", device);
+		wiringXLog(LOG_ERR, "bananapi->I2CSetup: Unable to set %s to slave mode", device);
 		return -1;
 	}
 
 	return fd;
 }
+#endif
 
 void bananapiInit(void) {
 
 	memset(pinModes, -1, 278);
 
-	device_register(&bananapi, "bananapi");
+	platform_register(&bananapi, "bananapi");
 	bananapi->setup=&setup;
 	bananapi->pinMode=&bananapiPinMode;
 	bananapi->digitalWrite=&bananapiDigitalWrite;
@@ -629,6 +638,7 @@ void bananapiInit(void) {
 	bananapi->identify=&piBoardRev;
 	bananapi->isr=&bananapiISR;
 	bananapi->waitForInterrupt=&bananapiWaitForInterrupt;
+#ifndef __FreeBSD__	
 	bananapi->I2CRead=&bananapiI2CRead;
 	bananapi->I2CReadReg8=&bananapiI2CReadReg8;
 	bananapi->I2CReadReg16=&bananapiI2CReadReg16;
@@ -636,6 +646,7 @@ void bananapiInit(void) {
 	bananapi->I2CWriteReg8=&bananapiI2CWriteReg8;
 	bananapi->I2CWriteReg16=&bananapiI2CWriteReg16;
 	bananapi->I2CSetup=&bananapiI2CSetup;
+#endif
 	bananapi->gc=&bananapiGC;
 	bananapi->validGPIO=&bananapiValidGPIO;
 }

@@ -18,6 +18,9 @@
 #ifndef _WIRING_X_H_
 #define _WIRING_X_H_
 
+#include <errno.h>
+#include <syslog.h>
+
 #ifndef	TRUE
 #define	TRUE	(1==1)
 #define	FALSE	(1==2)
@@ -43,7 +46,9 @@
 #define	PWM_MODE_MS			0
 #define	PWM_MODE_BAL		1
 
-typedef struct devices_t {
+void (*wiringXLog)(int prio, const char *format_str, ...);
+
+typedef struct platform_t {
 	char *name;
 	int (*setup)(void);
 	int (*pinMode)(int pin, int mode);
@@ -61,12 +66,12 @@ typedef struct devices_t {
 	int (*I2CSetup)(int devId);
 	int (*validGPIO)(int gpio);
 	int (*gc)(void);
-	struct devices_t *next;
-} devices_t;
+	struct platform_t *next;
+} platform_t;
 
-struct devices_t *devices;
+struct platform_t *platforms;
 
-void device_register(struct devices_t **device, const char *name);
+void platform_register(struct platform_t **platform, const char *name);
 void delayMicroseconds(unsigned int howLong);
 void pinMode(int pin, int mode);
 void digitalWrite(int pin, int value);

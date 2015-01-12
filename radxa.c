@@ -300,10 +300,10 @@ static int changeOwner(char *file) {
 
 	if(chown(file, uid, gid) != 0) {
 		if(errno == ENOENT)	{
-			fprintf(stderr, "radxa->changeOwner: File not present: %s\n", file);
+			wiringXLog(LOG_ERR, "radxa->changeOwner: File not present: %s", file);
 			return -1;
 		} else {
-			fprintf(stderr, "radxa->changeOwner: Unable to change ownership of %s: %s\n", file, strerror (errno));
+			wiringXLog(LOG_ERR, "radxa->changeOwner: Unable to change ownership of %s: %s", file, strerror (errno));
 			return -1;
 		}
 	}
@@ -319,13 +319,13 @@ static int radxaISR(int pin, int mode) {
 	FILE *f = NULL;
 
 	if(pin < 0 || pin > 35) {
-		fprintf(stderr, "radxa->isr: Invalid pin number %d (0 >= pin <= 35)\n", pin);
+		wiringXLog(LOG_ERR, "radxa->isr: Invalid pin number %d (0 >= pin <= 35)", pin);
 		return -1;
 	}
 
 	for(i=0;i<NUM_PINS;i++) {
 		if(onboardLEDs[i] == pinToGPIO[pin]) {
-			fprintf(stderr, "radxa->isr: The onboard LEDs cannot be used as interrupts\n");
+			wiringXLog(LOG_ERR, "radxa->isr: The onboard LEDs cannot be used as interrupts");
 			return -1;
 		}
 		if(validGPIO[i] == pin) {
@@ -335,7 +335,7 @@ static int radxaISR(int pin, int mode) {
 	}
 
 	if(match == 0) {
-		fprintf(stderr, "radxa->isr: Invalid pin number %d\n", pin);
+		wiringXLog(LOG_ERR, "radxa->isr: Invalid pin number %d", pin);
 		return -1;
 	}
 
@@ -348,7 +348,7 @@ static int radxaISR(int pin, int mode) {
 	} else if(mode == INT_EDGE_BOTH) {
 		sMode = "both";
 	} else {
-		fprintf(stderr, "radxa->isr: Invalid mode. Should be INT_EDGE_RISING, INT_EDGE_FALLING, or INT_EDGE_BOTH\n");
+		wiringXLog(LOG_ERR, "radxa->isr: Invalid mode. Should be INT_EDGE_RISING, INT_EDGE_FALLING, or INT_EDGE_BOTH");
 		return -1;
 	}
 
@@ -356,17 +356,17 @@ static int radxaISR(int pin, int mode) {
 
 	if((fd = open(path, O_RDWR)) < 0) {
 		if((f = fopen("/sys/class/gpio/export", "w")) == NULL) {
-			fprintf(stderr, "radxa->isr: Unable to open GPIO export interface\n");
+			wiringXLog(LOG_ERR, "radxa->isr: Unable to open GPIO export interface");
 			return -1;
 		}
 
-		fprintf(f, "%d\n", pinToGPIO[pin]);
+		fprintf(f, "%d", pinToGPIO[pin]);
 		fclose(f);
 	}
 
 	sprintf(path, "/sys/class/gpio/gpio%d/direction", pinToGPIO[pin]);
 	if((f = fopen(path, "w")) == NULL) {
-		fprintf(stderr, "radxa->isr: Unable to open GPIO direction interface for pin %d: %s\n", pin, strerror(errno));
+		wiringXLog(LOG_ERR, "radxa->isr: Unable to open GPIO direction interface for pin %d: %s", pin, strerror(errno));
 		return -1;
 	}
 
@@ -375,7 +375,7 @@ static int radxaISR(int pin, int mode) {
 
 	sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGPIO[pin]);
 	if((f = fopen(path, "w")) == NULL) {
-		fprintf(stderr, "radxa->isr: Unable to open GPIO edge interface for pin %d: %s\n", pin, strerror(errno));
+		wiringXLog(LOG_ERR, "radxa->isr: Unable to open GPIO edge interface for pin %d: %s", pin, strerror(errno));
 		return -1;
 	}
 
@@ -388,13 +388,13 @@ static int radxaISR(int pin, int mode) {
 	} else if(strcasecmp(sMode, "both") == 0) {
 		fprintf(f, "both\n");
 	} else {
-		fprintf(stderr, "radxa->isr: Could not set interrupt mode to %s\n", sMode);
+		wiringXLog(LOG_ERR, "radxa->isr: Could not set interrupt mode to %s", sMode);
 		return -1;
 	}
 	fclose(f);
 
 	if((f = fopen(path, "r")) == NULL) {
-		fprintf(stderr, "radxa->isr: Unable to open GPIO edge interface for pin %d: %s\n", pin, strerror(errno));
+		wiringXLog(LOG_ERR, "radxa->isr: Unable to open GPIO edge interface for pin %d: %s", pin, strerror(errno));
 		return -1;
 	}
 
@@ -408,13 +408,13 @@ static int radxaISR(int pin, int mode) {
 	fclose(f);
 
 	if(match == 0) {
-		fprintf(stderr, "radxa->isr: Failed to set interrupt edge to %s\n", sMode);
+		wiringXLog(LOG_ERR, "radxa->isr: Failed to set interrupt edge to %s", sMode);
 		return -1;	
 	}
 
 	sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]);
 	if((sysFds[pin] = open(path, O_RDONLY)) < 0) {
-		fprintf(stderr, "radxa->isr: Unable to open GPIO value interface: %s\n", strerror(errno));
+		wiringXLog(LOG_ERR, "radxa->isr: Unable to open GPIO value interface: %s", strerror(errno));
 		return -1;
 	}
 	changeOwner(path);
@@ -437,13 +437,13 @@ static int radxaWaitForInterrupt(int pin, int ms) {
 	struct pollfd polls;
 
 	if(pin < 0 || pin > 35) {
-		fprintf(stderr, "radxa->waitForInterrupt: Invalid pin number %d (0 >= pin <= 35)\n", pin);
+		wiringXLog(LOG_ERR, "radxa->waitForInterrupt: Invalid pin number %d (0 >= pin <= 35)", pin);
 		return -1;
 	}
 
 	for(i=0;i<NUM_PINS;i++) {
 		if(onboardLEDs[i] == pinToGPIO[pin]) {
-			fprintf(stderr, "radxa->waitForInterrupt: The onboard LEDs cannot be used as interrupts\n");
+			wiringXLog(LOG_ERR, "radxa->waitForInterrupt: The onboard LEDs cannot be used as interrupts");
 			return -1;
 		}
 		if(validGPIO[i] == pin) {
@@ -453,17 +453,17 @@ static int radxaWaitForInterrupt(int pin, int ms) {
 	}
 
 	if(match == 0) {
-		fprintf(stderr, "radxa->waitForInterrupt: Invalid pin number %d\n", pin);
+		wiringXLog(LOG_ERR, "radxa->waitForInterrupt: Invalid pin number %d", pin);
 		return -1;
 	}
 
 	if(pinModes[pin] != SYS) {
-		fprintf(stderr, "radxa->waitForInterrupt: Trying to read from pin %d, but it's not configured as interrupt\n", pin);
+		wiringXLog(LOG_ERR, "radxa->waitForInterrupt: Trying to read from pin %d, but it's not configured as interrupt", pin);
 		return -1;
 	}
 
 	if(sysFds[pin] == -1) {
-		fprintf(stderr, "radxa->waitForInterrupt: GPIO %d not set as interrupt\n", pin);
+		wiringXLog(LOG_ERR, "radxa->waitForInterrupt: GPIO %d not set as interrupt", pin);
 		return -1;
 	}
 
@@ -471,6 +471,11 @@ static int radxaWaitForInterrupt(int pin, int ms) {
 	polls.events = POLLPRI;
 
 	x = poll(&polls, 1, ms);
+
+	/* Don't react to signals */
+	if(x == -1 && errno == EINTR) {
+		x = 0;
+	}
 
 	(void)read(sysFds[pin], &c, 1);
 	lseek(sysFds[pin], 0, SEEK_SET);
@@ -484,7 +489,7 @@ static int radxaBoardRev(void) {
 	char *d;
 
 	if((cpuFd = fopen("/proc/cpuinfo", "r")) == NULL) {
-		fprintf(stderr, "radxa->identify: Unable open /proc/cpuinfo");
+		wiringXLog(LOG_ERR, "radxa->identify: Unable open /proc/cpuinfo");
 		return -1;
 	}
 
@@ -497,7 +502,7 @@ static int radxaBoardRev(void) {
 	fclose(cpuFd);
 
 	if(strncmp(line, "Hardware", 8) != 0) {
-		fprintf(stderr, "radxa->identify: /proc/cpuinfo has no hardware line");
+		wiringXLog(LOG_ERR, "radxa->identify: /proc/cpuinfo has no hardware line");
 		return -1;
 	}
 
@@ -581,13 +586,13 @@ static int radxaDigitalRead(int pin) {
 	int offset = pinToGPIO[pin] - bank->pin_base;
 
 	if(pin < 0 || pin > 35) {
-		fprintf(stderr, "radxa->digitalRead: Invalid pin number %d (0 >= pin <= 35)\n", pin);
+		wiringXLog(LOG_ERR, "radxa->digitalRead: Invalid pin number %d (0 >= pin <= 35)", pin);
 		return -1;
 	}
 
 	for(i=0;i<NUM_PINS;i++) {
 		if(onboardLEDs[i] == pinToGPIO[pin]) {
-			fprintf(stderr, "radxa->digitalRead: The onboard LEDs cannot be used as input\n");
+			wiringXLog(LOG_ERR, "radxa->digitalRead: The onboard LEDs cannot be used as input");
 			return -1;
 		}
 		if(validGPIO[i] == pin) {
@@ -597,12 +602,12 @@ static int radxaDigitalRead(int pin) {
 	}
 
 	if(match == 0) {
-		fprintf(stderr, "radxa->digitalRead: Invalid pin number %d\n", pin);
+		wiringXLog(LOG_ERR, "radxa->digitalRead: Invalid pin number %d", pin);
 		return -1;
 	}
 
 	if(pinModes[pin] != INPUT && pinModes[pin] != SYS) {
-		fprintf(stderr, "radxa->digitalRead: Trying to write to pin %d, but it's not configured as input\n", pin);
+		wiringXLog(LOG_ERR, "radxa->digitalRead: Trying to write to pin %d, but it's not configured as input", pin);
 		return -1;
 	}
 
@@ -620,7 +625,7 @@ static int radxaDigitalWrite(int pin, int value) {
 	int offset = pinToGPIO[pin] - bank->pin_base;
 
 	if(pin < 0 || pin > 35) {
-		fprintf(stderr, "radxa->digitalWrite: Invalid pin number %d (0 >= pin <= 35)\n", pin);
+		wiringXLog(LOG_ERR, "radxa->digitalWrite: Invalid pin number %d (0 >= pin <= 35)", pin);
 		return -1;
 	}
 
@@ -632,12 +637,12 @@ static int radxaDigitalWrite(int pin, int value) {
 	}
 
 	if(match == 0) {
-		fprintf(stderr, "radxa->digitalWrite: Invalid pin number %d\n", pin);
+		wiringXLog(LOG_ERR, "radxa->digitalWrite: Invalid pin number %d", pin);
 		return -1;
 	}
 
 	if(pinModes[pin] != OUTPUT) {
-		fprintf(stderr, "radxa->digitalWrite: Trying to write to pin %d, but it's not configured as output\n", pin);
+		wiringXLog(LOG_ERR, "radxa->digitalWrite: Trying to write to pin %d, but it's not configured as output", pin);
 		return -1;
 	}
 
@@ -657,13 +662,13 @@ static int radxaPinMode(int pin, int mode) {
 	unsigned int data;
 
 	if(pin < 0 || pin > 35) {
-		fprintf(stderr, "radxa->pinMode: Invalid pin number %d (0 >= pin <= 35)\n", pin);
+		wiringXLog(LOG_ERR, "radxa->pinMode: Invalid pin number %d (0 >= pin <= 35)", pin);
 		return -1;
 	}
 
 	for(i=0;i<NUM_PINS;i++) {
 		if(onboardLEDs[i] == pinToGPIO[pin] && mode == INPUT) {
-			fprintf(stderr, "radxa->pinMode: The onboard LEDs cannot be used as input\n");
+			wiringXLog(LOG_ERR, "radxa->pinMode: The onboard LEDs cannot be used as input");
 			return -1;
 		}
 		if(validGPIO[i] == pin) {
@@ -673,7 +678,7 @@ static int radxaPinMode(int pin, int mode) {
 	}
 
 	if(match == 0) {
-		fprintf(stderr, "radxa->pinMode: Invalid pin number %d\n", pin);
+		wiringXLog(LOG_ERR, "radxa->pinMode: Invalid pin number %d", pin);
 		return -1;
 	}
 
@@ -711,10 +716,10 @@ static int radxaGC(void) {
 			sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[i]);
 			if((fd = open(path, O_RDWR)) > 0) {
 				if((f = fopen("/sys/class/gpio/unexport", "w")) == NULL) {
-					fprintf(stderr, "radxa->gc: Unable to open GPIO unexport interface: %s\n", strerror(errno));
+					wiringXLog(LOG_ERR, "radxa->gc: Unable to open GPIO unexport interface: %s", strerror(errno));
 				}
 
-				fprintf(f, "%d\n", pinToGPIO[i]);
+				fprintf(f, "%d", pinToGPIO[i]);
 				fclose(f);
 				close(fd);
 			}
@@ -756,17 +761,17 @@ static int radxaI2CSetup(int devId) {
 	const char *device = NULL;
 
 	if((rev = radxaBoardRev()) < 0) {
-		fprintf(stderr, "radxa->I2CSetup: Unable to determine Pi board revision\n");
+		wiringXLog(LOG_ERR, "radxa->I2CSetup: Unable to determine Pi board revision");
 		return -1;
 	}
 
 	if((fd = open("/dev/i2c-0", O_RDWR)) < 0) {
-		fprintf(stderr, "radxa->I2CSetup: Unable to open %s\n", device);
+		wiringXLog(LOG_ERR, "radxa->I2CSetup: Unable to open %s", device);
 		return -1;
 	}
 
 	if(ioctl(fd, I2C_SLAVE, devId) < 0) {
-		fprintf(stderr, "radxa->I2CSetup: Unable to set %s to slave mode\n", device);
+		wiringXLog(LOG_ERR, "radxa->I2CSetup: Unable to set %s to slave mode", device);
 		return -1;
 	}
 
@@ -787,7 +792,7 @@ void radxaInit(void) {
 
 	memset(pinModes, -1, 128);
 
-	device_register(&radxa, "radxa");
+	platform_register(&radxa, "radxa");
 	radxa->setup=&radxaSetup;
 	radxa->pinMode=&radxaPinMode;
 	radxa->digitalWrite=&radxaDigitalWrite;
