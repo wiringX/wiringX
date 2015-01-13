@@ -1,0 +1,18 @@
+Metadata-Version: 0.5
+Name: wiringX
+Version: 0.5
+Summary: Python port for wiringX
+Home-page: http://www.wiringx.org
+Author: CurlyMo
+Author-email: curlymoo1@gmail.com
+License: GPLv2
+Description: This package export all wiringX function to python.
+Platform: ARM
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Education
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python
+Classifier: Topic :: Home Automation
+Classifier: Topic :: Software Development :: Embedded Systems
