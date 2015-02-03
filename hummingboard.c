@@ -61,7 +61,7 @@ int hummingboardValidGPIO(int pin) {
 	if(pin >= 0 && pin <= 7) {
 		return 0;
 	}
-	return -1;	
+	return -1;
 }
 
 static int changeOwner(char *file) {
@@ -127,8 +127,12 @@ static int identify(void) {
 	FILE *cpuFd;
 	char line[120], revision[120], hardware[120], name[120];
 
+	memset(revision, '\0', 120);
+	memset(hardware, '\0', 120);
+	
 	if((cpuFd = fopen("/proc/cpuinfo", "r")) == NULL) {
 		wiringXLog(LOG_ERR, "hummingboard->identify: Unable open /proc/cpuinfo");
+		return -1;
 	}
 
 	while(fgets(line, 120, cpuFd) != NULL) {
@@ -141,6 +145,11 @@ static int identify(void) {
 	}
 
 	fclose(cpuFd);
+
+	if(strlen(hardware) == 0 || strlen(revision) == 0) {
+		wiringXLog(LOG_ERR, "hummingboard->identify: /proc/cpuinfo has no hardware and revision line");
+		return -1;
+	}
 
 	sscanf(hardware, "Hardware%*[ \t]:%*[ ]%[a-zA-Z0-9 ./()]%*[\n]", name);
 	if(strstr(name, "Freescale i.MX6") != NULL
@@ -280,9 +289,9 @@ static int hummingboardISR(int pin, int mode) {
 
 	if(match == 0) {
 		wiringXLog(LOG_ERR, "hummingboard->isr: Failed to set interrupt edge to %s", sMode);
-		return -1;	
+		return -1;
 	}
-	
+
 	sprintf(path, "/sys/class/gpio/gpio%d/value", pinsToGPIO[pin]);
 	if((sysFds[pin] = open(path, O_RDONLY)) < 0) {
 		wiringXLog(LOG_ERR, "hummingboard->isr: Unable to open GPIO value interface: %s", strerror(errno));
@@ -416,7 +425,7 @@ void hummingboardInit(void) {
 	hummingboard->identify=&identify;
 	hummingboard->isr=&hummingboardISR;
 	hummingboard->waitForInterrupt=&hummingboardWaitForInterrupt;
-#ifndef __FreeBSD__	
+#ifndef __FreeBSD__
 	hummingboard->I2CRead=&hummingboardI2CRead;
 	hummingboard->I2CReadReg8=&hummingboardI2CReadReg8;
 	hummingboard->I2CReadReg16=&hummingboardI2CReadReg16;

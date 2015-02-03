@@ -117,7 +117,9 @@ int wiringXGC(void) {
 		platforms = platforms->next;
 		free(tmp);
 	}
-	free(platforms);
+	if(platforms != NULL) {
+		free(platforms);
+	}
 
 	wiringXLog(LOG_DEBUG, "garbage collected wiringX library");
 	return i;
@@ -351,12 +353,11 @@ int wiringXSetup(void) {
 	if(wiringXLog == NULL) {
 		wiringXLog = _fprintf;
 	}
-#ifndef __FreeBSD__	
+#ifdef __arm__
 	if(setup == -2) {
 		hummingboardInit();
 		raspberrypiInit();
 		bananapiInit();
-		radxaInit();
 
 		int match = 0;
 		struct platform_t *tmp = platforms;
@@ -382,5 +383,5 @@ int wiringXSetup(void) {
 		return setup;
 	}
 #endif
-	return 0;
+	return -1;
 }
