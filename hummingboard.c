@@ -397,7 +397,7 @@ static int hummingboardI2CSetup(int devId) {
 	int fd = 0;
 	const char *device = NULL;
 
-	device = "/dev/i2c-0";
+	device = "/dev/i2c-2";
 
 	if((fd = open(device, O_RDWR)) < 0) {
 		wiringXLog(LOG_ERR, "hummingboard->I2CSetup: Unable to open %s: %s", device, strerror(errno));
