@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
+#include <linux/spi/spidev.h>
 #include <signal.h>
 #include <setjmp.h>
 
@@ -56,6 +57,15 @@ static int pinToGPIOAddr[NUM_PINS] = {
 	0xa4000, // GPIO 6 --> GPIO3_DR
 	0x9c000 // GPIO 7 --> GPIO1_DR
 };
+
+/* SPI Bus Parameters */
+static char       *spiDev0 = "/dev/spidev1.0" ;
+static char       *spiDev1 = "/dev/spidev1.1" ;
+static uint8_t     spiMode   = 0 ;
+static uint8_t     spiBPW    = 8 ;
+static uint16_t    spiDelay  = 0;
+static uint32_t    spiSpeeds [2] ;
+static int         spiFds [2] ;
 
 int hummingboardValidGPIO(int pin) {
 	if(pin >= 0 && pin <= 7) {
@@ -411,6 +421,55 @@ static int hummingboardI2CSetup(int devId) {
 
 	return fd;
 }
+
+int hummingboardSPIGetFd(int channel) {
+	return spiFds[channel & 1];
+}
+
+int hummingboardSPIDataRW(int channel, unsigned char *data, int len) {
+	struct spi_ioc_transfer spi;
+
+	channel &= 1;
+
+	spi.tx_buf = (unsigned long) data;
+	spi.rx_buf = (unsigned long) data;
+	spi.len = len;
+	spi.delay_usecs = spiDelay;
+	spi.speed_hz = spiSpeeds[channel];
+	spi.bits_per_word = spiBPW;
+
+	return ioctl(spiFds[channel], SPI_IOC_MESSAGE(1), &spi);
+}
+
+int hummingboardSPISetup(int channel, int speed) {
+	int fd;
+
+	channel &= 1;
+
+	if ((fd = open(channel == 0 ? spiDev0 : spiDev1, O_RDWR)) < 0)
+		return -1;
+
+	spiSpeeds[channel] = speed;
+	spiFds[channel] = fd;
+
+	if (ioctl(fd, SPI_IOC_WR_MODE, &spiMode) < 0)
+		return -1;
+	if (ioctl(fd, SPI_IOC_RD_MODE, &spiMode) < 0)
+		return -1;
+
+	if (ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &spiBPW) < 0)
+		return -1;
+	if (ioctl(fd, SPI_IOC_RD_BITS_PER_WORD, &spiBPW) < 0)
+		return -1;
+
+	if (ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed) < 0)
+		return -1;
+	if (ioctl(fd, SPI_IOC_RD_MAX_SPEED_HZ, &speed) < 0)
+		return -1;
+
+	return fd;
+}
+
 #endif
 
 void hummingboardInit(void) {
@@ -433,6 +492,9 @@ void hummingboardInit(void) {
 	hummingboard->I2CWriteReg8=&hummingboardI2CWriteReg8;
 	hummingboard->I2CWriteReg16=&hummingboardI2CWriteReg16;
 	hummingboard->I2CSetup=&hummingboardI2CSetup;
+	hummingboard->SPIGetFd=&hummingboardSPIGetFd;
+	hummingboard->SPIDataRW=&hummingboardSPIDataRW;
+	hummingboard->SPISetup=&hummingboardSPISetup;
 #endif
 	hummingboard->gc=&hummingboardGC;
 	hummingboard->validGPIO=&hummingboardValidGPIO;
