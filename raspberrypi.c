@@ -314,7 +314,7 @@ static int piBoardRev(void) {
 			boardRev = 2;
 		}
 		return boardRev;
-	} else if(strstr(name, "BCM2836") != NULL) {
+	} else if(strstr(name, "BCM2709") != NULL) {
 		piModel2 = 1;
 		boardRev = 2;
 		return boardRev;
