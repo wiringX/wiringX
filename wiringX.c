@@ -94,6 +94,8 @@ void platform_register(struct platform_t **dev, const char *name) {
 	(*dev)->I2CWrite = NULL;
 	(*dev)->I2CWriteReg8 = NULL;
 	(*dev)->I2CWriteReg16 = NULL;
+	(*dev)->SPIGetFd = NULL;
+	(*dev)->SPIDataRW = NULL;
 
 	if(!((*dev)->name = malloc(strlen(name)+1))) {
 		wiringXLog(LOG_ERR, "out of memory");

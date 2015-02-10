@@ -59,8 +59,6 @@ static int pinToGPIOAddr[NUM_PINS] = {
 };
 
 /* SPI Bus Parameters */
-static char       *spiDev0 = "/dev/spidev1.0" ;
-static char       *spiDev1 = "/dev/spidev1.1" ;
 static uint8_t     spiMode   = 0 ;
 static uint8_t     spiBPW    = 8 ;
 static uint16_t    spiDelay  = 0;
@@ -428,7 +426,7 @@ int hummingboardSPIGetFd(int channel) {
 
 int hummingboardSPIDataRW(int channel, unsigned char *data, int len) {
 	struct spi_ioc_transfer spi;
-
+	memset (&spi, 0, sizeof(spi));
 	channel &= 1;
 
 	spi.tx_buf = (unsigned long) data;
@@ -438,34 +436,62 @@ int hummingboardSPIDataRW(int channel, unsigned char *data, int len) {
 	spi.speed_hz = spiSpeeds[channel];
 	spi.bits_per_word = spiBPW;
 
-	return ioctl(spiFds[channel], SPI_IOC_MESSAGE(1), &spi);
+	if (ioctl(spiFds[channel], SPI_IOC_MESSAGE(1), &spi) < 0) {
+		wiringXLog(LOG_ERR, "hummingboard->SPIDataRW: Unable to read/write from channel %d: %s", channel, strerror(errno));
+		return -1;
+	}
+	return 0;
 }
 
 int hummingboardSPISetup(int channel, int speed) {
 	int fd;
+	const char *device = NULL;
 
 	channel &= 1;
 
-	if ((fd = open(channel == 0 ? spiDev0 : spiDev1, O_RDWR)) < 0)
+	if (channel == 0) {
+		device = "/dev/spidev1.0";
+	} else {
+		device = "/dev/spidev1.1";
+	}
+
+	if ((fd = open(device, O_RDWR)) < 0) {
+		wiringXLog(LOG_ERR, "hummingboard->SPISetup: Unable to open %s: %s", device, strerror(errno));
 		return -1;
+	}
 
 	spiSpeeds[channel] = speed;
 	spiFds[channel] = fd;
 
-	if (ioctl(fd, SPI_IOC_WR_MODE, &spiMode) < 0)
+	if (ioctl(fd, SPI_IOC_WR_MODE, &spiMode) < 0) {
+		wiringXLog(LOG_ERR, "hummingboard->SPISetup: Unable to set %s to write mode: %s", device, strerror(errno));
 		return -1;
-	if (ioctl(fd, SPI_IOC_RD_MODE, &spiMode) < 0)
-		return -1;
+	}
 
-	if (ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &spiBPW) < 0)
+	if (ioctl(fd, SPI_IOC_RD_MODE, &spiMode) < 0) {
+		wiringXLog(LOG_ERR, "hummingboard->SPISetup: Unable to set %s to read mode: %s", device, strerror(errno));
 		return -1;
-	if (ioctl(fd, SPI_IOC_RD_BITS_PER_WORD, &spiBPW) < 0)
-		return -1;
+	}
 
-	if (ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed) < 0)
+	if (ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &spiBPW) < 0) {
+		wiringXLog(LOG_ERR, "hummingboard->SPISetup: Unable to set %s write bits_per_word: %s", device, strerror(errno));
 		return -1;
-	if (ioctl(fd, SPI_IOC_RD_MAX_SPEED_HZ, &speed) < 0)
+	}
+
+	if (ioctl(fd, SPI_IOC_RD_BITS_PER_WORD, &spiBPW) < 0) {
+		wiringXLog(LOG_ERR, "hummingboard->SPISetup: Unable to set %s read bits_per_word: %s", device, strerror(errno));
 		return -1;
+	}
+
+	if (ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed) < 0) {
+		wiringXLog(LOG_ERR, "hummingboard->SPISetup: Unable to set %s write max_speed: %s", device, strerror(errno));
+		return -1;
+	}
+
+	if (ioctl(fd, SPI_IOC_RD_MAX_SPEED_HZ, &speed) < 0) {
+		wiringXLog(LOG_ERR, "hummingboard->SPISetup: Unable to set %s read max_speed: %s", device, strerror(errno));
+		return -1;
+	}
 
 	return fd;
 }
