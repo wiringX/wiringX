@@ -217,11 +217,11 @@ static int sysFds[64] = {
 };
 
 /* SPI Bus Parameters */
-static uint8_t     spiMode   = 0 ;
-static uint8_t     spiBPW    = 8 ;
+static uint8_t     spiMode   = 0;
+static uint8_t     spiBPW    = 8;
 static uint16_t    spiDelay  = 0;
-static uint32_t    spiSpeeds [2] ;
-static int         spiFds [2] ;
+static uint32_t    spiSpeeds[2];
+static int         spiFds[2];
 
 int raspberrypiValidGPIO(int pin) {
 	if(pinToGpio[pin] != -1) {
@@ -838,14 +838,14 @@ int raspberrypiSPIDataRW(int channel, unsigned char *data, int len) {
 	memset (&spi, 0, sizeof(spi)); // found at http://www.raspberrypi.org/forums/viewtopic.php?p=680665#p680665
 	channel &= 1;
 
-	spi.tx_buf = (unsigned long) data;
-	spi.rx_buf = (unsigned long) data;
+	spi.tx_buf = (unsigned long)data;
+	spi.rx_buf = (unsigned long)data;
 	spi.len = len;
 	spi.delay_usecs = spiDelay;
 	spi.speed_hz = spiSpeeds[channel];
 	spi.bits_per_word = spiBPW;
 
-	if (ioctl(spiFds[channel], SPI_IOC_MESSAGE(1), &spi) < 0) {
+	if(ioctl(spiFds[channel], SPI_IOC_MESSAGE(1), &spi) < 0) {
 		wiringXLog(LOG_ERR, "raspberrypi->SPIDataRW: Unable to read/write from channel %d: %s", channel, strerror(errno));
 		return -1;
 	}
@@ -858,13 +858,13 @@ int raspberrypiSPISetup(int channel, int speed) {
 
 	channel &= 1;
 
-	if (channel == 0) {
+	if(channel == 0) {
 		device = "/dev/spidev0.0";
 	} else {
 		device = "/dev/spidev0.1";
 	}
 
-	if ((fd = open(device, O_RDWR)) < 0) {
+	if((fd = open(device, O_RDWR)) < 0) {
 		wiringXLog(LOG_ERR, "raspberrypi->SPISetup: Unable to open device %s: %s", device, strerror(errno));
 		return -1;
 	}
@@ -872,32 +872,32 @@ int raspberrypiSPISetup(int channel, int speed) {
 	spiSpeeds[channel] = speed;
 	spiFds[channel] = fd;
 
-	if (ioctl(fd, SPI_IOC_WR_MODE, &spiMode) < 0) {
+	if(ioctl(fd, SPI_IOC_WR_MODE, &spiMode) < 0) {
 		wiringXLog(LOG_ERR, "raspberrypi->SPISetup: Unable to set write mode for device %s: %s", device, strerror(errno));
 		return -1;
 	}
 
-	if (ioctl(fd, SPI_IOC_RD_MODE, &spiMode) < 0) {
+	if(ioctl(fd, SPI_IOC_RD_MODE, &spiMode) < 0) {
 		wiringXLog(LOG_ERR, "raspberrypi->SPISetup: Unable to set read mode for device %s: %s", device, strerror(errno));
 		return -1;
 	}
 
-	if (ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &spiBPW) < 0) {
+	if(ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &spiBPW) < 0) {
 		wiringXLog(LOG_ERR, "raspberrypi->SPISetup: Unable to set write bits_per_word for device %s: %s", device, strerror(errno));
 		return -1;
 	}
 
-	if (ioctl(fd, SPI_IOC_RD_BITS_PER_WORD, &spiBPW) < 0) {
+	if(ioctl(fd, SPI_IOC_RD_BITS_PER_WORD, &spiBPW) < 0) {
 		wiringXLog(LOG_ERR, "raspberrypi->SPISetup: Unable to set read bits_per_word for device %s: %s", device, strerror(errno));
 		return -1;
 	}
 
-	if (ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed) < 0) {
+	if(ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed) < 0) {
 		wiringXLog(LOG_ERR, "raspberrypi->SPISetup: Unable to set write max_speed for device %s: %s", device, strerror(errno));
 		return -1;
 	}
 
-	if (ioctl(fd, SPI_IOC_RD_MAX_SPEED_HZ, &speed) < 0) {
+	if(ioctl(fd, SPI_IOC_RD_MAX_SPEED_HZ, &speed) < 0) {
 		wiringXLog(LOG_ERR, "raspberrypi->SPISetup: Unable to set read max_speed for device %s: %s", device, strerror(errno));
 		return -1;
 	}
