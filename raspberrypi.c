@@ -835,7 +835,7 @@ int raspberrypiSPIGetFd(int channel) {
 
 int raspberrypiSPIDataRW(int channel, unsigned char *data, int len) {
 	struct spi_ioc_transfer spi;
-	memset (&spi, 0, sizeof(spi)); // found at http://www.raspberrypi.org/forums/viewtopic.php?p=680665#p680665
+	memset(&spi, 0, sizeof(spi)); // found at http://www.raspberrypi.org/forums/viewtopic.php?p=680665#p680665
 	channel &= 1;
 
 	spi.tx_buf = (unsigned long)data;

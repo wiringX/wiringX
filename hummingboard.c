@@ -426,7 +426,7 @@ int hummingboardSPIGetFd(int channel) {
 
 int hummingboardSPIDataRW(int channel, unsigned char *data, int len) {
 	struct spi_ioc_transfer spi;
-	memset (&spi, 0, sizeof(spi));
+	memset(&spi, 0, sizeof(spi));
 	channel &= 1;
 
 	spi.tx_buf = (unsigned long)data;
