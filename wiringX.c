@@ -94,6 +94,8 @@ void platform_register(struct platform_t **dev, const char *name) {
 	(*dev)->I2CWrite = NULL;
 	(*dev)->I2CWriteReg8 = NULL;
 	(*dev)->I2CWriteReg16 = NULL;
+	(*dev)->SPIGetFd = NULL;
+	(*dev)->SPIDataRW = NULL;
 
 	if(!((*dev)->name = malloc(strlen(name)+1))) {
 		wiringXLog(LOG_ERR, "out of memory");
@@ -327,6 +329,60 @@ int wiringXI2CSetup(int devId) {
 			}
 		} else {
 			wiringXLog(LOG_ERR, "%s: platform doesn't support I2CSetup", platform->name);
+			wiringXGC();
+		}
+	}
+	return -1;
+}
+
+int wiringXSPIGetFd(int channel) {
+	if(platform != NULL) {
+		if(platform->SPIGetFd) {
+			int x = platform->SPIGetFd(channel);
+			if(x == -1) {
+				wiringXLog(LOG_ERR, "%s: error while calling SPIGetFd", platform->name);
+				wiringXGC();
+			} else {
+				return x;
+			}
+		} else {
+			wiringXLog(LOG_ERR, "%s: platform doesn't support SPIGetFd", platform->name);
+			wiringXGC();
+		}
+	}
+	return -1;
+}
+
+int wiringXSPIDataRW(int channel, unsigned char *data, int len) {
+	if(platform != NULL) {
+		if(platform->SPIDataRW) {
+			int x = platform->SPIDataRW(channel, data, len);
+			if(x == -1) {
+				wiringXLog(LOG_ERR, "%s: error while calling SPIDataRW", platform->name);
+				wiringXGC();
+			} else {
+				return x;
+			}
+		} else {
+			wiringXLog(LOG_ERR, "%s: platform doesn't support SPIDataRW", platform->name);
+			wiringXGC();
+		}
+	}
+	return -1;
+}
+
+int wiringXSPISetup(int channel, int speed) {
+	if(platform != NULL) {
+		if(platform->SPISetup) {
+			int x = platform->SPISetup(channel, speed);
+			if(x == -1) {
+				wiringXLog(LOG_ERR, "%s: error while calling SPISetup", platform->name);
+				wiringXGC();
+			} else {
+				return x;
+			}
+		} else {
+			wiringXLog(LOG_ERR, "%s: platform doesn't support SPISetup", platform->name);
 			wiringXGC();
 		}
 	}

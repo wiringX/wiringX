@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
+#include <linux/spi/spidev.h>
 #include <signal.h>
 #include <setjmp.h>
 
@@ -56,6 +57,13 @@ static int pinToGPIOAddr[NUM_PINS] = {
 	0xa4000, // GPIO 6 --> GPIO3_DR
 	0x9c000 // GPIO 7 --> GPIO1_DR
 };
+
+/* SPI Bus Parameters */
+static uint8_t     spiMode   = 0;
+static uint8_t     spiBPW    = 8;
+static uint16_t    spiDelay  = 0;
+static uint32_t    spiSpeeds[2];
+static int         spiFds[2];
 
 int hummingboardValidGPIO(int pin) {
 	if(pin >= 0 && pin <= 7) {
@@ -411,6 +419,83 @@ static int hummingboardI2CSetup(int devId) {
 
 	return fd;
 }
+
+int hummingboardSPIGetFd(int channel) {
+	return spiFds[channel & 1];
+}
+
+int hummingboardSPIDataRW(int channel, unsigned char *data, int len) {
+	struct spi_ioc_transfer spi;
+	memset(&spi, 0, sizeof(spi));
+	channel &= 1;
+
+	spi.tx_buf = (unsigned long)data;
+	spi.rx_buf = (unsigned long)data;
+	spi.len = len;
+	spi.delay_usecs = spiDelay;
+	spi.speed_hz = spiSpeeds[channel];
+	spi.bits_per_word = spiBPW;
+
+	if(ioctl(spiFds[channel], SPI_IOC_MESSAGE(1), &spi) < 0) {
+		wiringXLog(LOG_ERR, "hummingboard->SPIDataRW: Unable to read/write from channel %d: %s", channel, strerror(errno));
+		return -1;
+	}
+	return 0;
+}
+
+int hummingboardSPISetup(int channel, int speed) {
+	int fd;
+	const char *device = NULL;
+
+	channel &= 1;
+
+	if(channel == 0) {
+		device = "/dev/spidev1.0";
+	} else {
+		device = "/dev/spidev1.1";
+	}
+
+	if((fd = open(device, O_RDWR)) < 0) {
+		wiringXLog(LOG_ERR, "hummingboard->SPISetup: Unable to open %s: %s", device, strerror(errno));
+		return -1;
+	}
+
+	spiSpeeds[channel] = speed;
+	spiFds[channel] = fd;
+
+	if(ioctl(fd, SPI_IOC_WR_MODE, &spiMode) < 0) {
+		wiringXLog(LOG_ERR, "hummingboard->SPISetup: Unable to set %s to write mode: %s", device, strerror(errno));
+		return -1;
+	}
+
+	if(ioctl(fd, SPI_IOC_RD_MODE, &spiMode) < 0) {
+		wiringXLog(LOG_ERR, "hummingboard->SPISetup: Unable to set %s to read mode: %s", device, strerror(errno));
+		return -1;
+	}
+
+	if(ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &spiBPW) < 0) {
+		wiringXLog(LOG_ERR, "hummingboard->SPISetup: Unable to set %s write bits_per_word: %s", device, strerror(errno));
+		return -1;
+	}
+
+	if(ioctl(fd, SPI_IOC_RD_BITS_PER_WORD, &spiBPW) < 0) {
+		wiringXLog(LOG_ERR, "hummingboard->SPISetup: Unable to set %s read bits_per_word: %s", device, strerror(errno));
+		return -1;
+	}
+
+	if(ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed) < 0) {
+		wiringXLog(LOG_ERR, "hummingboard->SPISetup: Unable to set %s write max_speed: %s", device, strerror(errno));
+		return -1;
+	}
+
+	if(ioctl(fd, SPI_IOC_RD_MAX_SPEED_HZ, &speed) < 0) {
+		wiringXLog(LOG_ERR, "hummingboard->SPISetup: Unable to set %s read max_speed: %s", device, strerror(errno));
+		return -1;
+	}
+
+	return fd;
+}
+
 #endif
 
 void hummingboardInit(void) {
@@ -433,6 +518,9 @@ void hummingboardInit(void) {
 	hummingboard->I2CWriteReg8=&hummingboardI2CWriteReg8;
 	hummingboard->I2CWriteReg16=&hummingboardI2CWriteReg16;
 	hummingboard->I2CSetup=&hummingboardI2CSetup;
+	hummingboard->SPIGetFd=&hummingboardSPIGetFd;
+	hummingboard->SPIDataRW=&hummingboardSPIDataRW;
+	hummingboard->SPISetup=&hummingboardSPISetup;
 #endif
 	hummingboard->gc=&hummingboardGC;
 	hummingboard->validGPIO=&hummingboardValidGPIO;
