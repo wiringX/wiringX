@@ -259,11 +259,43 @@ static PyObject *py_setupI2C(PyObject *self, PyObject *args) {
 		return NULL;
 	}
 
-	if(wiringXI2CSetup(device) == 0) {
-		return Py_True;
-	} else {
-		return Py_False;
+	return Py_BuildValue("i", wiringXI2CSetup(device));
+}
+
+static PyObject *py_SPIGetFd(PyObject *self, PyObject *args) {
+	int channel = 0;
+
+	if(!PyArg_ParseTuple(args, "i", &channel)) {
+		return NULL;
 	}
+
+	return Py_BuildValue("i", wiringXSPIGetFd(channel));
+}
+
+static PyObject *py_SPIDataRW(PyObject *self, PyObject *args) {
+	int channel = 0, len = 0;
+	unsigned char *data;
+	if(!PyArg_ParseTuple(args, "is#i", &channel, &data, &len)) {
+		return NULL;
+	}
+
+	int result = wiringXSPIDataRW(channel, data, len);
+
+	if(result < 0) {
+		return NULL;
+	}
+
+	return Py_BuildValue("s", data);
+}
+
+static PyObject *py_setupSPI(PyObject *self, PyObject *args) {
+	int channel = 0, speed = 0;
+
+	if(!PyArg_ParseTuple(args, "ii", &channel, &speed)) {
+		return NULL;
+	}
+
+	return Py_BuildValue("i", wiringXSPISetup(channel, speed));
 }
 
 static PyObject *py_setup(void) {
@@ -302,6 +334,9 @@ static PyMethodDef module_methods[] = {
     {"I2CWrite", py_I2CWrite, METH_VARARGS, "Write to I2C device"},
     {"I2CWriteReg8", py_I2CWriteReg8, METH_VARARGS, "Write to I2C device"},
     {"I2CWriteReg16", py_I2CWriteReg16, METH_VARARGS, "Write to I2C device"},
+    {"SPIGetFd", py_SPIGetFd, METH_VARARGS, "Get SPI file descriptor for channel"},
+    {"SPIDataRW", py_SPIDataRW, METH_VARARGS, "Read / write SPI device"},
+    {"SPISetup", py_setupSPI, METH_VARARGS, "Setup SPI device"},
     /*{"ISR", py_wiringXISR, METH_VARARGS,	"Set pin to interrupt"},
     {"waitForInterrupt", py_waitForInterrupt, METH_VARARGS,	"Wait for interrupt"},*/
 		
