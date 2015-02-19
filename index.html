@@ -76,7 +76,7 @@
 						wiringPi ports into one single modular GPIO interface created in C. 
 						It auto-detects the platform it's running on and will automatically map 
 						the GPIO functions to the enable general GPIO interfacing such as 
-						reading, writing, handling interrupts and interfacing with I2C.</p>
+						reading, writing, handling interrupts and interfacing with I2C and SPI.</p>
 						
 						<p>This means that programs developed using wiringX will natively work
 						on the following platforms:
@@ -626,6 +626,9 @@
 							<li>wiringXI2CWriteReg8</li>
 							<li>wiringXI2CWriteReg16</li>
 							<li>wiringXI2CWriteReg16</li>
+							<li>wiringXSPISetup</li>
+							<li>wiringXSPIDataRW</li>
+							<li>wiringXSPIGetFd</li>
 						</ul>
 						Please notice that the waitForInterrupt implementation is a bit different but 
 						greatly improved version of the one used in wiringPi. wiringX also includes
