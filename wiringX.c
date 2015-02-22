@@ -446,6 +446,7 @@ int wiringXSetup(void) {
 		hummingboardInit();
 		raspberrypiInit();
 		bananapiInit();
+		ci20Init();
 
 		int match = 0;
 		struct platform_t *tmp = platforms;
