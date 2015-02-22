@@ -43,7 +43,6 @@
 #include "ci20.h"
 
 #define NUM_PINS		16
-#define PATH_MAX 64
 
 static int pinModes[NUM_PINS];
 
@@ -155,12 +154,12 @@ static int ci20DigitalRead(int pin) {
 	
 	snprintf(path, PATH_MAX, "/sys/class/gpio/gpio%d/value", pinToGpio[pin]);
 	fd = open(path, O_RDONLY);
-	if (fd == -1) {
+	if(fd == -1) {
 		wiringXLog(LOG_ERR, "ci20->digitalRead: Failed to open gpio value for reading", pin);
 		return -1;
 	}
 
-	if (read(fd, value_str, 1) == -1) {
+	if(read(fd, value_str, 1) == -1) {
 		wiringXLog(LOG_ERR, "ci20->digitalRead: Failed to read value", pin);
 		return -1;
 	}
@@ -191,12 +190,12 @@ static int ci20DigitalWrite(int pin, int value) {
 	
 	snprintf(path, PATH_MAX, "/sys/class/gpio/gpio%d/value", pinToGpio[pin]);
 	fd = open(path, O_WRONLY);
-	if (fd == -1) {
+	if(fd == -1) {
 		wiringXLog(LOG_ERR, "ci20->digitalWrite: Failed to open gpio value for writing", pin);
 		return(-1);
 	}
 
-	if ( write(fd, &s_values_str[LOW == value ? 0 : 1], 1) != 1 ) {
+	if( write(fd, &s_values_str[LOW == value ? 0 : 1], 1) != 1 ) {
 		wiringXLog(LOG_ERR, "ci20->digitalWrite: Failed to write value", pin);
 		return(-1);
 	}

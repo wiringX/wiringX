@@ -26,6 +26,14 @@
 #define	FALSE	(1==2)
 #endif
 
+#if !defined(PATH_MAX)
+    #if defined(_POSIX_PATH_MAX)
+        #define PATH_MAX _POSIX_PATH_MAX
+    #else
+        #define PATH_MAX 1024
+    #endif
+#endif
+
 #define HIGH		1
 #define LOW			0
 
