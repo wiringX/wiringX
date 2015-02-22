@@ -411,41 +411,12 @@ int wiringXSetup(void) {
 		wiringXLog = _fprintf;
 	}
 
-#ifdef __mips__
-        if(setup == -2) {
-                ci20Init();
-
-                int match = 0;
-                struct platform_t *tmp = platforms;
-                while(tmp) {
-                        if(tmp->identify() >= 0) {
-                                platform = tmp;
-                                match = 1;
-                                break;
-                        }
-                        tmp = tmp->next;
-                }
-
-                if(match == 0) {
-                        wiringXLog(LOG_ERR, "this hardware not supported");
-                        wiringXLog(LOG_ERR, "running on a %s", platform->name);
-                        wiringXGC();
-                        return -1;
-                } else {
-                        wiringXLog(LOG_DEBUG, "running on a %s", platform->name);
-                }
-                setup = platform->setup();
-                return setup;
-        } else {
-                return setup;
-        }
-#endif
-
-#ifdef __arm__
+#if defined(__arm__) || defined(__mips__)
 	if(setup == -2) {
 		hummingboardInit();
 		raspberrypiInit();
 		bananapiInit();
+		ci20Init();
 
 		int match = 0;
 		struct platform_t *tmp = platforms;
