@@ -42,29 +42,28 @@
 #endif
 #include "ci20.h"
 
-#define NUM_PINS		17
+#define NUM_PINS		16
 #define PATH_MAX 64
 
 static int pinModes[NUM_PINS];
 
 static int pinToGpio[NUM_PINS] = {
-		-1,  // wiringX # 0 - GPIO 0 doesn't exist
-		124, // wiringX # 1 - Physical pin  7 - GPIO 1
-		122, // wiringX # 2 - Physical pin  11 - GPIO 2
-		123, // wiringX # 3 - Physical pin  13 - GPIO 3
-		125, // wiringX # 4 - Physical pin  15 - GPIO 4
-		161, // wiringX # 5 - Physical pin  16 - GPIO 5
-		162, // wiringX # 6 - Physical pin  18 - GPIO 6
-		136, // wiringX # 7 - Physical pin  22 - GPIO 7
-		126, // wiringX # 8 - Physical pin  3 - IC21_SDA
-		127, // wiringX # 9 - Physical pin  5 - I2C1_SCK
-		144, // wiringX # 10 - Physical pin  24 - SSI1_CE0
-		146, // wiringX # 11 - Physical pin  26 - SSI1_CE1
-		145, // wiringX # 12 - Physical pin  19 - SSI0_DT
-		142, // wiringX # 13 - Physical pin  21 - SSI0_DR
-		143, // wiringX # 14 - Physical pin  23 - SSI0_CLK
-		163, // wiringX # 15 - Physical pin  8 - UART0_TXD
-		160, // wiringX # 16 - Physical pin  10 - UART0_RXD		
+		124, // wiringX # 0 - Physical pin  7 - GPIO 1
+		122, // wiringX # 1 - Physical pin  11 - GPIO 2
+		123, // wiringX # 2 - Physical pin  13 - GPIO 3
+		125, // wiringX # 3 - Physical pin  15 - GPIO 4
+		161, // wiringX # 4 - Physical pin  16 - GPIO 5
+		162, // wiringX # 5 - Physical pin  18 - GPIO 6
+		136, // wiringX # 6 - Physical pin  22 - GPIO 7
+		126, // wiringX # 7 - Physical pin  3 - IC21_SDA
+		127, // wiringX # 8 - Physical pin  5 - I2C1_SCK
+		144, // wiringX # 9 - Physical pin  24 - SSI1_CE0
+		146, // wiringX # 10 - Physical pin  26 - SSI1_CE1
+		145, // wiringX # 11 - Physical pin  19 - SSI0_DT
+		142, // wiringX # 12 - Physical pin  21 - SSI0_DR
+		143, // wiringX # 13 - Physical pin  23 - SSI0_CLK
+		163, // wiringX # 14 - Physical pin  8 - UART0_TXD
+		160, // wiringX # 15 - Physical pin  10 - UART0_RXD		
 };
 
 static int sysFds[64] = {
@@ -391,8 +390,6 @@ static int ci20GC(void) {
 	int i = 0, fd = 0;
 	char path[PATH_MAX];
 	FILE *f = NULL;
-
-	return 0;
 	
 	for(i=0;i<NUM_PINS;i++) {
 		sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGpio[i]);
