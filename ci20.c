@@ -42,17 +42,29 @@
 #endif
 #include "ci20.h"
 
-#define NUM_PINS		27
+#define NUM_PINS		17
 #define PATH_MAX 64
 
 static int pinModes[NUM_PINS];
 
-static int pinToGpio[27] = {
-	-1, // Pin 0 - doesn't exist
-	-1, -1, 126, -1, 127, -1, 124, 163,   	// Pins 1 to 8
-	-1, 160, 122, 133, 123, -1, 125, 161,  	// Pins 9 to 16
-	-1, 162, 145, -1, 142, 136, 143, 144, 	// Pins 10 to 24
-	-1, 146 								// Pins 25 and 26
+static int pinToGpio[NUM_PINS] = {
+		-1,  // wiringX # 0 - GPIO 0 doesn't exist
+		124, // wiringX # 1 - Physical pin  7 - GPIO 1
+		122, // wiringX # 2 - Physical pin  11 - GPIO 2
+		123, // wiringX # 3 - Physical pin  13 - GPIO 3
+		125, // wiringX # 4 - Physical pin  15 - GPIO 4
+		161, // wiringX # 5 - Physical pin  16 - GPIO 5
+		162, // wiringX # 6 - Physical pin  18 - GPIO 6
+		136, // wiringX # 7 - Physical pin  22 - GPIO 7
+		126, // wiringX # 8 - Physical pin  3 - IC21_SDA
+		127, // wiringX # 9 - Physical pin  5 - I2C1_SCK
+		144, // wiringX # 10 - Physical pin  24 - SSI1_CE0
+		146, // wiringX # 11 - Physical pin  26 - SSI1_CE1
+		145, // wiringX # 12 - Physical pin  19 - SSI0_DT
+		142, // wiringX # 13 - Physical pin  21 - SSI0_DR
+		143, // wiringX # 14 - Physical pin  23 - SSI0_CLK
+		163, // wiringX # 15 - Physical pin  8 - UART0_TXD
+		160, // wiringX # 16 - Physical pin  10 - UART0_RXD		
 };
 
 static int sysFds[64] = {
@@ -149,14 +161,14 @@ static int ci20DigitalRead(int pin) {
 		return -1;
 	}
 
-	if (read(fd, value_str, 3) == -1) {
+	if (read(fd, value_str, 1) == -1) {
 		wiringXLog(LOG_ERR, "ci20->digitalRead: Failed to read value", pin);
 		return -1;
 	}
 
 	close(fd);
-	
-	if((atoi(value_str) & (1 << (pin & 31))) != 0) {
+
+	if(value_str[0]!='0') {
 		return HIGH;
 	} else {
 		return LOW;
@@ -185,7 +197,8 @@ static int ci20DigitalWrite(int pin, int value) {
 		return(-1);
 	}
 
-	if (write(fd, &s_values_str[LOW == value ? 0 : 1], 1) != 1 ) {
+	int tmp = write(fd, &s_values_str[LOW == value ? 0 : 1], 1);
+	if ( tmp != 1 ) {
 		wiringXLog(LOG_ERR, "ci20->digitalWrite: Failed to write value", pin);
 		return(-1);
 	}
@@ -211,7 +224,7 @@ static int ci20PinMode(int pin, int mode) {
 
 	if(fd < 0) {
 		if((f = fopen("/sys/class/gpio/export", "w")) == NULL) {
-			wiringXLog(LOG_ERR, "ci20->isr: Unable to open GPIO export interface: %s", strerror(errno));
+			wiringXLog(LOG_ERR, "ci20->pinmode: Unable to open GPIO export interface: %s", strerror(errno));
 			return -1;
 		}
 
@@ -221,7 +234,7 @@ static int ci20PinMode(int pin, int mode) {
 
 	sprintf(path, "/sys/class/gpio/gpio%d/direction", pinToGpio[pin]);
 	if((f = fopen(path, "w")) == NULL) {
-		wiringXLog(LOG_ERR, "ci20->isr: Unable to open GPIO direction interface for pin %d: %s", pin, strerror(errno));
+		wiringXLog(LOG_ERR, "ci20->pinmode: Unable to open GPIO direction interface for pin %d: %s", pin, strerror(errno));
 		return -1;
 	}
 
@@ -380,6 +393,8 @@ static int ci20GC(void) {
 	char path[PATH_MAX];
 	FILE *f = NULL;
 
+	return 0;
+	
 	for(i=0;i<NUM_PINS;i++) {
 		sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGpio[i]);
 		if((fd = open(path, O_RDWR)) > 0) {
