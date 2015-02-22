@@ -197,8 +197,7 @@ static int ci20DigitalWrite(int pin, int value) {
 		return(-1);
 	}
 
-	int tmp = write(fd, &s_values_str[LOW == value ? 0 : 1], 1);
-	if ( tmp != 1 ) {
+	if ( write(fd, &s_values_str[LOW == value ? 0 : 1], 1) != 1 ) {
 		wiringXLog(LOG_ERR, "ci20->digitalWrite: Failed to write value", pin);
 		return(-1);
 	}
