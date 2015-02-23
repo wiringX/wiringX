@@ -171,12 +171,12 @@ static PyObject *py_validGPIO(PyObject *self, PyObject *args) {
 	}
 }
 
-static PyObject *py_gc(void) {
+static PyObject *py_gc(PyObject *self, PyObject *noarg) {
 	wiringXGC();
 	Py_RETURN_NONE;
 }
 
-static PyObject *py_platform(void) {
+static PyObject *py_platform(PyObject *self, PyObject *noarg) {
 	return Py_BuildValue("s", wiringXPlatform());
 }
 
@@ -274,18 +274,20 @@ static PyObject *py_SPIGetFd(PyObject *self, PyObject *args) {
 
 static PyObject *py_SPIDataRW(PyObject *self, PyObject *args) {
 	int channel = 0, len = 0;
-	unsigned char *data;
-	if(!PyArg_ParseTuple(args, "is#i", &channel, &data, &len)) {
+	Py_buffer data;
+	if(!PyArg_ParseTuple(args, "is*i", &channel, &data, &len)) {
 		return NULL;
 	}
 
-	int result = wiringXSPIDataRW(channel, data, len);
+	int result = wiringXSPIDataRW(channel, (unsigned char *)data.buf, len);
 
 	if(result < 0) {
 		return NULL;
 	}
 
-	return Py_BuildValue("s", data);
+	PyObject *out = Py_BuildValue("s", data.buf);
+	PyBuffer_Release(&data);
+	return out;
 }
 
 static PyObject *py_setupSPI(PyObject *self, PyObject *args) {
@@ -298,7 +300,7 @@ static PyObject *py_setupSPI(PyObject *self, PyObject *args) {
 	return Py_BuildValue("i", wiringXSPISetup(channel, speed));
 }
 
-static PyObject *py_setup(void) {
+static PyObject *py_setup(PyObject *self, PyObject *noarg) {
 	char name[8];
 	int pin = 0;
 
