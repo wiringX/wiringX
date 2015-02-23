@@ -29,12 +29,12 @@ fd = gpio.SPISetup(0, 250000)
 
 while True:
     # write 1 2 3 4 to the display
-    data = gpio.SPIDataRW(0, bytes([0x01,0x02,0x03,0x04]), 4)
+    data = gpio.SPIDataRW(0, bytearray([0x01,0x02,0x03,0x04]), 4)
 
     # set the decimal point to position 2
-    data = gpio.SPIDataRW(0, bytes([0x77,0x02]), 2)
+    data = gpio.SPIDataRW(0, bytearray([0x77,0x02]), 2)
     sleep(1)
 
     # clear the display
-    data = gpio.SPIDataRW(0, bytes([0x76]), 1)
+    data = gpio.SPIDataRW(0, bytearray([0x76]), 1)
     sleep(1)

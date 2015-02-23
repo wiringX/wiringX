@@ -20,3 +20,6 @@ Function list:
 - gpio.I2CWrite(fd, data)
 - gpio.I2CWriteReg8(fd, address, data)
 - gpio.I2CWriteReg16(fd, address, data)
+- gpio.SPISetup(channel, speed_in_hz)
+- gpio.SPIDataRW(channel, data, length)
+- gpio.SPIGetFd(channel)

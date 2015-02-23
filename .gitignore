@@ -1,0 +1,3 @@
+*.pyc
+python/__pycache__/
+python/build/
