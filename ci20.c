@@ -36,8 +36,6 @@
 #include <sys/ioctl.h>
 #include <linux/spi/spidev.h>
 
-//#include "jz4780gpio.h"
-
 #include "wiringX.h"
 #ifndef __FreeBSD__
 	#include "i2c-dev.h"
@@ -168,7 +166,7 @@ static int setup(void) {
 	gpio = (unsigned char *)mmap(0, PAGE_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, addr);
 
 	if((int32_t)gpio == -1) {
-		wiringXLog(LOG_ERR, "bananapi->setup: mmap (GPIO) failed");
+		wiringXLog(LOG_ERR, "ci20->setup: mmap (GPIO) failed");
 		return -1;
 	}
 
@@ -382,26 +380,31 @@ static int ci20WaitForInterrupt(int pin, int ms) {
 
 static int ci20GC(void) {
 	int i = 0, fd = 0;
-	char path[PATH_MAX];
+	char path[35];
 	FILE *f = NULL;
-	
-	for(i=0;i<NUM_PINS;i++) {
-		sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGpio[i]);
-		if((fd = open(path, O_RDWR)) > 0) {
-			if((f = fopen("/sys/class/gpio/unexport", "w")) == NULL) {
-				wiringXLog(LOG_ERR, "ci20->gc: Unable to open GPIO unexport interface: %s", strerror(errno));
-			}
 
-			fprintf(f, "%d\n", pinToGpio[i]);
-			fclose(f);
-			close(fd);
+	for(i=0;i<NUM_PINS;i++) {
+		if(pinModes[i] == OUTPUT) {
+			pinMode(i, INPUT);
+		} else if(pinModes[i] == SYS) {
+			sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGpio[i]);
+			if((fd = open(path, O_RDWR)) > 0) {
+				if((f = fopen("/sys/class/gpio/unexport", "w")) == NULL) {
+					wiringXLog(LOG_ERR, "ci20->gc: Unable to open GPIO unexport interface: %s", strerror(errno));
+				}
+
+				fprintf(f, "%d\n", pinToGpio[i]);
+				fclose(f);
+				close(fd);
+			}
 		}
-			
 		if(sysFds[i] > 0) {
 			close(sysFds[i]);
 		}
-			
-		pinMode(i, -1);
+	}
+
+	if(gpio) {
+		munmap((void *)gpio, PAGE_SIZE);
 	}
 	return 0;
 }
