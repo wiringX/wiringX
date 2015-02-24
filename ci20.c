@@ -36,13 +36,28 @@
 #include <sys/ioctl.h>
 #include <linux/spi/spidev.h>
 
+//#include "jz4780gpio.h"
+
 #include "wiringX.h"
 #ifndef __FreeBSD__
 	#include "i2c-dev.h"
 #endif
 #include "ci20.h"
 
-#define NUM_PINS		16
+#define NUM_PINS	16
+
+#define	GPIO_BASE	0x10010000
+#define PAGE_SIZE	0x1000
+#define PAGE_MASK 	(PAGE_SIZE - 1)
+
+#define PIN 	0x00 // PORT PIN Level Register
+#define INTC	0x18 // PORT Interrupt Clear Register
+#define MSKS	0x24 // PORT Interrupt Mask Set Register
+#define PAT1S	0x34 // PORT Pattern 1 Set Register
+#define PAT1C	0x38 // PORT Pattern 1 Clear Register
+#define PAT0	0x40 // PORT Pattern 0 Register
+#define PAT0S 	0x44 // PORT Pattern 0 Set Register
+#define PAT0C 	0x48 // PORT Pattern 0 Clear  Register
 
 static int pinModes[NUM_PINS];
 
@@ -78,6 +93,16 @@ static uint8_t     spiBPW    = 8;
 static uint16_t    spiDelay  = 0;
 static uint32_t    spiSpeeds[2];
 static int         spiFds[2];
+
+static volatile unsigned char *gpio;
+
+static unsigned int gpioReadl(unsigned int gpio_offset) {
+	return *(unsigned int *)(gpio + gpio_offset);
+}
+
+static void gpioWritel(unsigned int gpio_offset, unsigned int gpio_val) {
+	*(unsigned int *)(gpio + gpio_offset) = gpio_val;
+}
 
 int ci20ValidGPIO(int pin) {
 	if(pinToGpio[pin] != -1) {
@@ -133,114 +158,84 @@ static int identify(void) {
 }
 
 static int setup(void) {
+	int fd;
+
+	if((fd = open("/dev/mem", O_RDWR | O_SYNC )) < 0) {
+		wiringXLog(LOG_ERR, "ci20->setup: Unable to open /dev/mem");
+		return -1;
+	}
+	off_t addr = GPIO_BASE & ~PAGE_MASK;
+	gpio = (unsigned char *)mmap(0, PAGE_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, addr);
+
+	if((int32_t)gpio == -1) {
+		wiringXLog(LOG_ERR, "bananapi->setup: mmap (GPIO) failed");
+		return -1;
+	}
 
 	return 0;
 }
 
 static int ci20DigitalRead(int pin) {
-	char path[PATH_MAX];
-	char value_str[3];
-	int fd;
+	// p is the port number (0,1,2,3,4,5)
+	// o is the pin offset (0-31) inside the port
+	// n is the absolute number of a pin (0-127), regardless of the port
+	unsigned int p, o, n;
+	unsigned int r;
 
-	if(pinModes[pin] != INPUT && pinModes[pin] != SYS) {
-		wiringXLog(LOG_ERR, "ci20->digitalRead: Trying to write to pin %d, but it's not configured as input", pin);
-		return -1;
-	}
+	n = pinToGpio[pin];
+	p = (n) / 32;
+	o = (n) % 32;
 
-	if(ci20ValidGPIO(pin) != 0) {
-		wiringXLog(LOG_ERR, "ci20->digitalRead: Invalid pin number %d (0 >= pin <= 31)", pin);
-		return -1;
-	}
-	
-	snprintf(path, PATH_MAX, "/sys/class/gpio/gpio%d/value", pinToGpio[pin]);
-	fd = open(path, O_RDONLY);
-	if(fd == -1) {
-		wiringXLog(LOG_ERR, "ci20->digitalRead: Failed to open gpio value for reading", pin);
-		return -1;
-	}
+	r = gpioReadl((PIN + (p)*0x100));
 
-	if(read(fd, value_str, 1) == -1) {
-		wiringXLog(LOG_ERR, "ci20->digitalRead: Failed to read value", pin);
-		return -1;
-	}
-
-	close(fd);
-
-	if(value_str[0]!='0') {
-		return HIGH;
-	} else {
+	if(((r) & (1 << (o))) == 0) {	
 		return LOW;
+	} else {
+		return HIGH;
 	}
 }
 
 static int ci20DigitalWrite(int pin, int value) {
-	static const char s_values_str[] = "01";
-	char path[PATH_MAX];
-	int fd;
+	// p is the port number (0,1,2,3,4,5)
+	// o is the pin offset (0-31) inside the port
+	// n is the absolute number of a pin (0-127), regardless of the port
+	unsigned int p, o, n;
+
+	n = pinToGpio[pin];
+	p = (n) / 32;
+	o = (n) % 32;
 	
-	if(pinModes[pin] != OUTPUT) {
-		wiringXLog(LOG_ERR, "ci20->digitalWrite: Trying to write to pin %d, but it's not configured as output", pin);
-		return -1;
+	if(value==0) {
+		gpioWritel((PAT0C + (p)*0x100), (1 << (o)));	
+	} else {
+		gpioWritel((PAT0S + (p)*0x100), (1 << (o)));
 	}
-
-	if(ci20ValidGPIO(pin) != 0) {
-		wiringXLog(LOG_ERR, "ci20->digitalWrite: Invalid pin number %d (0 >= pin <= 31)", pin);
-		return -1;
-	}	
-	
-	snprintf(path, PATH_MAX, "/sys/class/gpio/gpio%d/value", pinToGpio[pin]);
-	fd = open(path, O_WRONLY);
-	if(fd == -1) {
-		wiringXLog(LOG_ERR, "ci20->digitalWrite: Failed to open gpio value for writing", pin);
-		return(-1);
-	}
-
-	if( write(fd, &s_values_str[LOW == value ? 0 : 1], 1) != 1 ) {
-		wiringXLog(LOG_ERR, "ci20->digitalWrite: Failed to write value", pin);
-		return(-1);
-	}
-
-	close(fd);
+		
 	return 0;
 }
 
 static int ci20PinMode(int pin, int mode) {
-	int fd = 0;
-	FILE *f = NULL;
-	char path[PATH_MAX];
+	// p is the port number (0,1,2,3,4,5)
+	// o is the pin offset (0-31) inside the port
+	// n is the absolute number of a pin (0-127), regardless of the port
+	unsigned int p, o, n;
 
-	if(ci20ValidGPIO(pin) != 0) {
-		wiringXLog(LOG_ERR, "ci20->pinMode: Invalid pin number %d (0 >= pin <= 31)", pin);
-		return -1;
-	}	
+	n = pinToGpio[pin];
+	p = (n) / 32;
+	o = (n) % 32;
 
+	if(mode==INPUT) {
+		gpioWritel((INTC + (p)*0x100), (1 << (o)));
+		gpioWritel((MSKS + (p)*0x100), (1 << (o)));
+		gpioWritel((PAT1S + (p)*0x100), (1 << (o)));
+		gpioWritel((PAT0C + (p)*0x100), (1 << (o)));
+	} else {
+		gpioWritel((INTC + (p)*0x100), (1 << (o)));
+		gpioWritel((MSKS + (p)*0x100), (1 << (o)));
+		gpioWritel((PAT1C + (p)*0x100), (1 << (o)));
+		gpioWritel((PAT0C + (p)*0x100), (1 << (o)));
+	}
 	pinModes[pin] = mode;
-	
-	sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGpio[pin]);
-	fd = open(path, O_RDWR);
-
-	if(fd < 0) {
-		if((f = fopen("/sys/class/gpio/export", "w")) == NULL) {
-			wiringXLog(LOG_ERR, "ci20->pinmode: Unable to open GPIO export interface: %s", strerror(errno));
-			return -1;
-		}
-
-		fprintf(f, "%d\n", pinToGpio[pin]);
-		fclose(f);
-	}
-
-	sprintf(path, "/sys/class/gpio/gpio%d/direction", pinToGpio[pin]);
-	if((f = fopen(path, "w")) == NULL) {
-		wiringXLog(LOG_ERR, "ci20->pinmode: Unable to open GPIO direction interface for pin %d: %s", pin, strerror(errno));
-		return -1;
-	}
-
-	if(mode == INPUT) {
-		fprintf(f, "in\n");
-	} else if(mode == OUTPUT) {
-		fprintf(f, "out\n");
-	}
-	fclose(f);
 	
 	return 0;
 }
