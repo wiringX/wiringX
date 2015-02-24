@@ -25,6 +25,12 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7l")
 	set(CMAKE_C_FLAGS "-Ofast -fPIC -mfloat-abi=hard -mfpu=vfp -march=armv7-a -ffast-math -Wfloat-equal -Wshadow -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Waggregate-return -Wswitch-default -Wswitch-enum -Wformat=2 -g -Wall -Wno-sign-conversion -Wunreachable-code -Wstrict-prototypes")
 endif()
 
+if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "^mips")
+	set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE armhf)
+	set(CMAKE_C_FLAGS "-Ofast -fPIC -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Waggregate-return -Wswitch-default -Wswitch-enum -Wformat=2 -g -Wall -Wno-sign-conversion -Wunreachable-code -Wstrict-prototypes")
+endif()
+
+
 # Start uninstaller generator
 function(WRITE_UNINSTALL_TARGET_SCRIPT)
     # Create uninstall target template file, if it doesn't exist...
