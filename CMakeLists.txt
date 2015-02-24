@@ -26,7 +26,7 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7l")
 endif()
 
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "^mips")
-	set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE armhf)
+	set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE mipsel)
 	set(CMAKE_C_FLAGS "-Ofast -fPIC -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Waggregate-return -Wswitch-default -Wswitch-enum -Wformat=2 -g -Wall -Wno-sign-conversion -Wunreachable-code -Wstrict-prototypes")
 endif()
 
