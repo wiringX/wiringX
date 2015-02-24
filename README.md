@@ -20,7 +20,8 @@ The supported devices are:
 - Raspberry Pi
 - Hummingboard
 - BananaPi
-- Radxa Rock
+- Radxa Rock 
+- MIPS CI20 Creator
 
 ###Donations
 
