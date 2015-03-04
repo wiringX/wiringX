@@ -21,16 +21,20 @@ New Modules
 - wiringXGC
 - wiringXPlatform
 3. Your module must pass the read, blink, and interrupt example tests.
-4. Your module must be able to discover it's own platform in whatever way. Must modules use /proc/cpuinfo for this.
+4. Your module must be able to discover it's own platform in whatever way. Most modules use /proc/cpuinfo for this.
 5. Add your new module to wiringX.c and wiringX.h.
-6. Add your new module to python/python.py
+6. Add your new module to the sources list in python/setup.py
 7. Add your new module to README.md
 8. Add the GPIO mapping of your new module in index.html on the gh-pages branch.
 
 Extending existing modules
 --------
 If you extend existing modules make sure to:
+
 1. Add the GPIO mapping of your new module in index.html on the gh-pages branch.
+2. Document new methods in index.html on the gh-pages branch
+3. Add new methods to README.md
+4. Add Python bindings in python/wiringX/wiringx.c and test for compatibiity with Python2 and Python3
 
 Pull Request Checklist
 ---------
