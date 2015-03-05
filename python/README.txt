@@ -2,6 +2,8 @@ This package export all wiringX function to python.
 
 Run "python setup.py install" to install.
 
+On Arch Linux ARM, install "python-wiringx-git" or "python2-wiringx-git" via Pacman
+
 To import:
    from wiringX import gpio
 
