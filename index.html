@@ -51,46 +51,56 @@
         </header>
 
         <section>
-            <h3><a class="anchor" href="#welcome-to-github-pages" id=
-            "welcome-to-github-pages"><span class=
+            <h3><a class="anchor" href="#introduction" id=
+            "introduction"><span class=
             "octicon octicon-link"></span></a>Introduction to wiringX</h3>
 
             <p>Ever wondered why with every new GPIO capable computer like the
             Banana Pi, Radxa, Hummingboard people are always asking: "Is there
             already a wiringPi port?" Gordon from wiringPi did a great job in
             porting common Arduino style GPIO function to the Raspberry Pi
-            GPIO, but no-one realized it would become to the standard
+            GPIO, but no-one realized it would become the standard
             C GPIO interface. Sadly, this lack of insight also introduces the
-            biggest lack of wiringPi: It wasn't created modular! This means
+            biggest issue with wiringPi: it wasn't created modular! This means
             that every port of wiringPi only supports the single computer it was
-						ported to! When creating multi-platform software, developers had
-						to due some great deal of dirty hacking to actually integrate the
-						different wiringPi ports.</p>
-						
-						<p>This is exactly were wiringX has jumped in.</p>
+            ported to! When creating multi-platform software, developers had
+            to do a great deal of dirty hacking to actually integrate the
+            different wiringPi ports.</p>
 
-            <h3><a class="anchor" href="#welcome-to-github-pages" id=
-            "welcome-to-github-pages"><span class=
+	    <p>This is exactly where wiringX has jumped in.</p>
+
+            <h3><a class="anchor" href="#what-is-wiringx" id=
+            "what-is-wiringx"><span class=
             "octicon octicon-link"></span></a>What is wiringX?</h3>						
-						<p>wiringX combines (and developed in case of the Hummingboard) all 
-						wiringPi ports into one single modular GPIO interface created in C. 
-						It auto-detects the platform it's running on and will automatically map 
-						the GPIO functions to the enable general GPIO interfacing such as 
-						reading, writing, handling interrupts and interfacing with I2C and SPI.</p>
-						
-						<p>This means that programs developed using wiringX will natively work
-						on the following platforms:
-						<ul>
-							<li>Raspberry Pi (1 and 2; model A, A+, B, and B+)</li>
-							<li>Banana Pi</li>
-							<li>Hummingboard</li>
-							<li>Radxa</li>
-						</ul>
-						wiringX has already been proven to work in <a href="http://www.pilight.org">pilight</a>, an open source domotica
-						solution.
+            <p>wiringX combines (and developed in case of the Hummingboard) all 
+            wiringPi ports into one single modular GPIO interface created in C. 
+            It auto-detects the platform it's running on and will automatically map 
+            the GPIO functions to the enable general GPIO interfacing such as 
+            reading, writing, handling interrupts and interfacing with I2C and SPI.</p>
 
-            <h3><a class="anchor" href="#designer-templates" id=
-            "designer-templates"><span class=
+            <p>This means that programs developed using wiringX will natively work
+            on the following platforms:
+            <ul>
+                <li>Raspberry Pi (1 and 2; model A, A+, B, and B+)</li>
+                <li>Banana Pi</li>
+                <li>Hummingboard</li>
+                <li>Radxa</li>
+           </ul>
+           wiringX has already been proven to work in <a href="http://www.pilight.org">pilight</a>, an open source domotica
+           solution.
+
+           <h3><a class="anchor" href="#get-wiringx" id="get-wiringx">
+           <span class="octicon octicon-link"></span></a>Get wiringX</h3>
+
+	   <p>Grab the source from the link on the left. Check the README on GitHub 
+	   for further instructions. Python bindings are now available in the python 
+	   folder, and must be installed separately. On Arch Linux ARM,
+	   you can install it directly from the repository, simply 
+	   <span class="code">pacman -S wiringx-git</span></p>
+           <p>Look in the examples folder to see how to use it.</p>
+
+            <h3><a class="anchor" href="#spread-the-word" id=
+            "spread-the-word"><span class=
             "octicon octicon-link"></span></a>Spread the word!</h3>
 
             <p>Instead of porting wiringPi, computer manufacturers should really start
@@ -98,8 +108,8 @@
 						we can make software that will natively work on all platforms. So as users: 
 						<strong>Spread the word!</strong></p>
 
-	          <h3><a class="anchor" href="#designer-templates" id=
-            "designer-templates"><span class=
+	          <h3><a class="anchor" href="#gpios" id=
+            "gpios"><span class=
             "octicon octicon-link"></span></a>GPIO numbering</h3>			
 						
 						<h4>Raspberry Pi (1; A, B, A+, and B+)</h4>
@@ -389,10 +399,10 @@
 								<td>-</td><td>-</td><td class="vcc">3.3v</td><td class="header">1</td><td class="header">2</td><td class="vcc">5v</td><td>-</td><td>-</td>
 							</tr>
 							<tr>
-								<td>?</td><td>?</td><td>?</td><td class="header">3</td><td class="header">4</td><td class="vcc">5v</td><td>-</td><td>-</td>
+								<td>?</td><td>?</td><td class="i2c">I2C-SDA</td><td class="header">3</td><td class="header">4</td><td class="vcc">5v</td><td>-</td><td>-</td>
 							</tr>
 							<tr>
-								<td>?</td><td>?</td><td>?</td><td class="header">5</td><td class="header">6</td><td class="gnd">0v</td><td>-</td><td>-</td>
+								<td>?</td><td>?</td><td class="i2c">I2C-SCL</td><td class="header">5</td><td class="header">6</td><td class="gnd">0v</td><td>-</td><td>-</td>
 							</tr>
 							<tr>
 								<td>7</td><td>1</td><td class="gpio">GPIO 7</td><td class="header">7</td><td class="header">8</td><td class="txd">TxD</td><td>?</td><td>?</td>
@@ -413,16 +423,16 @@
 								<td>-</td><td>-</td><td class="vcc">3.3v</td><td class="header">17</td><td class="header">18</td><td class="gpio">GPIO 5</td><td>195</td><td>5</td>
 							</tr>
 							<tr>
-								<td>?</td><td>?</td><td>?</td><td class="header">19</td><td class="header">20</td><td class="gnd">0v</td><td>-</td><td>-</td>
+								<td>?</td><td>?</td><td class="spi">SPI-MOSI</td><td class="header">19</td><td class="header">20</td><td class="gnd">0v</td><td>-</td><td>-</td>
 							</tr>
 							<tr>
-								<td>?</td><td>?</td><td>?</td><td class="header">21</td><td class="header">22</td><td class="gpio">GPIO 6</td><td>67</td><td>6</td>
+								<td>?</td><td>?</td><td class="spi">SPI-MISO</td><td class="header">21</td><td class="header">22</td><td class="gpio">GPIO 6</td><td>67</td><td>6</td>
 							</tr>
 							<tr>
-								<td>?</td><td>?</td><td>?</td><td class="header">23</td><td class="header">24</td><td>?</td><td>?</td><td>?</td>
+								<td>?</td><td>?</td><td class="spi">SPI-SCLK</td><td class="header">23</td><td class="header">24</td><td class="spi">SPI-CS0</td><td>?</td><td>?</td>
 							</tr>
 							<tr>
-								<td>-</td><td>-</td><td class="gnd">0v</td><td class="header">25</td><td class="header">26</td><td>?</td><td>?</td><td>?</td>
+								<td>-</td><td>-</td><td class="gnd">0v</td><td class="header">25</td><td class="header">26</td><td class="spi">SPI-CS1</td><td>?</td><td>?</td>
 							</tr>
 							<tr>
 								<td class="thead">wiringX #</td>

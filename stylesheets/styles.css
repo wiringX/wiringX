@@ -218,7 +218,7 @@ td.vcc {
 	color: red;
 }
 
-td.mosi, td.miso, td.ce1, td.ce0, td.sclk, td.gpclk {
+td.mosi, td.miso, td.ce1, td.ce0, td.sclk, td.gpclk, td.spi {
 	color: purple;
 }
 
@@ -226,7 +226,7 @@ td.gpio {
 	color: green;
 }
 
-td.sda, td.scl, td.csn, td.spi {
+td.sda, td.scl, td.csn, td.i2c {
 	color: blue;
 }
 
