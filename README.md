@@ -44,6 +44,10 @@ Make sure you have cmake in both cases installed:
 sudo apt-get install cmake
 ```
 
+wiringX is available in the Arch Linux ARM repository. To install, simply:
+```
+pacman -S wiringx-git
+```
 Pin numbering of the Raspberry Pi, Hummingboard and BananaPi can be found here:
 https://projects.drogon.net/raspberry-pi/wiringpi/pins/
 
