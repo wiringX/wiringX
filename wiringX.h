@@ -18,6 +18,10 @@
 #ifndef _WIRING_X_H_
 #define _WIRING_X_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <errno.h>
 #include <syslog.h>
 
@@ -103,5 +107,9 @@ int wiringXSPIDataRW(int channel, unsigned char *data, int len);
 int wiringXSPISetup(int channel, int speed);
 char *wiringXPlatform(void);
 int wiringXValidGPIO(int gpio);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
