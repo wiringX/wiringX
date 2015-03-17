@@ -468,6 +468,12 @@ int ci20SPIDataRW(int channel, unsigned char *data, int len) {
 	spi.delay_usecs = spiDelay;
 	spi.speed_hz = spiSpeeds[channel];
 	spi.bits_per_word = spiBPW;
+#ifdef SPI_IOC_WR_MODE32
+	spi.tx_nbits = 0;
+#endif
+#ifdef SPI_IOC_RD_MODE32
+	spi.rx_nbits = 0;
+#endif
 
 	if(ioctl(spiFds[channel], SPI_IOC_MESSAGE(1), &spi) < 0) {
 		wiringXLog(LOG_ERR, "ci20->SPIDataRW: Unable to read/write from channel %d: %s", channel, strerror(errno));
