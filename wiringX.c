@@ -414,6 +414,7 @@ int wiringXSetup(void) {
 #if defined(__arm__) || defined(__mips__)
 	if(setup == -2) {
 		hummingboardInit();
+		radxaInit();
 		raspberrypiInit();
 		bananapiInit();
 		ci20Init();

@@ -38,6 +38,7 @@
 #include "i2c-dev.h"
 
 #define NUM_PINS	37
+#define NUM_LEDS	3
 
 #define RK_FUNC_GPIO	0
 
@@ -205,7 +206,7 @@ static int validGPIO[NUM_PINS+1] = {
 	33, 34, 35
 };
 
-static int onboardLEDs[4] = {
+static int onboardLEDs[NUM_LEDS+1] = {
 	12, 14, 15
 };
 
@@ -323,11 +324,13 @@ static int radxaISR(int pin, int mode) {
 		return -1;
 	}
 
-	for(i=0;i<NUM_PINS;i++) {
+	for(i=0;i<NUM_LEDS;i++) {
 		if(onboardLEDs[i] == pinToGPIO[pin]) {
 			wiringXLog(LOG_ERR, "radxa->isr: The onboard LEDs cannot be used as interrupts");
 			return -1;
 		}
+	}
+	for(i=0;i<NUM_PINS;i++) {
 		if(validGPIO[i] == pin) {
 			match = 1;
 			break;
@@ -441,11 +444,13 @@ static int radxaWaitForInterrupt(int pin, int ms) {
 		return -1;
 	}
 
-	for(i=0;i<NUM_PINS;i++) {
+	for(i=0;i<NUM_LEDS;i++) {
 		if(onboardLEDs[i] == pinToGPIO[pin]) {
 			wiringXLog(LOG_ERR, "radxa->waitForInterrupt: The onboard LEDs cannot be used as interrupts");
 			return -1;
 		}
+	}
+	for(i=0;i<NUM_PINS;i++) {
 		if(validGPIO[i] == pin) {
 			match = 1;
 			break;
@@ -590,11 +595,13 @@ static int radxaDigitalRead(int pin) {
 		return -1;
 	}
 
-	for(i=0;i<NUM_PINS;i++) {
+	for(i=0;i<NUM_LEDS;i++) {
 		if(onboardLEDs[i] == pinToGPIO[pin]) {
 			wiringXLog(LOG_ERR, "radxa->digitalRead: The onboard LEDs cannot be used as input");
 			return -1;
 		}
+	}
+	for(i=0;i<NUM_PINS;i++) {
 		if(validGPIO[i] == pin) {
 			match = 1;
 			break;
@@ -666,11 +673,13 @@ static int radxaPinMode(int pin, int mode) {
 		return -1;
 	}
 
-	for(i=0;i<NUM_PINS;i++) {
+	for(i=0;i<NUM_LEDS;i++) {
 		if(onboardLEDs[i] == pinToGPIO[pin] && mode == INPUT) {
 			wiringXLog(LOG_ERR, "radxa->pinMode: The onboard LEDs cannot be used as input");
 			return -1;
 		}
+	}
+	for(i=0;i<NUM_PINS;i++) {
 		if(validGPIO[i] == pin) {
 			match = 1;
 			break;
