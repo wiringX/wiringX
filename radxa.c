@@ -40,6 +40,8 @@
 #define NUM_PINS	37
 #define NUM_LEDS	3
 
+#define pinBase 160
+
 #define RK_FUNC_GPIO	0
 
 /* GPIO control registers */
@@ -312,9 +314,37 @@ static int changeOwner(char *file) {
 	return 0;
 }
 
+static int radxaKernelRev(void) {
+	FILE *versionFd;
+	char line[120];
+
+	if((versionFd = fopen("/proc/version", "r")) == NULL) {
+		wiringXLog(LOG_ERR, "radxa->identify: Unable open /proc/version");
+		return -1;
+	}
+
+	fgets(line, 120, versionFd);
+	fclose(versionFd);
+
+	if(strstr(line, "3.0.36") != NULL) {
+		wiringXLog(LOG_DEBUG, "Kernel version is 3.0.36.");
+		return 0;
+	}
+	else if(strstr(line, "3.18.0") != NULL)
+	{
+		wiringXLog(LOG_DEBUG, "Kernel version is 3.18.0.");
+		return 1;
+	}
+	else {
+		wiringXLog(LOG_DEBUG, "Kernel version cannot be determined.");
+		return -1;
+	}
+}
+
 static int radxaISR(int pin, int mode) {
 	int i = 0, fd = 0, count = 0;
 	int match = 0;
+	int kernelVer=0;
 	const char *sMode = NULL;
 	char path[35], c, line[120];
 	FILE *f = NULL;
@@ -355,7 +385,11 @@ static int radxaISR(int pin, int mode) {
 		return -1;
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]);
+	if((kernelVer=radxaKernelRev())==0){
+		sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]+pinBase);
+	}else{
+		sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]);
+	}
 
 	if((fd = open(path, O_RDWR)) < 0) {
 		if((f = fopen("/sys/class/gpio/export", "w")) == NULL) {
@@ -363,11 +397,19 @@ static int radxaISR(int pin, int mode) {
 			return -1;
 		}
 
-		fprintf(f, "%d", pinToGPIO[pin]);
+		if(kernelVer==0){
+			fprintf(f, "%d", pinToGPIO[pin]+pinBase);
+		}else{
+			fprintf(f, "%d", pinToGPIO[pin]);
+		}
 		fclose(f);
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d/direction", pinToGPIO[pin]);
+	if(kernelVer==0){
+		sprintf(path, "/sys/class/gpio/gpio%d/direction", pinToGPIO[pin]+pinBase);
+	}else{
+		sprintf(path, "/sys/class/gpio/gpio%d/direction", pinToGPIO[pin]);
+	}
 	if((f = fopen(path, "w")) == NULL) {
 		wiringXLog(LOG_ERR, "radxa->isr: Unable to open GPIO direction interface for pin %d: %s", pin, strerror(errno));
 		return -1;
@@ -376,7 +418,11 @@ static int radxaISR(int pin, int mode) {
 	fprintf(f, "in\n");
 	fclose(f);
 
-	sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGPIO[pin]);
+	if(kernelVer==0){
+		sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGPIO[pin]+pinBase);
+	}else{
+		sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGPIO[pin]);
+	}
 	if((f = fopen(path, "w")) == NULL) {
 		wiringXLog(LOG_ERR, "radxa->isr: Unable to open GPIO edge interface for pin %d: %s", pin, strerror(errno));
 		return -1;
@@ -415,14 +461,22 @@ static int radxaISR(int pin, int mode) {
 		return -1;	
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]);
+	if(kernelVer==0){
+		sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]+pinBase);
+	}else{
+		sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]);
+	}
 	if((sysFds[pin] = open(path, O_RDONLY)) < 0) {
 		wiringXLog(LOG_ERR, "radxa->isr: Unable to open GPIO value interface: %s", strerror(errno));
 		return -1;
 	}
 	changeOwner(path);
 
-	sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGPIO[pin]);
+	if(kernelVer==0){
+		sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGPIO[pin]+pinBase);
+	}else{
+		sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGPIO[pin]);
+	}
 	changeOwner(path);
 
 	ioctl(fd, FIONREAD, &count);
@@ -715,6 +769,7 @@ static int radxaPinMode(int pin, int mode) {
 
 static int radxaGC(void) {
 	int i = 0, fd = 0;
+	int kernelVer=0;
 	char path[35];
 	FILE *f = NULL;
 
@@ -722,7 +777,11 @@ static int radxaGC(void) {
 		if(pinModes[i] == OUTPUT) {
 			pinMode(i, INPUT);
 		} else if(pinModes[i] == SYS) {
-			sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[i]);
+			if((kernelVer=radxaKernelRev())==0){
+				sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[i]+pinBase);
+			}else{
+				sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[i]);
+			}
 			if((fd = open(path, O_RDWR)) > 0) {
 				if((f = fopen("/sys/class/gpio/unexport", "w")) == NULL) {
 					wiringXLog(LOG_ERR, "radxa->gc: Unable to open GPIO unexport interface: %s", strerror(errno));
