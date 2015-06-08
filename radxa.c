@@ -40,6 +40,8 @@
 #define NUM_PINS	37
 #define NUM_LEDS	3
 
+#define pinBase 160
+
 #define RK_FUNC_GPIO	0
 
 /* GPIO control registers */
@@ -312,9 +314,53 @@ static int changeOwner(char *file) {
 	return 0;
 }
 
+static char radxaKernelVer(void) {
+	FILE *versionFd = NULL;
+	char line[120];
+	char verFlag = 0x00;
+	int majorVer=0, minorVer=0, patchVer=0;
+
+	if((versionFd = fopen("/proc/version", "r")) == NULL) {
+		wiringXLog(LOG_ERR, "radxa->identify: Unable open /proc/version");
+		return -1;
+	}
+
+	fgets(line, 120, versionFd);
+	fclose(versionFd);
+
+	if(sscanf(line,"%*[^0-9]%d.%d.%d",&majorVer,&minorVer,&patchVer)<3){
+		wiringXLog(LOG_DEBUG, "Kernel version cannot be determined.");
+		return -1;
+	}
+	else{
+		if(majorVer < 3){
+			verFlag |= 0x01;
+			verFlag |= 0x02;
+		}else if(majorVer > 3){
+			verFlag &= 0xfe;
+			verFlag &= 0xfd;
+		}else{
+			if(minorVer < 12){
+				verFlag |= 0x01;
+				if(minorVer < 10){
+					verFlag |= 0x02;
+				}else{
+					verFlag &= 0xfd;
+				}
+			}else{
+				verFlag &= 0xfe;
+				verFlag &= 0xfd;
+			}
+		}
+		wiringXLog(LOG_DEBUG, "Kernel version is %d.%d.%d.",majorVer,minorVer,patchVer);
+		return verFlag;
+	}
+}
+
 static int radxaISR(int pin, int mode) {
 	int i = 0, fd = 0, count = 0;
 	int match = 0;
+	char kernelVer = 0, pinbaseFlag = 0, edgeFlag = 0;
 	const char *sMode = NULL;
 	char path[35], c, line[120];
 	FILE *f = NULL;
@@ -344,18 +390,31 @@ static int radxaISR(int pin, int mode) {
 
 	pinModes[pin] = SYS;
 
+	kernelVer = radxaKernelVer();
+	pinbaseFlag = kernelVer & 0x02;
+	edgeFlag = kernelVer & 0x01;
+
 	if(mode == INT_EDGE_FALLING) {
 		sMode = "falling" ;
 	} else if(mode == INT_EDGE_RISING) {
 		sMode = "rising" ;
 	} else if(mode == INT_EDGE_BOTH) {
-		sMode = "both";
+		if(edgeFlag != 0){
+			wiringXLog(LOG_ERR, "radxa->isr: Kernel version below 3.12 doesn's support both edge interruption.", sMode);
+			return -1;
+		}else{
+			sMode = "both";
+		}
 	} else {
 		wiringXLog(LOG_ERR, "radxa->isr: Invalid mode. Should be INT_EDGE_RISING, INT_EDGE_FALLING, or INT_EDGE_BOTH");
 		return -1;
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]);
+	if(pinbaseFlag != 0){
+		sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]+pinBase);
+	}else{
+		sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]);
+	}
 
 	if((fd = open(path, O_RDWR)) < 0) {
 		if((f = fopen("/sys/class/gpio/export", "w")) == NULL) {
@@ -363,11 +422,19 @@ static int radxaISR(int pin, int mode) {
 			return -1;
 		}
 
-		fprintf(f, "%d", pinToGPIO[pin]);
+		if( pinbaseFlag !=0){
+			fprintf(f, "%d", pinToGPIO[pin]+pinBase);
+		}else{
+			fprintf(f, "%d", pinToGPIO[pin]);
+		}
 		fclose(f);
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d/direction", pinToGPIO[pin]);
+	if(pinbaseFlag != 0){
+		sprintf(path, "/sys/class/gpio/gpio%d/direction", pinToGPIO[pin]+pinBase);
+	}else{
+		sprintf(path, "/sys/class/gpio/gpio%d/direction", pinToGPIO[pin]);
+	}
 	if((f = fopen(path, "w")) == NULL) {
 		wiringXLog(LOG_ERR, "radxa->isr: Unable to open GPIO direction interface for pin %d: %s", pin, strerror(errno));
 		return -1;
@@ -376,7 +443,11 @@ static int radxaISR(int pin, int mode) {
 	fprintf(f, "in\n");
 	fclose(f);
 
-	sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGPIO[pin]);
+	if(pinbaseFlag != 0){
+		sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGPIO[pin]+pinBase);
+	}else{
+		sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGPIO[pin]);
+	}
 	if((f = fopen(path, "w")) == NULL) {
 		wiringXLog(LOG_ERR, "radxa->isr: Unable to open GPIO edge interface for pin %d: %s", pin, strerror(errno));
 		return -1;
@@ -415,14 +486,22 @@ static int radxaISR(int pin, int mode) {
 		return -1;	
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]);
+	if(pinbaseFlag != 0){
+		sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]+pinBase);
+	}else{
+		sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]);
+	}
 	if((sysFds[pin] = open(path, O_RDONLY)) < 0) {
 		wiringXLog(LOG_ERR, "radxa->isr: Unable to open GPIO value interface: %s", strerror(errno));
 		return -1;
 	}
 	changeOwner(path);
 
-	sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGPIO[pin]);
+	if(pinbaseFlag != 0){
+		sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGPIO[pin]+pinBase);
+	}else{
+		sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGPIO[pin]);
+	}
 	changeOwner(path);
 
 	ioctl(fd, FIONREAD, &count);
@@ -715,14 +794,22 @@ static int radxaPinMode(int pin, int mode) {
 
 static int radxaGC(void) {
 	int i = 0, fd = 0;
+	char pinbaseFlag = 0;
 	char path[35];
 	FILE *f = NULL;
+
+	pinbaseFlag = radxaKernelVer();
+	pinbaseFlag &= 0x02;
 
 	for(i=0;i<NUM_PINS;i++) {
 		if(pinModes[i] == OUTPUT) {
 			pinMode(i, INPUT);
 		} else if(pinModes[i] == SYS) {
-			sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[i]);
+			if(pinbaseFlag != 0){
+				sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[i]+pinBase);
+			}else{
+				sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[i]);
+			}
 			if((fd = open(path, O_RDWR)) > 0) {
 				if((f = fopen("/sys/class/gpio/unexport", "w")) == NULL) {
 					wiringXLog(LOG_ERR, "radxa->gc: Unable to open GPIO unexport interface: %s", strerror(errno));
