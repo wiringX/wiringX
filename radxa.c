@@ -33,6 +33,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/ioctl.h>
+#include <linux/spi/spidev.h>
 
 #include "radxa.h"
 #include "i2c-dev.h"
@@ -223,6 +224,13 @@ static struct rockchip_pin_bank *pin_to_bank(unsigned pin) {
 
 	return b;
 }
+
+/* SPI Bus Parameters */
+static uint8_t     spiMode   = 0;
+static uint8_t     spiBPW    = 8;
+static uint16_t    spiDelay  = 0;
+static uint32_t    spiSpeeds[2];
+static int         spiFds[2];
 
 static int map_reg(void *reg, void **reg_mapped) {
 	int fd;
@@ -884,6 +892,86 @@ int radxaValidGPIO(int pin) {
 	return -1;
 }
 
+static int radxaSPIGetFd(int channel) {
+	return spiFds[channel & 1];
+}
+
+static int radxaSPIDataRW(int channel, unsigned char *data, int len) {
+	struct spi_ioc_transfer spi;
+	memset(&spi, 0, sizeof(spi));
+	channel &= 1;
+
+	spi.tx_buf = (unsigned long)data;
+	spi.rx_buf = (unsigned long)data;
+	spi.len = len;
+	spi.delay_usecs = spiDelay;
+	spi.speed_hz = spiSpeeds[channel];
+	spi.bits_per_word = spiBPW;
+#ifdef SPI_IOC_WR_MODE32
+	spi.tx_nbits = 0;
+#endif
+#ifdef SPI_IOC_RD_MODE32
+	spi.rx_nbits = 0;
+#endif
+
+	if(ioctl(spiFds[channel], SPI_IOC_MESSAGE(1), &spi) < 0) {
+		wiringXLog(LOG_ERR, "radxa->SPIDataRW: Unable to read/write from channel %d: %s", channel, strerror(errno));
+		return -1;
+	}
+	return 0;
+}
+
+static int radxaSPISetup(int channel, int speed) {
+	int fd;
+	const char *device = NULL;
+
+	channel &= 1;
+
+	if(channel == 0) {
+		device = "/dev/spidev0.0";
+	} else {
+		device = "/dev/spidev0.1";
+	}
+	if((fd = open(device, O_RDWR)) < 0) {
+		wiringXLog(LOG_ERR, "radxa->SPISetup: Unable to open device %s: %s", device, strerror(errno));
+		return -1;
+	}
+
+	spiSpeeds[channel] = speed;
+	spiFds[channel] = fd;
+
+	if(ioctl(fd, SPI_IOC_WR_MODE, &spiMode) < 0) {
+		wiringXLog(LOG_ERR, "radxa->SPISetup: Unable to set write mode for device %s: %s", device, strerror(errno));
+		return -1;
+	}
+
+	if(ioctl(fd, SPI_IOC_RD_MODE, &spiMode) < 0) {
+		wiringXLog(LOG_ERR, "radxa->SPISetup: Unable to set read mode for device %s: %s", device, strerror(errno));
+		return -1;
+	}
+
+	if(ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &spiBPW) < 0) {
+		wiringXLog(LOG_ERR, "radxa->SPISetup: Unable to set write bits_per_word for device %s: %s", device, strerror(errno));
+		return -1;
+	}
+
+	if(ioctl(fd, SPI_IOC_RD_BITS_PER_WORD, &spiBPW) < 0) {
+		wiringXLog(LOG_ERR, "radxa->SPISetup: Unable to set read bits_per_word for device %s: %s", device, strerror(errno));
+		return -1;
+	}
+
+	if(ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed) < 0) {
+		wiringXLog(LOG_ERR, "radxa->SPISetup: Unable to set write max_speed for device %s: %s", device, strerror(errno));
+		return -1;
+	}
+
+	if(ioctl(fd, SPI_IOC_RD_MAX_SPEED_HZ, &speed) < 0) {
+		wiringXLog(LOG_ERR, "radxa->SPISetup: Unable to set read max_speed for device %s: %s", device, strerror(errno));
+		return -1;
+	}
+	return fd;
+}
+
 void radxaInit(void) {
 
 	memset(pinModes, -1, 128);
@@ -903,6 +991,9 @@ void radxaInit(void) {
 	radxa->I2CWriteReg8=&radxaI2CWriteReg8;
 	radxa->I2CWriteReg16=&radxaI2CWriteReg16;
 	radxa->I2CSetup=&radxaI2CSetup;
+	radxa->SPIGetFd=&radxaSPIGetFd;
+	radxa->SPIDataRW=&radxaSPIDataRW;
+	radxa->SPISetup=&radxaSPISetup;
 	radxa->gc=&radxaGC;
 	radxa->validGPIO=&radxaValidGPIO;
 }
