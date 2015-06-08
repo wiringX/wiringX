@@ -733,15 +733,15 @@ static int raspberrypiWaitForInterrupt(int pin, int ms) {
 	polls.fd = sysFds[pin];
 	polls.events = POLLPRI;
 
+	(void)read(sysFds[pin], &c, 1);
+	lseek(sysFds[pin], 0, SEEK_SET);
+
 	x = poll(&polls, 1, ms);
 
 	/* Don't react to signals */
 	if(x == -1 && errno == EINTR) {
 		x = 0;
 	}
-	
-	(void)read(sysFds[pin], &c, 1);
-	lseek(sysFds[pin], 0, SEEK_SET);
 
 	return x;
 }
