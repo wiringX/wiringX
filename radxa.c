@@ -568,11 +568,11 @@ static int radxaWaitForInterrupt(int pin, int ms) {
 		return -1;
 	}
 
+	(void)read(sysFds[pin], &c, 1);
+	lseek(sysFds[pin], 0, SEEK_SET);	
+	
 	polls.fd = sysFds[pin];
 	polls.events = POLLPRI;
-
-	(void)read(sysFds[pin], &c, 1);
-	lseek(sysFds[pin], 0, SEEK_SET);
 
 	x = poll(&polls, 1, ms);
 
