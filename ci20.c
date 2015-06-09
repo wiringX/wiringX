@@ -34,7 +34,9 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/ioctl.h>
-#include <linux/spi/spidev.h>
+#ifndef __FreeBSD__
+	#include <linux/spi/spidev.h>
+#endif
 
 #include "wiringX.h"
 #ifndef __FreeBSD__
@@ -85,12 +87,14 @@ static int sysFds[64] = {
 	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 };
 
+#ifndef __FreeBSD__
 /* SPI Bus Parameters */
 static uint8_t     spiMode   = 0;
 static uint8_t     spiBPW    = 8;
 static uint16_t    spiDelay  = 0;
 static uint32_t    spiSpeeds[2];
 static int         spiFds[2];
+#endif
 
 static volatile unsigned char *gpio;
 
@@ -245,7 +249,7 @@ static int ci20ISR(int pin, int mode) {
 	FILE *f = NULL;
 
 	if(ci20ValidGPIO(pin) != 0) {
-		wiringXLog(LOG_ERR, "ci20->isr: Invalid pin number %d (0 >= pin <= 31)", pin);
+		wiringXLog(LOG_ERR, "ci20->isr: Invalid pin number %d", pin);
 		return -1;
 	}	
 
@@ -348,7 +352,7 @@ static int ci20WaitForInterrupt(int pin, int ms) {
 	struct pollfd polls;
 
 	if(ci20ValidGPIO(pin) != 0) {
-		wiringXLog(LOG_ERR, "ci20->waitForInterrupt: Invalid pin number %d (0 >= pin <= 31)", pin);
+		wiringXLog(LOG_ERR, "ci20->waitForInterrupt: Invalid pin number %d", pin);
 		return -1;
 	}
 
@@ -365,15 +369,15 @@ static int ci20WaitForInterrupt(int pin, int ms) {
 	polls.fd = sysFds[pin];
 	polls.events = POLLPRI;
 
-	(void)read(sysFds[pin], &c, 1);
-	lseek(sysFds[pin], 0, SEEK_SET);
-
 	x = poll(&polls, 1, ms);
 
 	/* Don't react to signals */
 	if(x == -1 && errno == EINTR) {
 		x = 0;
 	}
+
+	(void)read(sysFds[pin], &c, 1);
+	lseek(sysFds[pin], 0, SEEK_SET);	
 
 	return x;
 }
