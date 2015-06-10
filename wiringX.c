@@ -132,6 +132,14 @@ void platform_register(struct platform_t **dev, const char *name) {
 	(*dev)->I2CWriteReg16 = NULL;
 	(*dev)->SPIGetFd = NULL;
 	(*dev)->SPIDataRW = NULL;
+	(*dev)->serialOpen = NULL;
+	(*dev)->serialClose = NULL;
+	(*dev)->serialFlush = NULL;
+	(*dev)->serialPutchar = NULL;
+	(*dev)->serialPuts = NULL;
+	(*dev)->serialPrintf = NULL;
+	(*dev)->serialDataAvail = NULL;
+	(*dev)->serialGetchar = NULL;
 
 	if(((*dev)->name = malloc(strlen(name)+1)) == NULL) {
 		fprintf(stderr, "out of memory\n");
@@ -419,6 +427,151 @@ int wiringXSPISetup(int channel, int speed) {
 			}
 		} else {
 			wiringXLog(LOG_ERR, "%s: platform doesn't support SPISetup", platform->name);
+			wiringXGC();
+		}
+	}
+	return -1;
+}
+
+//serial
+int wiringXserialOpen(char *device, int baud) {
+	if(platform != NULL) {
+		if(platform->serialOpen) {
+			int x = platform->serialOpen(device, baud);
+			if(x == -1) {
+				wiringXLog(LOG_ERR, "%s: error while calling serialOpen", platform->name);
+				wiringXGC();
+			} else {
+				return x;
+			}
+		} else {
+			wiringXLog(LOG_ERR, "%s: platform doesn't support serialOpen", platform->name);
+			wiringXGC();
+		}
+	}
+	return -1;
+}
+
+int wiringXserialClose(int fd){
+	if(platform != NULL) {
+		if(platform->serialClose) {
+			int x = platform->serialClose(fd);
+			if(x == -1) {
+				wiringXLog(LOG_ERR, "%s: error while calling serialClose", platform->name);
+				wiringXGC();
+			} else {
+				return x;
+			}
+		} else {
+			wiringXLog(LOG_ERR, "%s: platform doesn't support serialClose", platform->name);
+			wiringXGC();
+		}
+	}
+	return -1;
+}
+
+int wiringXserialFlush(int fd){
+	if(platform != NULL) {
+		if(platform->serialFlush) {
+			int x = platform->serialFlush(fd);
+			if(x == -1) {
+				wiringXLog(LOG_ERR, "%s: error while calling serialFlush", platform->name);
+				wiringXGC();
+			} else {
+				return x;
+			}
+		} else {
+			wiringXLog(LOG_ERR, "%s: platform doesn't support serialFlush", platform->name);
+			wiringXGC();
+		}
+	}
+	return -1;
+}
+
+int wiringXserialPutchar(int fd, unsigned char c){
+	if(platform != NULL) {
+		if(platform->serialPutchar) {
+			int x = platform->serialPutchar(fd, c);
+			if(x == -1) {
+				wiringXLog(LOG_ERR, "%s: error while calling serialPutchar", platform->name);
+				wiringXGC();
+			} else {
+				return x;
+			}
+		} else {
+			wiringXLog(LOG_ERR, "%s: platform doesn't support serialPutchar", platform->name);
+			wiringXGC();
+		}
+	}
+	return -1;
+}
+
+int wiringXserialPuts(int fd, char *s){
+	if(platform != NULL) {
+		if(platform->serialPuts) {
+			int x = platform->serialPuts(fd, s);
+			if(x == -1) {
+				wiringXLog(LOG_ERR, "%s: error while calling serialPuts", platform->name);
+				wiringXGC();
+			} else {
+				return x;
+			}
+		} else {
+			wiringXLog(LOG_ERR, "%s: platform doesn't support serialPuts", platform->name);
+			wiringXGC();
+		}
+	}
+	return -1;
+}
+
+int wiringXserialPrintf(int fd, char *message, ...){
+	if(platform != NULL) {
+		if(platform->serialPrintf) {
+			int x = platform->serialPrintf(fd, message);
+			if(x == -1) {
+				wiringXLog(LOG_ERR, "%s: error while calling serialPrintf", platform->name);
+				wiringXGC();
+			} else {
+				return x;
+			}
+		} else {
+			wiringXLog(LOG_ERR, "%s: platform doesn't support serialPrintf", platform->name);
+			wiringXGC();
+		}
+	}
+	return -1;
+}
+
+int wiringXserialDataAvail(int fd){
+	if(platform != NULL) {
+		if(platform->serialDataAvail) {
+			int x = platform->serialDataAvail(fd);
+			if(x == -1) {
+				wiringXLog(LOG_ERR, "%s: error while calling serialDataAvail", platform->name);
+				wiringXGC();
+			} else {
+				return x;
+			}
+		} else {
+			wiringXLog(LOG_ERR, "%s: platform doesn't support serialDataAvail", platform->name);
+			wiringXGC();
+		}
+	}
+	return -1;
+}
+
+int wiringXserialGetchar(int fd){
+	if(platform != NULL) {
+		if(platform->serialGetchar) {
+			int x = platform->serialGetchar(fd);
+			if(x == -1) {
+				wiringXLog(LOG_ERR, "%s: error while calling serialGetchar", platform->name);
+				wiringXGC();
+			} else {
+				return x;
+			}
+		} else {
+			wiringXLog(LOG_ERR, "%s: platform doesn't support serialGetchar", platform->name);
 			wiringXGC();
 		}
 	}
