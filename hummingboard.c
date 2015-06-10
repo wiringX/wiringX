@@ -26,7 +26,9 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
-#include <linux/spi/spidev.h>
+#ifndef __FreeBSD__
+	#include <linux/spi/spidev.h>
+#endif
 #include <signal.h>
 #include <setjmp.h>
 
@@ -59,11 +61,13 @@ static int pinToGPIOAddr[NUM_PINS] = {
 };
 
 /* SPI Bus Parameters */
+#ifndef __FreeBSD__
 static uint8_t     spiMode   = 0;
 static uint8_t     spiBPW    = 8;
 static uint16_t    spiDelay  = 0;
 static uint32_t    spiSpeeds[2];
 static int         spiFds[2];
+#endif
 
 int hummingboardValidGPIO(int pin) {
 	if(pin >= 0 && pin <= 7) {
@@ -91,7 +95,11 @@ static int changeOwner(char *file) {
 static int setup(void) {
 	int fd = 0;
 
+#ifdef O_CLOEXEC
 	if((fd = open("/dev/mem", O_RDWR | O_SYNC | O_CLOEXEC)) < 0) {
+#else
+	if((fd = open("/dev/mem", O_RDWR | O_SYNC)) < 0) {
+#endif
 		wiringXLog(LOG_ERR, "hummingboard->setup: Unable to open /dev/mem: %s", strerror(errno));
 		return -1;
 	}
@@ -112,7 +120,7 @@ static int hummingboardPinMode(int pin, int direction) {
 	}
 
 	if(hummingboardValidGPIO(pin) != 0) {
-		wiringXLog(LOG_ERR, "hummingboard->pinMode: Invalid pin number %d (0 >= pin <= 7)", pin);
+		wiringXLog(LOG_ERR, "hummingboard->pinMode: Invalid pin number %d", pin);
 		return -1;
 	}
 
@@ -176,7 +184,7 @@ static int hummingboardDigitalWrite(int pin, int value) {
 	}
 
 	if(hummingboardValidGPIO(pin) != 0) {
-		wiringXLog(LOG_ERR, "hummingboard->digitalWrite: Invalid pin number %d (0 >= pin <= 7)", pin);
+		wiringXLog(LOG_ERR, "hummingboard->digitalWrite: Invalid pin number %d", pin);
 		return -1;
 	}
 
@@ -196,7 +204,7 @@ static int hummingboardDigitalRead(int pin) {
 	}
 
 	if(hummingboardValidGPIO(pin) != 0) {
-		wiringXLog(LOG_ERR, "hummingboard->digitalRead: Invalid pin number %d (0 >= pin <= 7)", pin);
+		wiringXLog(LOG_ERR, "hummingboard->digitalRead: Invalid pin number %d", pin);
 		return -1;
 	}
 
@@ -215,7 +223,7 @@ static int hummingboardISR(int pin, int mode) {
 	FILE *f = NULL;
 
 	if(hummingboardValidGPIO(pin) != 0) {
-		wiringXLog(LOG_ERR, "hummingboard->isr: Invalid pin number %d (0 >= pin <= 7)", pin);
+		wiringXLog(LOG_ERR, "hummingboard->isr: Invalid pin number %d", pin);
 		return -1;
 	}
 
@@ -333,8 +341,8 @@ static int hummingboardWaitForInterrupt(int pin, int ms) {
 	polls.events = POLLPRI;
 
 	(void)read(sysFds[pin], &c, 1);
-	lseek(sysFds[pin], 0, SEEK_SET);
-
+	lseek(sysFds[pin], 0, SEEK_SET);	
+	
 	x = poll(&polls, 1, ms);
 
 	/* Don't react to signals */

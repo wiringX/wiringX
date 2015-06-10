@@ -35,10 +35,15 @@
 #include <sys/wait.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
-#include <linux/spi/spidev.h>
+
+#ifndef __FreeBSD__
+	#include <linux/spi/spidev.h>
+#endif
 
 #include "radxa.h"
-#include "i2c-dev.h"
+#ifndef __FreeBSD__
+	#include "i2c-dev.h"
+#endif
 
 #define NUM_PINS	37
 #define NUM_LEDS	3
@@ -69,8 +74,8 @@
  *	    to a new value for autocalculating the following iomux registers.
  */
 static struct rockchip_iomux {
-	int				type;
-	int				offset;
+	int type;
+	int offset;
 };
 
 /**
@@ -92,29 +97,29 @@ static struct rockchip_iomux {
  * @slock: spinlock for the gpio bank
  */
 static struct rockchip_pin_bank {
-	void 			*reg_base;
-	int				irq;
-	int				pin_base;
-	int				nr_pins;
-	char			*name;
-	int				bank_num;
-	struct rockchip_iomux		iomux[4];
-	int				valid;
-	int				toggle_edge_mode;
-	void			*reg_mapped_base;
+	void *reg_base;
+	int irq;
+	int pin_base;
+	int nr_pins;
+	char *name;
+	int bank_num;
+	struct rockchip_iomux iomux[4];
+	int valid;
+	int toggle_edge_mode;
+	void *reg_mapped_base;
 };
 
 static struct rockchip_pin_ctrl {
 	struct rockchip_pin_bank	*pin_banks;
-	unsigned int	nr_banks;
-	unsigned int	nr_pins;
-	char			*label;
-	int             grf_mux_offset;
-	int             pmu_mux_offset;
-	void 			*grf_base;
-	void 			*pmu_base;
-	void 			*grf_mapped_base;
-	void 			*pmu_mapped_base;
+	unsigned int nr_banks;
+	unsigned int nr_pins;
+	char *label;
+	int grf_mux_offset;
+	int pmu_mux_offset;
+	void *grf_base;
+	void *pmu_base;
+	void *grf_mapped_base;
+	void *pmu_mapped_base;
 };
 
 #define PIN_BANK(id, addr, pins, label)			\
@@ -147,8 +152,7 @@ static struct rockchip_pin_ctrl {
 
 
 #ifndef __raw_readl
-static inline unsigned int __raw_readl(const volatile void *addr)
-{
+static inline unsigned int __raw_readl(const volatile void *addr) {
 	return *(const volatile unsigned int *) addr;
 }
 #endif
@@ -156,8 +160,7 @@ static inline unsigned int __raw_readl(const volatile void *addr)
 #define readl(addr) __raw_readl(addr)
 
 #ifndef __raw_writel
-static inline void __raw_writel(unsigned int b, volatile void *addr)
-{
+static inline void __raw_writel(unsigned int b, volatile void *addr) {
 	*(volatile unsigned int *) addr = b;
 }
 #endif
@@ -180,12 +183,12 @@ static struct rockchip_pin_bank rk3188_pin_banks[] = {
 };
 
 static struct rockchip_pin_ctrl rk3188_pin_ctrl = {
-	.pin_banks		= rk3188_pin_banks,
-	.nr_banks		= sizeof(rk3188_pin_banks)/sizeof(struct rockchip_pin_bank),
-	.label			= "RK3188-GPIO",
+	.pin_banks = rk3188_pin_banks,
+	.nr_banks = sizeof(rk3188_pin_banks)/sizeof(struct rockchip_pin_bank),
+	.label = "RK3188-GPIO",
 	.grf_mux_offset	= 0x60,
-	.pmu_base		= (void *)0x20004000,
-	.grf_base		= (void *)0x20008000,
+	.pmu_base = (void *)0x20004000,
+	.grf_base = (void *)0x20008000,
 };
 
 static int sysFds[NUM_PINS+1] = {
@@ -227,12 +230,14 @@ static struct rockchip_pin_bank *pin_to_bank(unsigned pin) {
 	return b;
 }
 
+#ifndef __FreeBSD__
 /* SPI Bus Parameters */
 static uint8_t     spiMode   = 0;
 static uint8_t     spiBPW    = 8;
 static uint16_t    spiDelay  = 0;
 static uint32_t    spiSpeeds[2];
 static int         spiFds[2];
+#endif
 
 static int map_reg(void *reg, void **reg_mapped) {
 	int fd;
@@ -240,8 +245,11 @@ static int map_reg(void *reg, void **reg_mapped) {
 	unsigned int pagesize, pagemask;
 	void *pc;
 
-	fd = open("/dev/mem", O_RDWR);
-	if(fd < 0) {
+#ifdef O_CLOEXEC
+	if((fd = open("/dev/mem", O_RDWR | O_SYNC | O_CLOEXEC)) < 0) {
+#else
+	if((fd = open("/dev/mem", O_RDWR | O_SYNC)) < 0) {
+#endif
 		return -E_MEM_OPEN;
 	}
 
@@ -251,7 +259,7 @@ static int map_reg(void *reg, void **reg_mapped) {
 	addr_start = (unsigned int)reg & pagemask;
 	addr_offset = (unsigned int)reg & ~pagemask;
 
-	pc = (void *) mmap(0, pagesize * 2, PROT_READ | PROT_WRITE, MAP_SHARED, fd, addr_start);
+	pc = (void *)mmap(0, pagesize * 2, PROT_READ | PROT_WRITE, MAP_SHARED, fd, addr_start);
 
 	if(pc == MAP_FAILED) {
 		return -E_MEM_MAP;
@@ -271,8 +279,9 @@ static int rockchip_gpio_set_mux(unsigned int pin, unsigned int mux) {
 	unsigned char bit;
 	void *reg_mapped_base;
 
-	if(iomux_num > 3)
+	if(iomux_num > 3) {
 		return -E_MUX_INVAL;
+	}
 
 	if(bank->iomux[iomux_num].type & IOMUX_UNROUTED) {
 		return -E_MUX_UNROUTED;
@@ -293,8 +302,9 @@ static int rockchip_gpio_set_mux(unsigned int pin, unsigned int mux) {
 	mask = (bank->iomux[iomux_num].type & IOMUX_WIDTH_4BIT) ? 0xf : 0x3;
 	offset = bank->iomux[iomux_num].offset;
 	if(bank->iomux[iomux_num].type & IOMUX_WIDTH_4BIT) {
-		if((pin % 8) >= 4)
+		if((pin % 8) >= 4) {
 			offset += 0x4;
+		}
 		bit = (pin % 4) * 4;
 	} else {
 		bit = (pin % 8) * 2;
@@ -304,7 +314,7 @@ static int rockchip_gpio_set_mux(unsigned int pin, unsigned int mux) {
 	data |= (mux & mask) << bit;
 	writel(data, reg_mapped_base + offset);
 
-    return 0;
+	return 0;
 }
 
 static int changeOwner(char *file) {
@@ -338,31 +348,30 @@ static char radxaKernelVer(void) {
 	fgets(line, 120, versionFd);
 	fclose(versionFd);
 
-	if(sscanf(line,"%*[^0-9]%d.%d.%d",&majorVer,&minorVer,&patchVer)<3){
-		wiringXLog(LOG_DEBUG, "Kernel version cannot be determined.");
+	if(sscanf(line, "%*[^0-9]%d.%d.%d", &majorVer, &minorVer, &patchVer) < 3) {
+		wiringXLog(LOG_DEBUG, "radxa->identify: Kernel version cannot be determined.");
 		return -1;
-	}
-	else{
-		if(majorVer < 3){
+	}	else {
+		if(majorVer < 3) {
 			verFlag |= 0x01;
 			verFlag |= 0x02;
-		}else if(majorVer > 3){
+		} else if(majorVer > 3) {
 			verFlag &= 0xfe;
 			verFlag &= 0xfd;
-		}else{
-			if(minorVer < 12){
+		} else {
+			if(minorVer < 12) {
 				verFlag |= 0x01;
-				if(minorVer < 10){
+				if(minorVer < 10) {
 					verFlag |= 0x02;
-				}else{
+				} else {
 					verFlag &= 0xfd;
 				}
-			}else{
+			} else {
 				verFlag &= 0xfe;
 				verFlag &= 0xfd;
 			}
 		}
-		wiringXLog(LOG_DEBUG, "Kernel version is %d.%d.%d.",majorVer,minorVer,patchVer);
+		wiringXLog(LOG_DEBUG, "radxa->identify: Kernel version is %d.%d.%d.", majorVer, minorVer, patchVer);
 		return verFlag;
 	}
 }
@@ -376,7 +385,7 @@ static int radxaISR(int pin, int mode) {
 	FILE *f = NULL;
 
 	if(pin < 0 || pin > 35) {
-		wiringXLog(LOG_ERR, "radxa->isr: Invalid pin number %d (0 >= pin <= 35)", pin);
+		wiringXLog(LOG_ERR, "radxa->isr: Invalid pin number %d", pin);
 		return -1;
 	}
 
@@ -409,10 +418,10 @@ static int radxaISR(int pin, int mode) {
 	} else if(mode == INT_EDGE_RISING) {
 		sMode = "rising" ;
 	} else if(mode == INT_EDGE_BOTH) {
-		if(edgeFlag != 0){
+		if(edgeFlag != 0) {
 			wiringXLog(LOG_ERR, "radxa->isr: Kernel version below 3.12 doesn's support both edge interruption.", sMode);
 			return -1;
-		}else{
+		} else {
 			sMode = "both";
 		}
 	} else {
@@ -420,9 +429,9 @@ static int radxaISR(int pin, int mode) {
 		return -1;
 	}
 
-	if(pinbaseFlag != 0){
+	if(pinbaseFlag != 0) {
 		sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]+pinBase);
-	}else{
+	} else {
 		sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]);
 	}
 
@@ -432,7 +441,7 @@ static int radxaISR(int pin, int mode) {
 			return -1;
 		}
 
-		if( pinbaseFlag !=0){
+		if(pinbaseFlag !=0){
 			fprintf(f, "%d", pinToGPIO[pin]+pinBase);
 		}else{
 			fprintf(f, "%d", pinToGPIO[pin]);
@@ -440,9 +449,9 @@ static int radxaISR(int pin, int mode) {
 		fclose(f);
 	}
 
-	if(pinbaseFlag != 0){
+	if(pinbaseFlag != 0) {
 		sprintf(path, "/sys/class/gpio/gpio%d/direction", pinToGPIO[pin]+pinBase);
-	}else{
+	} else {
 		sprintf(path, "/sys/class/gpio/gpio%d/direction", pinToGPIO[pin]);
 	}
 	if((f = fopen(path, "w")) == NULL) {
@@ -453,9 +462,9 @@ static int radxaISR(int pin, int mode) {
 	fprintf(f, "in\n");
 	fclose(f);
 
-	if(pinbaseFlag != 0){
+	if(pinbaseFlag != 0) {
 		sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGPIO[pin]+pinBase);
-	}else{
+	} else {
 		sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGPIO[pin]);
 	}
 	if((f = fopen(path, "w")) == NULL) {
@@ -496,9 +505,9 @@ static int radxaISR(int pin, int mode) {
 		return -1;	
 	}
 
-	if(pinbaseFlag != 0){
+	if(pinbaseFlag != 0) {
 		sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]+pinBase);
-	}else{
+	} else {
 		sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]);
 	}
 	if((sysFds[pin] = open(path, O_RDONLY)) < 0) {
@@ -507,9 +516,9 @@ static int radxaISR(int pin, int mode) {
 	}
 	changeOwner(path);
 
-	if(pinbaseFlag != 0){
+	if(pinbaseFlag != 0) {
 		sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGPIO[pin]+pinBase);
-	}else{
+	} else {
 		sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGPIO[pin]);
 	}
 	changeOwner(path);
@@ -529,7 +538,7 @@ static int radxaWaitForInterrupt(int pin, int ms) {
 	struct pollfd polls;
 
 	if(pin < 0 || pin > 35) {
-		wiringXLog(LOG_ERR, "radxa->waitForInterrupt: Invalid pin number %d (0 >= pin <= 35)", pin);
+		wiringXLog(LOG_ERR, "radxa->waitForInterrupt: Invalid pin number %d", pin);
 		return -1;
 	}
 
@@ -561,11 +570,11 @@ static int radxaWaitForInterrupt(int pin, int ms) {
 		return -1;
 	}
 
+	(void)read(sysFds[pin], &c, 1);
+	lseek(sysFds[pin], 0, SEEK_SET);	
+	
 	polls.fd = sysFds[pin];
 	polls.events = POLLPRI;
-
-	(void)read(sysFds[pin], &c, 1);
-	lseek(sysFds[pin], 0, SEEK_SET);
 
 	x = poll(&polls, 1, ms);
 
@@ -621,7 +630,7 @@ static int radxaSetup(void)	{
 	grf_offs = ctrl->grf_mux_offset;
 	pmu_offs = ctrl->pmu_mux_offset;
 
-	for(i = 0; i < ctrl->nr_banks; ++i, ++bank ) {
+	for(i = 0; i < ctrl->nr_banks; ++i, ++bank) {
 		int bank_pins = 0;
 
 		bank->pin_base = ctrl->nr_pins;
@@ -637,10 +646,11 @@ static int radxaSetup(void)	{
 
 			/* preset offset value, set new start value */
 			if(iom->offset >= 0) {
-				if(iom->type & IOMUX_SOURCE_PMU)
+				if(iom->type & IOMUX_SOURCE_PMU) {
 					pmu_offs = iom->offset;
-				else
+				} else {
 					grf_offs = iom->offset;
+				}
 			} else { /* set current offset */
 				iom->offset = (iom->type & IOMUX_SOURCE_PMU) ? pmu_offs : grf_offs;
 			}
@@ -650,25 +660,29 @@ static int radxaSetup(void)	{
 			 * 4bit iomux'es are spread over two registers.
 			 */
 			inc = (iom->type & IOMUX_WIDTH_4BIT) ? 8 : 4;
-			if(iom->type & IOMUX_SOURCE_PMU)
+			if(iom->type & IOMUX_SOURCE_PMU) {
 				pmu_offs += inc;
-			else
+			} else {
 				grf_offs += inc;
+			}
 
 			bank_pins += 8;
 		}
 
 		ret = map_reg(bank->reg_base, &bank->reg_mapped_base);
-		if(ret < 0)
+		if(ret < 0) {
 			return ret;
+		}
 	}
 
 	ret = map_reg(ctrl->pmu_base, &ctrl->pmu_mapped_base);
-	if(ret < 0)
+	if(ret < 0) {
 		return ret;
+	}
 	ret = map_reg(ctrl->grf_base, &ctrl->grf_mapped_base);
-	if(ret < 0)
+	if(ret < 0) {
 		return ret;
+	}
 
 	return 0;
 }
@@ -680,7 +694,7 @@ static int radxaDigitalRead(int pin) {
 	int offset = pinToGPIO[pin] - bank->pin_base;
 
 	if(pin < 0 || pin > 35) {
-		wiringXLog(LOG_ERR, "radxa->digitalRead: Invalid pin number %d (0 >= pin <= 35)", pin);
+		wiringXLog(LOG_ERR, "radxa->digitalRead: Invalid pin number %d", pin);
 		return -1;
 	}
 
@@ -721,7 +735,7 @@ static int radxaDigitalWrite(int pin, int value) {
 	int offset = pinToGPIO[pin] - bank->pin_base;
 
 	if(pin < 0 || pin > 35) {
-		wiringXLog(LOG_ERR, "radxa->digitalWrite: Invalid pin number %d (0 >= pin <= 35)", pin);
+		wiringXLog(LOG_ERR, "radxa->digitalWrite: Invalid pin number %d", pin);
 		return -1;
 	}
 
@@ -758,7 +772,7 @@ static int radxaPinMode(int pin, int mode) {
 	unsigned int data;
 
 	if(pin < 0 || pin > 35) {
-		wiringXLog(LOG_ERR, "radxa->pinMode: Invalid pin number %d (0 >= pin <= 35)", pin);
+		wiringXLog(LOG_ERR, "radxa->pinMode: Invalid pin number %d", pin);
 		return -1;
 	}
 
@@ -838,6 +852,7 @@ static int radxaGC(void) {
 	return 0;
 }
 
+#ifndef __FreeBSD__
 static int radxaI2CRead(int fd) {
 	return i2c_smbus_read_byte(fd);
 }
@@ -973,6 +988,7 @@ static int radxaSPISetup(int channel, int speed) {
 	}
 	return fd;
 }
+#endif
 
 /*
  * serialOpen:
@@ -1160,6 +1176,7 @@ void radxaInit(void) {
 	radxa->identify=&radxaBoardRev;
 	radxa->isr=&radxaISR;
 	radxa->waitForInterrupt=&radxaWaitForInterrupt;
+#ifndef __FreeBSD__	
 	radxa->I2CRead=&radxaI2CRead;
 	radxa->I2CReadReg8=&radxaI2CReadReg8;
 	radxa->I2CReadReg16=&radxaI2CReadReg16;
@@ -1170,6 +1187,7 @@ void radxaInit(void) {
 	radxa->SPIGetFd=&radxaSPIGetFd;
 	radxa->SPIDataRW=&radxaSPIDataRW;
 	radxa->SPISetup=&radxaSPISetup;
+#endif
 	radxa->serialOpen=&radxaserialOpen;
 	radxa->serialClose=&radxaserialClose;
 	radxa->serialFlush=&radxaserialFlush;

@@ -231,7 +231,7 @@ static int bananapiISR(int pin, int mode) {
 	}
 
 	if(edge[npin] == -1) {
-		wiringXLog(LOG_ERR, "bananapi->isr: Invalid GPIO: %d", pin);
+		wiringXLog(LOG_ERR, "bananapi->isr: Invalid pin number: %d", pin);
 		return -1;
 	}
 
@@ -336,8 +336,8 @@ static int bananapiWaitForInterrupt(int pin, int ms) {
 	polls.events = POLLPRI;
 
 	(void)read(sysFds[pin], &c, 1);
-	lseek(sysFds[pin], 0, SEEK_SET);
-
+	lseek(sysFds[pin], 0, SEEK_SET);		
+	
 	x = poll(&polls, 1, ms);
 
 	/* Don't react to signals */
@@ -397,7 +397,11 @@ static int setup(void)	{
 		physToGpio = physToGpioR3;
 	}
 
+#ifdef O_CLOEXEC
 	if((fd = open("/dev/mem", O_RDWR | O_SYNC | O_CLOEXEC)) < 0) {
+#else
+	if((fd = open("/dev/mem", O_RDWR | O_SYNC)) < 0) {
+#endif
 		wiringXLog(LOG_ERR, "bananapi->setup: Unable to open /dev/mem");
 		return -1;
 	}
