@@ -247,7 +247,6 @@ static int map_reg(void *reg, void **reg_mapped) {
 #else
 	if((fd = open("/dev/mem", O_RDWR | O_SYNC)) < 0) {
 #endif
-	if(fd < 0) {
 		return -E_MEM_OPEN;
 	}
 
@@ -850,7 +849,7 @@ static int radxaGC(void) {
 	return 0;
 }
 
-#ifdef __FreeBSD__
+#ifndef __FreeBSD__
 static int radxaI2CRead(int fd) {
 	return i2c_smbus_read_byte(fd);
 }
