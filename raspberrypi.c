@@ -33,7 +33,9 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/ioctl.h>
-#include <linux/spi/spidev.h>
+#ifndef __FreeBSD__
+	#include <linux/spi/spidev.h>
+#endif
 
 #include "wiringX.h"
 #ifndef __FreeBSD__
@@ -79,8 +81,6 @@ static volatile unsigned int	 BCM2708_PERI_BASE = 0x20000000;
 
 #define	PAGE_SIZE		(4*1024)
 #define	BLOCK_SIZE		(4*1024)
-
-static int wiringPiMode = WPI_MODE_UNINITIALISED;
 
 static int piModel2 = 0;
 
@@ -217,11 +217,13 @@ static int sysFds[64] = {
 };
 
 /* SPI Bus Parameters */
+#ifndef __FreeBSD__
 static uint8_t     spiMode   = 0;
 static uint8_t     spiBPW    = 8;
 static uint16_t    spiDelay  = 0;
 static uint32_t    spiSpeeds[2];
 static int         spiFds[2];
+#endif
 
 int raspberrypiValidGPIO(int pin) {
 	if(pinToGpio[pin] != -1) {
@@ -331,158 +333,9 @@ static int piBoardRev(void) {
 	}
 }
 
-static int piBoardId(int *model, int *rev, int *mem, int *maker, int *overVolted) {
-	FILE *cpuFd ;
-	char line [120] ;
-	char *c ;
-
-	(void)piBoardRev();	// Call this first to make sure all's OK. Don't care about the result.
-
-	if((cpuFd = fopen("/proc/cpuinfo", "r")) == NULL) {
-		wiringXLog(LOG_ERR, "raspberrypi->piBoardId: Unable to open /proc/cpuinfo");
-		return -1;
-	}
-
-	while(fgets (line, 120, cpuFd) != NULL) {
-		if(strncmp (line, "Revision", 8) == 0) {
-			break;
-		}
-	}
-
-	fclose(cpuFd);
-
-	if(strncmp(line, "Revision", 8) != 0) {
-		wiringXLog(LOG_ERR, "raspberrypi->piBoardId: No \"Revision\" line");
-		return -1;
-	}
-
-	// Chomp trailing CR/NL
-	for(c = &line[strlen(line) - 1]; (*c == '\n') || (*c == '\r'); --c) {
-		*c = 0;
-	}
-
-	// Scan to first digit
-	for(c = line; *c; ++c) {
-		if(isdigit(*c)) {
-			break;
-		}
-	}
-
-	// Make sure its long enough
-	if(strlen(c) < 4) {
-		wiringXLog(LOG_ERR, "raspberrypi->piBoardId: Bogus \"Revision\" line");
-		return -1;
-	}
-
-	// If longer than 4, we'll assume it's been overvolted
-	*overVolted = strlen(c) > 4;
-
-	// Extract last 4 characters:
-	c = c + strlen(c) - 4;
-
-	// Fill out the replys as appropriate
-
-	if(piModel2 == 1) {
-		if(strcmp (c, "0010") == 0) {
-			*model = PI_MODEL_2;
-			*rev = PI_VERSION_1_1;
-			*mem = 1024;
-			*maker = PI_MAKER_SONY;
-		} else {
-			*model = 0;
-			*rev = 0;
-			*mem = 0;
-			*maker = 0;
-		}
-	} else if(strcmp(c, "0002") == 0) {
-		*model = PI_MODEL_B;
-		*rev = PI_VERSION_1;
-		*mem = 256;
-		*maker = PI_MAKER_EGOMAN;
-	} else if(strcmp(c, "0003") == 0) {
-		*model = PI_MODEL_B;
-		*rev = PI_VERSION_1_1;
-		*mem = 256;
-		*maker = PI_MAKER_EGOMAN;
-	} else if(strcmp(c, "0004") == 0) {
-		*model = PI_MODEL_B;
-		*rev = PI_VERSION_2;
-		*mem = 256;
-		*maker = PI_MAKER_SONY;
-	} else if(strcmp(c, "0005") == 0) {
-		*model = PI_MODEL_B;
-		*rev = PI_VERSION_2;
-		*mem = 256;
-		*maker = PI_MAKER_QISDA;
-	} else if(strcmp(c, "0006") == 0) {
-		*model = PI_MODEL_B;
-		*rev = PI_VERSION_2;
-		*mem = 256;
-		*maker = PI_MAKER_EGOMAN;
-	} else if(strcmp(c, "0007") == 0) {
-		*model = PI_MODEL_A;
-		*rev = PI_VERSION_2;
-		*mem = 256;
-		*maker = PI_MAKER_EGOMAN;
-	} else if(strcmp(c, "0008") == 0) {
-		*model = PI_MODEL_A;
-		*rev = PI_VERSION_2;
-		*mem = 256;
-		*maker = PI_MAKER_SONY;
-	} else if(strcmp(c, "0009") == 0) {
-		*model = PI_MODEL_B;
-		*rev = PI_VERSION_2;
-		*mem = 256;
-		*maker = PI_MAKER_QISDA;
-	} else if(strcmp(c, "000d") == 0) {
-		*model = PI_MODEL_B;
-		*rev = PI_VERSION_2;
-		*mem = 512;
-		*maker = PI_MAKER_EGOMAN;
-	} else if(strcmp(c, "000e") == 0) {
-		*model = PI_MODEL_B;
-		*rev = PI_VERSION_2;
-		*mem = 512;
-		*maker = PI_MAKER_SONY;
-	} else if(strcmp(c, "000f") == 0) {
-		*model = PI_MODEL_B;
-		*rev = PI_VERSION_2;
-		*mem = 512;
-		*maker = PI_MAKER_EGOMAN;
-	} else if(strcmp(c, "0010") == 0) {
-		*model = PI_MODEL_BP;
-		*rev = PI_VERSION_1_2;
-		*mem = 512;
-		*maker = PI_MAKER_SONY;
-	} else if(strcmp(c, "0011") == 0) {
-		*model = PI_MODEL_CM;
-		*rev = PI_VERSION_1_2;
-		*mem = 512;
-		*maker = PI_MAKER_SONY;
-  } else if(strcmp(c, "0012") == 0) { 
-		*model = PI_MODEL_AP;
-		*rev = PI_VERSION_1_2;
-		*mem = 256;
-		*maker = PI_MAKER_SONY;
-	}	else if(strcmp(c, "0013") == 0) {
-		*model = PI_MODEL_BP;
-		*rev = PI_VERSION_1_2;
-		*mem = 512;
-		*maker = PI_MAKER_MBEST;
-	} else {
-		*model = 0;
-		*rev = 0;
-		*mem = 0;
-		*maker = 0;
-	}
-
-	return 0;
-}
-
 static int setup(void) {
 	int fd;
 	int boardRev;
-	int model, rev, mem, maker, overVolted;
 
 	boardRev = piBoardRev();
 
@@ -497,7 +350,11 @@ static int setup(void) {
 		physToGpio = physToGpioR2;
 	}
 
-	if((fd = open("/dev/mem", O_RDWR | O_SYNC | O_CLOEXEC) ) < 0) {
+#ifdef O_CLOEXEC
+	if((fd = open("/dev/mem", O_RDWR | O_SYNC | O_CLOEXEC)) < 0) {
+#else
+	if((fd = open("/dev/mem", O_RDWR | O_SYNC)) < 0) {
+#endif
 		wiringXLog(LOG_ERR, "raspberrypi->setup: Unable to open /dev/mem: %s", strerror(errno));
 		return -1;
 	}
@@ -506,15 +363,6 @@ static int setup(void) {
 	if((int32_t)gpio == -1) {
 		wiringXLog(LOG_ERR, "raspberrypi->setup: mmap (GPIO) failed: %s", strerror(errno));
 		return -1;
-	}
-
-	if(piBoardId(&model, &rev, &mem, &maker, &overVolted) == -1) {
-		return -1;
-	}
-	if(model == PI_MODEL_CM) {
-		wiringPiMode = WPI_MODE_GPIO;
-	} else {
-		wiringPiMode = WPI_MODE_PINS;
 	}
 
 	return 0;
@@ -527,18 +375,12 @@ static int raspberrypiDigitalRead(int pin) {
 	}
 
 	if(raspberrypiValidGPIO(pin) != 0) {
-		wiringXLog(LOG_ERR, "raspberrypi->digitalRead: Invalid pin number %d (0 >= pin <= 31)", pin);
+		wiringXLog(LOG_ERR, "raspberrypi->digitalRead: Invalid pin number %d", pin);
 		return -1;
 	}	
 
 	if((pin & PI_GPIO_MASK) == 0) {
-		if(wiringPiMode == WPI_MODE_PINS) {
-			pin = pinToGpio[pin] ;
-		} else if (wiringPiMode == WPI_MODE_PHYS) {
-			pin = physToGpio[pin] ;
-		} else if (wiringPiMode != WPI_MODE_GPIO) {
-			return -1;
-		}
+		pin = pinToGpio[pin];
 
 		if((*(gpio + gpioToGPLEV[pin]) & (1 << (pin & 31))) != 0) {
 			return HIGH;
@@ -556,18 +398,12 @@ static int raspberrypiDigitalWrite(int pin, int value) {
 	}
 
 	if(raspberrypiValidGPIO(pin) != 0) {
-		wiringXLog(LOG_ERR, "raspberrypi->digitalWrite: Invalid pin number %d (0 >= pin <= 31)", pin);
+		wiringXLog(LOG_ERR, "raspberrypi->digitalWrite: Invalid pin number %d", pin);
 		return -1;
 	}	
 
 	if((pin & PI_GPIO_MASK) == 0) {
-		if(wiringPiMode == WPI_MODE_PINS) {
-			pin = pinToGpio[pin] ;
-		} else if(wiringPiMode == WPI_MODE_PHYS) {
-			pin = physToGpio[pin] ;
-		} else if(wiringPiMode != WPI_MODE_GPIO) {
-			return -1;
-		}
+		pin = pinToGpio[pin] ;
 
 		if(value == LOW)
 			*(gpio + gpioToGPCLR [pin]) = 1 << (pin & 31);
@@ -581,18 +417,13 @@ static int raspberrypiPinMode(int pin, int mode) {
 	int fSel, shift;
 
 	if(raspberrypiValidGPIO(pin) != 0) {
-		wiringXLog(LOG_ERR, "raspberrypi->pinMode: Invalid pin number %d (0 >= pin <= 31)", pin);
+		wiringXLog(LOG_ERR, "raspberrypi->pinMode: Invalid pin number %d", pin);
 		return -1;
 	}	
 
 	if((pin & PI_GPIO_MASK) == 0) {
 		pinModes[pin] = mode;
-		if(wiringPiMode == WPI_MODE_PINS) {
-			pin = pinToGpio[pin];
-		} else if(wiringPiMode == WPI_MODE_PHYS)
-			pin = physToGpio[pin];
-		else if(wiringPiMode != WPI_MODE_GPIO)
-			return -1;
+		pin = pinToGpio[pin];
 
 		fSel = gpioToGPFSEL[pin];
 		shift = gpioToShift[pin];
@@ -613,7 +444,7 @@ static int raspberrypiISR(int pin, int mode) {
 	FILE *f = NULL;
 
 	if(raspberrypiValidGPIO(pin) != 0) {
-		wiringXLog(LOG_ERR, "raspberrypi->isr: Invalid pin number %d (0 >= pin <= 31)", pin);
+		wiringXLog(LOG_ERR, "raspberrypi->isr: Invalid pin number %d", pin);
 		return -1;
 	}	
 
@@ -716,7 +547,7 @@ static int raspberrypiWaitForInterrupt(int pin, int ms) {
 	struct pollfd polls;
 
 	if(raspberrypiValidGPIO(pin) != 0) {
-		wiringXLog(LOG_ERR, "raspberrypi->waitForInterrupt: Invalid pin number %d (0 >= pin <= 31)", pin);
+		wiringXLog(LOG_ERR, "raspberrypi->waitForInterrupt: Invalid pin number %d", pin);
 		return -1;
 	}
 
@@ -734,8 +565,8 @@ static int raspberrypiWaitForInterrupt(int pin, int ms) {
 	polls.events = POLLPRI;
 
 	(void)read(sysFds[pin], &c, 1);
-	lseek(sysFds[pin], 0, SEEK_SET);
-
+	lseek(sysFds[pin], 0, SEEK_SET);	
+	
 	x = poll(&polls, 1, ms);
 
 	/* Don't react to signals */
