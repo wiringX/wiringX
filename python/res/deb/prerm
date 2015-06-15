@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [ $1 = "purge" ] || [ $1 = "remove" ]; then
+
+	if [ -d /usr/local/lib/python2.7/dist-packages/wiringX ]; then
+		rm -r /usr/local/lib/python2.7/dist-packages/wiringX 1>/dev/null 2>/dev/null;
+	fi
+	
+	if [ -f /usr/local/lib/python2.7/dist-packages/wiringX-1.0.egg-info ]; then
+		rm /usr/local/lib/python2.7/dist-packages/wiringX-1.0.egg-info 1>/dev/null 2>/dev/null;
+	fi
+	
+fi

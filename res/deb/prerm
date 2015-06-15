@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [ $1 = "purge" ] || [ $1 = "remove" ]; then
+
+	if [ -f /usr/local/lib/wiringX* ]; then
+		rm /usr/local/lib/wiringX* 1>/dev/null 2>/dev/null;
+	fi
+	
+	if [ -f /usr/local/include/wiringX.h ]; then
+		rm /usr/local/include/wiringX.h 1>/dev/null 2>/dev/null;
+	fi
+
+	for N in {blink,interrupt,i2c-spi,read}; do
+		if [ -f /usr/local/sbin/wiringx-$N ]; then
+			rm /usr/local/sbin/wiringx-$N
+		fi
+	done
+	
+fi

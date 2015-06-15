@@ -5,8 +5,9 @@ project(wiringX C)
 set(PROJECT_VERSION 1.0)
 set(PROJECT_NAME wiringX)
 
+set(CMAKE_BUILD_TYPE Release)
+
 set(CMAKE_SKIP_RULE_DEPENDENCY TRUE)
-set(CPACK_DEB_COMPONENT_INSTALL TRUE)
 
 #Final compilation all platforms
 #Removing debugging for final compilation
@@ -14,22 +15,6 @@ set(CMAKE_SKIP_RPATH TRUE)
 set(CMAKE_EXE_LINKER_FLAGS " -Wl,-rpath=/usr/local/lib/,-rpath=/usr/lib/,-rpath=/lib/")
 set(CMAKE_SHARED_LINKER_FLAGS " -Wl,-rpath=/usr/local/lib/,-rpath=/usr/lib/,-rpath=/lib/")
 set(CMAKE_MODULE_LINKER_FLAGS " -Wl,-rpath=/usr/local/lib/,-rpath=/usr/lib/,-rpath=/lib/")
-
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv6" OR CPACK_DEBIAN_PACKAGE_ARCHITECTURE MATCHES "armhf")
-		set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE armhf)
-		set(CMAKE_C_FLAGS "-Ofast -mfloat-abi=hard -mfpu=vfp -march=armv6 -ffast-math -Wfloat-equal -Wshadow -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Waggregate-return -Wswitch-default -Wswitch-enum -Wformat=2 -g -Wall -Wno-sign-conversion -Wunreachable-code -Wstrict-prototypes")
-endif()
-
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7l")
-	set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE armhf)
-	set(CMAKE_C_FLAGS "-Ofast -fPIC -mfloat-abi=hard -mfpu=vfp -march=armv7-a -ffast-math -Wfloat-equal -Wshadow -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Waggregate-return -Wswitch-default -Wswitch-enum -Wformat=2 -g -Wall -Wno-sign-conversion -Wunreachable-code -Wstrict-prototypes")
-endif()
-
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "^mips")
-	set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE mipsel)
-	set(CMAKE_C_FLAGS "-Ofast -fPIC -Wcast-align -Wstrict-overflow=5 -Wwrite-strings -Waggregate-return -Wswitch-default -Wswitch-enum -Wformat=2 -g -Wall -Wno-sign-conversion -Wunreachable-code -Wstrict-prototypes")
-endif()
-
 
 # Start uninstaller generator
 function(WRITE_UNINSTALL_TARGET_SCRIPT)
@@ -77,28 +62,47 @@ execute_process(COMMAND git describe --always
 	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
 	RESULT_VARIABLE git_result
 	OUTPUT_VARIABLE git_ver)
+	
+# The printf is used to prevent bash naming errors e.g. libwiringx-107?-0963491.deb
+execute_process(COMMAND git log --oneline
+	COMMAND wc -l
+	COMMAND xargs printf %d
+	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+	RESULT_VARIABLE git_result
+	OUTPUT_VARIABLE git_commits)	
 
 STRING(REGEX REPLACE "\n" "" git_ver "${git_ver}")
 add_definitions(-DHASH="${git_ver}")
 
-file(GLOB headers
-	"${PROJECT_SOURCE_DIR}/*.h"
+include_directories(${PROJECT_SOURCE_DIR}/src/)
+
+file(GLOB wiringX
+	"${PROJECT_SOURCE_DIR}/src/*.h"
+	"${PROJECT_SOURCE_DIR}/src/*.c"
 )
 
-file(GLOB sources
-	"${PROJECT_SOURCE_DIR}/*.c"
-)
-
-add_library(sources OBJECT ${sources})
-
+add_library(sources OBJECT ${wiringX})
 add_library(wiringx_static STATIC $<TARGET_OBJECTS:sources>)
 add_library(wiringx_shared SHARED $<TARGET_OBJECTS:sources>)
 
 set_target_properties(wiringx_shared wiringx_static PROPERTIES OUTPUT_NAME wiringX)
 
-install(FILES libwiringX.so DESTINATION lib/)
-install(FILES libwiringX.a DESTINATION lib/)
-install(FILES wiringX.h DESTINATION include/)
+add_executable(wiringx-blink ${PROJECT_SOURCE_DIR}/examples/blink.c)
+add_executable(wiringx-interrupt ${PROJECT_SOURCE_DIR}/examples/interrupt.c)
+add_executable(wiringx-i2c-spi ${PROJECT_SOURCE_DIR}/examples/i2c_spi.c)
+add_executable(wiringx-read ${PROJECT_SOURCE_DIR}/examples/read.c)
+target_link_libraries(wiringx-blink wiringx_shared)
+target_link_libraries(wiringx-interrupt wiringx_shared pthread)
+target_link_libraries(wiringx-i2c-spi wiringx_shared)
+target_link_libraries(wiringx-read wiringx_shared)
+
+install(FILES ${CMAKE_BINARY_DIR}/libwiringX.so DESTINATION lib/ COMPONENT library)
+install(FILES ${CMAKE_BINARY_DIR}/libwiringX.a DESTINATION lib/ COMPONENT library)
+install(FILES ${PROJECT_SOURCE_DIR}/src/wiringX.h DESTINATION include/ COMPONENT library)
+install(PROGRAMS ${CMAKE_BINARY_DIR}/wiringx-blink DESTINATION sbin/ COMPONENT library)
+install(PROGRAMS ${CMAKE_BINARY_DIR}/wiringx-interrupt DESTINATION sbin/ COMPONENT library)
+install(PROGRAMS ${CMAKE_BINARY_DIR}/wiringx-i2c-spi DESTINATION sbin/ COMPONENT library)
+install(PROGRAMS ${CMAKE_BINARY_DIR}/wiringx-read DESTINATION sbin/ COMPONENT library)
 
 WRITE_UNINSTALL_TARGET_SCRIPT()
 configure_file("${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake.in"
@@ -106,15 +110,17 @@ configure_file("${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake.in"
     IMMEDIATE @ONLY)
 add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 
-set(CPACK_GENERATOR "DEB")
-set(CPACK_PACKAGING_INSTALL_PREFIX "/usr/local/")
+set(CPACK_GENERATOR "DEB RPM")
+set(CPACK_PACKAGING_INSTALL_PREFIX "/usr/local")
 set(CPACK_SOURCE_STRIP_FILES TRUE)
 set(CPACK_STRIP_FILES TRUE)
 set(CPACK_PACKAGE_CONTACT "CurlyMo <info@pilight.org>")
-set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
-set(CPACK_PACKAGE_NAME "wiringX")
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION}-${git_commits}-g${git_ver})
+set(CPACK_PACKAGE_NAME "libwiringx")
+set(CPACK_PACKAGE_FILE_NAME libwiringx-${git_commits}-g${git_ver})
 set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
-set(CPACK_PACKAGE_DESCRIPTION "Control RF devices with the Raspberry Pi")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Control RF devices with the Raspberry Pi")
+set(CPACK_PACKAGE_DESCRIPTION "Cross-platform GPIO Interface")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Cross-platform GPIO Interface")
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA ${PROJECT_SOURCE_DIR}/res/deb/prerm;)
 
 include(CPack)

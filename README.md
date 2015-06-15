@@ -29,19 +29,23 @@ donate@pilight.org
 
 ###Installation:
 
-* Let it automatically generate a deb package:
+* Let it automatically build and generate a deb or rpm package:
 ```
-sudo ./gen.package.sh
-sudo dpkg -i libwiringx*.deb
+mkdir build
+cd build
+cmake ..
+make
+#For Debian based linuxes
+cpack -G DEB
+#For Red-Hat based linuxes
+cpack -G RPM
 ```
-* Or by just compiling and running make install:
+* To install the final package run:
 ```
-sudo cmake .
-sudo make install
-```
-Make sure you have cmake in both cases installed:
-```
-sudo apt-get install cmake
+#For Debian based linuxes
+dpkg -i libwiringx*.deb
+#For Red-Hat based linuxes
+dpkg -i libwiringx*.rpm
 ```
 
 wiringX is available in the Arch Linux ARM repository. To install, simply:
