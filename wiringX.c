@@ -140,6 +140,10 @@ void platform_register(struct platform_t **dev, const char *name) {
 	(*dev)->serialPrintf = NULL;
 	(*dev)->serialDataAvail = NULL;
 	(*dev)->serialGetchar = NULL;
+	(*dev)->pwmEnable = NULL;
+	(*dev)->setPwmPeriod = NULL;
+	(*dev)->setPwmDuty = NULL;
+	(*dev)->pwmRemove = NULL;
 
 	if(((*dev)->name = malloc(strlen(name)+1)) == NULL) {
 		fprintf(stderr, "out of memory\n");
@@ -572,6 +576,79 @@ int wiringXserialGetchar(int fd){
 			}
 		} else {
 			wiringXLog(LOG_ERR, "%s: platform doesn't support serialGetchar", platform->name);
+			wiringXGC();
+		}
+	}
+	return -1;
+}
+
+//PWM
+int wiringXpwmEnable(int pin, int enable){
+	if(platform != NULL) {
+		if(platform->pwmEnable) {
+			int x = platform->pwmEnable(pin, enable);
+			if(x == -1) {
+				wiringXLog(LOG_ERR, "%s: error while calling pwmEnable", platform->name);
+				wiringXGC();
+			} else {
+				return x;
+			}
+		} else {
+			wiringXLog(LOG_ERR, "%s: platform doesn't support pwmEnable", platform->name);
+			wiringXGC();
+		}
+	}
+	return -1;
+}
+
+int wiringXsetPwmPeriod (int pin, unsigned int period_ns){
+	if(platform != NULL) {
+		if(platform->setPwmPeriod) {
+			int x = platform->setPwmPeriod(pin, period_ns);
+			if(x == -1) {
+				wiringXLog(LOG_ERR, "%s: error while calling setPwmPeriod", platform->name);
+				wiringXGC();
+			} else {
+				return x;
+			}
+		} else {
+			wiringXLog(LOG_ERR, "%s: platform doesn't support setPwmPeriod", platform->name);
+			wiringXGC();
+		}
+	}
+	return -1;
+}
+
+int wiringXsetPwmDuty(int pin, unsigned int duty_cycle_ns){
+	if(platform != NULL) {
+		if(platform->setPwmDuty) {
+			int x = platform->setPwmDuty(pin, duty_cycle_ns);
+			if(x == -1) {
+				wiringXLog(LOG_ERR, "%s: error while calling setPwmDuty", platform->name);
+				wiringXGC();
+			} else {
+				return x;
+			}
+		} else {
+			wiringXLog(LOG_ERR, "%s: platform doesn't support setPwmDuty", platform->name);
+			wiringXGC();
+		}
+	}
+	return -1;
+}
+
+int wiringXpwmRemove(int pin){
+	if(platform != NULL) {
+		if(platform->pwmRemove) {
+			int x = platform->pwmRemove(pin);
+			if(x == -1) {
+				wiringXLog(LOG_ERR, "%s: error while calling pwmRemove", platform->name);
+				wiringXGC();
+			} else {
+				return x;
+			}
+		} else {
+			wiringXLog(LOG_ERR, "%s: platform doesn't support pwmRemove", platform->name);
 			wiringXGC();
 		}
 	}

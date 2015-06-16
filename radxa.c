@@ -51,6 +51,7 @@
 #define pinBase 160
 
 #define RK_FUNC_GPIO	0
+#define RK_FUNC_MUX	1//muxIO
 
 /* GPIO control registers */
 #define GPIO_SWPORT_DR		0x00
@@ -202,6 +203,10 @@ static int pinToGPIO[NUM_PINS+1] = {
 	45, 28, 42, 30, 43, 44, 5, 29, 57, 56,
 	90, 91, 89, 88, 8, 2, 126, 47, 39, 36, 38, 37,
 	12, 14, 15
+};
+
+static int pinToPWM[7] = {
+	3, 3, 3, 3, 3, 1, 0
 };
 
 static int validGPIO[NUM_PINS+1] = {
@@ -770,6 +775,8 @@ static int radxaPinMode(int pin, int mode) {
 	int ret, offset, i = 0, match = 0;
 	struct rockchip_pin_bank *bank = pin_to_bank(pin);
 	unsigned int data;
+	char path[35];
+	FILE *f = NULL;
 
 	if(pin < 0 || pin > 35) {
 		wiringXLog(LOG_ERR, "radxa->pinMode: Invalid pin number %d", pin);
@@ -796,25 +803,102 @@ static int radxaPinMode(int pin, int mode) {
 
 	pinModes[pin] = mode;
 
-	ret = rockchip_gpio_set_mux(pinToGPIO[pin], RK_FUNC_GPIO);
-	if(ret < 0) {
-		return ret;
-	}
-
 	data = readl(bank->reg_mapped_base + GPIO_SWPORT_DDR);
 
 	/* set bit to 1 for output, 0 for input */
 	offset = pinToGPIO[pin] - bank->pin_base;
-	if(mode != INPUT) {
-		data |= BIT(offset);
-	} else {
-		data &= ~BIT(offset);
+	
+	if(mode == PWM_OUTPUT) {
+		if(pin != 5 && pin != 6) {
+			wiringXLog(LOG_ERR, "Pin %d does not support hardware pwm", pinToGPIO[pin]);
+			return -1;
+		}
+		rockchip_gpio_set_mux(pinToGPIO[pin], RK_FUNC_MUX);
+
+		sprintf(path, "/sys/class/pwm/pwmchip%d/export", pinToPWM[pin]);
+
+		if((f = fopen(path, "w")) == NULL) {
+			wiringXLog(LOG_ERR, "radxa->pwm: Unable to open PWM export interface", pin);
+			return -1;
+		}
+
+		//request the device
+		fprintf(f, "%d", 0);
+		fclose(f);
 	}
-
-	writel(data, bank->reg_mapped_base + GPIO_SWPORT_DDR);
-
+	else if(mode == OUTPUT) {
+		rockchip_gpio_set_mux(pinToGPIO[pin], RK_FUNC_GPIO);
+		data |= BIT(offset);
+		writel(data, bank->reg_mapped_base + GPIO_SWPORT_DDR);
+	} else if(mode == INPUT) {
+		rockchip_gpio_set_mux(pinToGPIO[pin], RK_FUNC_GPIO);
+		data &= ~BIT(offset);
+		writel(data, bank->reg_mapped_base + GPIO_SWPORT_DDR);
+	}
+	else 
+		printf("Mode not supported\n");
 	return 0;
 }
+
+static int pwmEnable (int pin, int enable) {
+	char path[50];
+	FILE *f = NULL;
+	sprintf(path, "/sys/class/pwm/pwmchip%d/pwm0/enable", pinToPWM[pin]);
+	if((f = fopen(path, "w")) == NULL) {
+		wiringXLog(LOG_ERR, "radxa->pwm: Unable to open pwm enable interface for pin %d: %s", pin, strerror(errno));
+		return -1;
+	}
+	if(enable == 0) {
+		fprintf(f, "%d", 0);
+	} else {
+		fprintf(f, "%d", 1);
+	}
+	fclose(f);
+	return 0;
+}
+
+static int setPwmPeriod(int pin, unsigned int period_ns){
+	char path[50];
+	FILE *f = NULL;
+	sprintf(path, "/sys/class/pwm/pwmchip%d/pwm0/period", pinToPWM[pin]);
+	if((f = fopen(path, "w")) == NULL) {
+		wiringXLog(LOG_ERR, "radxa->pwm: Unable to open pwm period interface for pin %d: %s", pin, strerror(errno));
+		return -1;
+	}
+	fprintf(f, "%u", period_ns);
+	fclose(f);
+	return 0;
+}
+
+static int setPwmDuty(int pin, unsigned int duty_cycle_ns){
+	char path[50];
+	FILE *f = NULL;
+	sprintf(path, "/sys/class/pwm/pwmchip%d/pwm0/duty_cycle", pinToPWM[pin]);
+	if((f = fopen(path, "w")) == NULL) {
+		wiringXLog(LOG_ERR, "radxa->pwm: Unable to open pwm duty_cycle interface for pin %d: %s", pin, strerror(errno));
+		return -1;
+	}
+	fprintf(f, "%u", duty_cycle_ns);
+	fclose(f);
+	return 0;
+}
+
+static int pwmRemove (int pin) {
+	char path[50];
+	FILE *f = NULL;
+
+	pwmEnable (pin, 0);
+
+	sprintf(path, "/sys/class/pwm/pwmchip%d/unexport", pinToPWM[pin]);
+	if((f = fopen(path, "w")) == NULL) {
+		wiringXLog(LOG_ERR, "radxa->pwm: Unable to open pwm unexport interface for pin %d: %s", pin, strerror(errno));
+		return -1;
+	}
+	fprintf(f, "%d", 0);
+	fclose(f);
+	return 0;
+}
+
 
 static int radxaGC(void) {
 	int i = 0, fd = 0;
@@ -1196,6 +1280,10 @@ void radxaInit(void) {
 	radxa->serialPrintf=&radxaserialPrintf;
 	radxa->serialDataAvail=&radxaserialDataAvail;
 	radxa->serialGetchar=&radxaserialGetchar;
+	radxa->pwmEnable=&pwmEnable;
+	radxa->setPwmPeriod=&setPwmPeriod;
+	radxa->setPwmDuty=&setPwmDuty;
+	radxa->pwmRemove=&pwmRemove;
 	radxa->gc=&radxaGC;
 	radxa->validGPIO=&radxaValidGPIO;
 }
