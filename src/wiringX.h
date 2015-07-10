@@ -64,6 +64,7 @@ typedef struct platform_t {
 	char *name;
 	int (*setup)(void);
 	int (*pinMode)(int pin, int mode);
+	int (*analogRead)(int channel);
 	int (*digitalWrite)(int pin, int val);
 	int (*digitalRead)(int pin);
 	int (*identify)(void);
@@ -97,6 +98,7 @@ struct platform_t *platforms;
 void platform_register(struct platform_t **platform, const char *name);
 void delayMicroseconds(unsigned int howLong);
 void pinMode(int pin, int mode);
+int wiringXAnalogRead(int channel);
 void digitalWrite(int pin, int value);
 int digitalRead(int pin);
 int waitForInterrupt(int pin, int ms);

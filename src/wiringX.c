@@ -135,6 +135,7 @@ void platform_register(struct platform_t **dev, const char *name) {
 	(*dev)->I2CWriteReg16 = NULL;
 	(*dev)->SPIGetFd = NULL;
 	(*dev)->SPIDataRW = NULL;
+	(*dev)->analogRead = NULL;
 
 	if(((*dev)->name = malloc(strlen(name)+1)) == NULL) {
 		fprintf(stderr, "out of memory\n");
@@ -178,6 +179,24 @@ void pinMode(int pin, int mode) {
 			wiringXGC();
 		}
 	}
+}
+
+int wiringXAnalogRead(int channel){
+	if(platform != NULL) {
+		if(platform->analogRead) {
+			int x = platform->analogRead(channel);
+			if(x == -1) {
+				wiringXLog(LOG_ERR, "%s: error while calling analogRead", platform->name);
+				wiringXGC();
+			} else {
+				return x;
+			}
+		} else {
+			wiringXLog(LOG_ERR, "%s: platform doesn't support analogRead", platform->name);
+			wiringXGC();
+		}
+	}
+	return -1;
 }
 
 void digitalWrite(int pin, int value) {
@@ -431,7 +450,7 @@ int wiringXSPISetup(int channel, int speed) {
 int wiringXSerialOpen(char *device, struct wiringXSerial_t wiringXSerial) {
 	struct termios options;
 	speed_t myBaud;
-	int status, fd;
+	int status = 0, fd = 0;
 
 	switch(wiringXSerial.baud) {
 		case     50:	myBaud = B50; break;
@@ -587,6 +606,7 @@ void wiringXSerialPuts(int fd, char *s) {
 void wiringXSerialPrintf(int fd, char *message, ...) {
 	va_list argp;
 	char buffer[1024];
+
 	memset(&buffer, '\0', 1024);
 
 	if(fd > 0) {
