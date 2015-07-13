@@ -67,6 +67,23 @@
 #define SARADC_CTRL_CHN_MASK		0x7
 #define SARADC_DLY_PU_SOC		0x0c
 
+/* Pwm control */
+#define RK30_PWM01_BASE         0x20030000
+#define RK30_PWM23_BASE         0x20050000
+
+#define PWM_CNTR		0x00		/* Counter register */
+#define PWM_HRC			0x04		/* High reference register */
+#define PWM_LRC			0x08		/* Low reference register */
+#define PWM_CTRL		0x0c		/* Control register */
+
+#define PWM_CTRL_TIMER_EN	(1 << 0)
+#define PWM_CTRL_OUTPUT_EN	(1 << 3)
+#define PWM_CTRL_RESET		(1 << 7)
+#define GRF_GPIO3D_IOMUX_OFFSET	0x9c
+#define RK_FUNC_PWM		0xffff1540
+#define PWM2_OFFSET		0x20
+#define PWM1_OFFSET		0x10
+
 /**
  * Encode variants of iomux registers into a type variable
  */
@@ -226,6 +243,10 @@ static int onboardLEDs[NUM_LEDS+1] = {
 	12, 14, 15
 };
 
+static int pinToPWM[7] = {
+	-1, -1, -1, -1, 1, 0, -1
+};
+
 static struct rockchip_pin_ctrl *rkxx_pin_ctrl = &rk3188_pin_ctrl;
 
 static struct rockchip_pin_bank *pin_to_bank(unsigned pin) {
@@ -239,6 +260,11 @@ static struct rockchip_pin_bank *pin_to_bank(unsigned pin) {
 }
 
 #ifndef __FreeBSD__
+/* Locals to hold pointers to the hardware */
+static volatile void *pwm[] = {
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL
+};
+static volatile void *grf = NULL;
 static volatile void *ain = NULL;
 
 /* SPI Bus Parameters */
@@ -693,10 +719,22 @@ static int radxaSetup(void)	{
 	if(ret < 0) {
 		return ret;
 	}
+	grf = ctrl->grf_mapped_base;
+
 	ret = map_reg(RK30_AIN_BASE, &ain);
 	if(ret < 0) {
 		return ret;
 	}
+	ret = map_reg(RK30_PWM23_BASE, &(pwm[4]));
+	if(ret < 0) {
+		return ret;
+	}
+	ret = map_reg(RK30_PWM01_BASE, &(pwm[5]));
+	if(ret < 0) {
+		return ret;
+	}
+	pwm[4] += PWM2_OFFSET;
+	pwm[5] += PWM1_OFFSET;
 
 	return 0;
 }
@@ -806,10 +844,108 @@ static int radxaDigitalWrite(int pin, int value) {
 	return 0;
 }
 
+static int pwmEnable(int pin, int enable) {
+	FILE *f = NULL;
+	char path[50];
+	int val = 0;
+	int kernelVer = 0, edgeFlag = 0;
+
+	memset(&path, '\0', 50);
+
+	kernelVer = radxaKernelVer();
+	edgeFlag = kernelVer & 0x01;
+
+	if((enable != 0) & (enable != 1)) {
+		wiringXLog(LOG_ERR, "The second parameter of radxa->pwm should be 1 or 0");
+		return -1;
+	}
+	if(edgeFlag != 0) {
+		val = readl(pwm[pin] + PWM_CTRL);
+
+		if(enable == 1) {
+			val |= PWM_CTRL_TIMER_EN | PWM_CTRL_OUTPUT_EN;
+			writel(val , pwm[pin] + PWM_CTRL);
+		} else {
+			val &= ~PWM_CTRL_TIMER_EN & ~PWM_CTRL_OUTPUT_EN;
+			writel(val, pwm[pin] + PWM_CTRL);
+			val |= PWM_CTRL_RESET;
+			writel(val, pwm[pin] + PWM_CTRL);/* reset */
+		}
+	} else {
+		sprintf(path, "/sys/class/pwm/pwmchip%d/pwm0/enable", pinToPWM[pin]);
+		if((f = fopen(path, "w")) == NULL) {
+			wiringXLog(LOG_ERR, "radxa->pwm: Unable to open pwm enable interface for pin %d: %s", pin, strerror(errno));
+			return -1;
+		}
+		if(enable == 1) {
+			fprintf(f, "%d", 1);
+			fclose(f);
+		} else {
+			fprintf(f, "%d", 0);
+			fclose(f);
+			sprintf(path, "/sys/class/pwm/pwmchip%d/unexport", pinToPWM[pin]);
+			if((f = fopen(path, "w")) == NULL) {
+				wiringXLog(LOG_ERR, "radxa->pwm: Unable to open pwm unexport interface for pin %d: %s", pin, strerror(errno));
+				return -1;
+			}
+			fprintf(f, "%d", 0);
+			fclose(f);
+		}
+	}
+
+	return 0;
+}
+
+static int setPWM(int pin, float period_ms, float duty_cycle) {
+	FILE *f = NULL;
+	char path[50];
+	int k = 37500;
+	int period = 0, duty = 0;
+	int kernelVer = 0, edgeFlag = 0;
+
+	memset(&path, '\0', 50);
+
+	kernelVer = radxaKernelVer();
+	edgeFlag = kernelVer & 0x01;
+
+	if(edgeFlag != 0) {
+		period = period_ms*k;
+		duty = duty_cycle*period/100;
+		writel(duty, pwm[pin] + PWM_HRC);
+		writel(period, pwm[pin] + PWM_LRC);
+		writel(0, pwm[pin] + PWM_CNTR);
+	} else {
+		sprintf(path, "/sys/class/pwm/pwmchip%d/pwm0/period", pinToPWM[pin]);
+		if((f = fopen(path, "w")) == NULL) {
+			wiringXLog(LOG_ERR, "radxa->pwm: Unable to open pwm period interface for pin %d: %s", pin, strerror(errno));
+			return -1;
+		}
+		period = period_ms*1000000;
+		fprintf(f, "%u", period);
+		fclose(f);
+
+		sprintf(path, "/sys/class/pwm/pwmchip%d/pwm0/duty_cycle", pinToPWM[pin]);
+		if((f = fopen(path, "w")) == NULL) {
+			wiringXLog(LOG_ERR, "radxa->pwm: Unable to open pwm duty_cycle interface for pin %d: %s", pin, strerror(errno));
+			return -1;
+		}
+		duty=period_ms*10000*duty_cycle;
+		fprintf(f, "%u", duty);
+		fclose(f);
+	}
+
+	return 0;
+}
+
 static int radxaPinMode(int pin, int mode) {
-	int ret, offset, i = 0, match = 0;
 	struct rockchip_pin_bank *bank = pin_to_bank(pin);
-	unsigned int data;
+	FILE *f = NULL;
+	char path[50];
+	unsigned int data = 0;
+	int ret = 0, offset = 0, i = 0, match = 0;
+	int kernelVer = 0, edgeFlag = 0;
+
+	memset(&path, '\0', 50);
 
 	if(pin < 0 || pin > 35) {
 		wiringXLog(LOG_ERR, "radxa->pinMode: Invalid pin number %d", pin);
@@ -836,22 +972,52 @@ static int radxaPinMode(int pin, int mode) {
 
 	pinModes[pin] = mode;
 
-	ret = rockchip_gpio_set_mux(pinToGPIO[pin], RK_FUNC_GPIO);
-	if(ret < 0) {
-		return ret;
-	}
+	if(mode != PWM_OUTPUT) {
+		ret = rockchip_gpio_set_mux(pinToGPIO[pin], RK_FUNC_GPIO);
+		if(ret < 0) {
+			return ret;
+		}
 
-	data = readl(bank->reg_mapped_base + GPIO_SWPORT_DDR);
+		data = readl(bank->reg_mapped_base + GPIO_SWPORT_DDR);
 
-	/* set bit to 1 for output, 0 for input */
-	offset = pinToGPIO[pin] - bank->pin_base;
-	if(mode != INPUT) {
-		data |= BIT(offset);
+		/* set bit to 1 for output, 0 for input */
+		offset = pinToGPIO[pin] - bank->pin_base;
+		if(mode != INPUT) {
+			data |= BIT(offset);
+		} else {
+			data &= ~BIT(offset);
+		}
+
+		writel(data, bank->reg_mapped_base + GPIO_SWPORT_DDR);
 	} else {
-		data &= ~BIT(offset);
-	}
+		if(pin != 5 && pin != 4) {
+			wiringXLog(LOG_ERR, "Pin %d does not support hardware pwm", pinToGPIO[pin]);
+			return -1;
+		}
 
-	writel(data, bank->reg_mapped_base + GPIO_SWPORT_DDR);
+		kernelVer = radxaKernelVer();
+		edgeFlag = kernelVer & 0x01;
+
+		if(edgeFlag != 0) {
+			wiringXLog(LOG_DEBUG, "PWM is used in a register control way");
+			/* set pin PWMx to pwm mode */
+			writel(0, grf+GRF_GPIO3D_IOMUX_OFFSET);
+			writel(0x80, pwm[pin] + PWM_CTRL);
+			writel(RK_FUNC_PWM, grf+GRF_GPIO3D_IOMUX_OFFSET);
+			delayMicroseconds(110);
+		} else {
+			wiringXLog(LOG_DEBUG, "PWM is used by calling kernel driver");
+			sprintf(path, "/sys/class/pwm/pwmchip%d/export", pinToPWM[pin]);
+
+			if((f = fopen(path, "w")) == NULL) {
+				wiringXLog(LOG_ERR, "radxa->pwm: Unable to open PWM export interface", pin);
+				return -1;
+			}
+			/* request the device */
+			fprintf(f, "%d", 0);
+			fclose(f);
+		}
+	}
 
 	return 0;
 }
@@ -1037,13 +1203,13 @@ void radxaInit(void) {
 	platform_register(&radxa, "radxa");
 	radxa->setup=&radxaSetup;
 	radxa->pinMode=&radxaPinMode;
-	radxa->analogRead=&radxaAnalogRead;
 	radxa->digitalWrite=&radxaDigitalWrite;
 	radxa->digitalRead=&radxaDigitalRead;
 	radxa->identify=&radxaBoardRev;
 	radxa->isr=&radxaISR;
 	radxa->waitForInterrupt=&radxaWaitForInterrupt;
 #ifndef __FreeBSD__	
+	radxa->analogRead=&radxaAnalogRead;
 	radxa->I2CRead=&radxaI2CRead;
 	radxa->I2CReadReg8=&radxaI2CReadReg8;
 	radxa->I2CReadReg16=&radxaI2CReadReg16;
@@ -1054,7 +1220,10 @@ void radxaInit(void) {
 	radxa->SPIGetFd=&radxaSPIGetFd;
 	radxa->SPIDataRW=&radxaSPIDataRW;
 	radxa->SPISetup=&radxaSPISetup;
-#endif	
+	radxa->pwmEnable=&pwmEnable;
+	radxa->setPWM=&setPWM;
+#endif
+
 	radxa->gc=&radxaGC;
 	radxa->validGPIO=&radxaValidGPIO;
 }

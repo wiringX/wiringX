@@ -136,6 +136,8 @@ void platform_register(struct platform_t **dev, const char *name) {
 	(*dev)->SPIGetFd = NULL;
 	(*dev)->SPIDataRW = NULL;
 	(*dev)->analogRead = NULL;
+	(*dev)->pwmEnable = NULL;
+	(*dev)->setPWM = NULL;
 
 	if(((*dev)->name = malloc(strlen(name)+1)) == NULL) {
 		fprintf(stderr, "out of memory\n");
@@ -646,6 +648,43 @@ int wiringXSerialGetChar(int fd) {
 		wiringXLog(LOG_ERR, "Serial interface is not opened");
 		return -1;
 	}
+}
+
+//PWM
+int wiringXPWMEnable(int pin, int enable){
+	if(platform != NULL) {
+		if(platform->pwmEnable) {
+			int x = platform->pwmEnable(pin, enable);
+			if(x == -1) {
+				wiringXLog(LOG_ERR, "%s: error while calling pwmEnable", platform->name);
+				wiringXGC();
+			} else {
+				return x;
+			}
+		} else {
+			wiringXLog(LOG_ERR, "%s: platform doesn't support pwmEnable", platform->name);
+			wiringXGC();
+		}
+	}
+	return -1;
+}
+
+int  wiringXSetPWM(int pin, float period_ms, float duty){
+	if(platform != NULL) {
+		if(platform->setPWM) {
+			int x = platform->setPWM(pin, period_ms, duty);
+			if(x == -1) {
+				wiringXLog(LOG_ERR, "%s: error while calling setPWM", platform->name);
+				wiringXGC();
+			} else {
+				return x;
+			}
+		} else {
+			wiringXLog(LOG_ERR, "%s: platform doesn't support setPWM", platform->name);
+			wiringXGC();
+		}
+	}
+	return -1;
 }
 
 char *wiringXPlatform(void) {
