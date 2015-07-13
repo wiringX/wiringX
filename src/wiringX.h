@@ -64,6 +64,7 @@ typedef struct platform_t {
 	char *name;
 	int (*setup)(void);
 	int (*pinMode)(int pin, int mode);
+	int (*analogRead)(int channel);
 	int (*digitalWrite)(int pin, int val);
 	int (*digitalRead)(int pin);
 	int (*identify)(void);
@@ -84,11 +85,20 @@ typedef struct platform_t {
 	struct platform_t *next;
 } platform_t;
 
+typedef struct wiringXSerial_t {
+	unsigned int baud;
+	unsigned int databits;
+	unsigned int parity;
+	unsigned int stopbits;
+	unsigned int flowcontrol;
+} wiringXSerial_t;
+
 struct platform_t *platforms;
 
 void platform_register(struct platform_t **platform, const char *name);
 void delayMicroseconds(unsigned int howLong);
 void pinMode(int pin, int mode);
+int wiringXAnalogRead(int channel);
 void digitalWrite(int pin, int value);
 int digitalRead(int pin);
 int waitForInterrupt(int pin, int ms);
@@ -105,6 +115,14 @@ int wiringXI2CSetup(int devId);
 int wiringXSPIGetFd(int channel);
 int wiringXSPIDataRW(int channel, unsigned char *data, int len);
 int wiringXSPISetup(int channel, int speed);
+int wiringXSerialOpen(char *device, struct wiringXSerial_t wiringXSerial);
+void wiringXSerialFlush(int fd);
+void wiringXSerialClose(int fd);
+void wiringXSerialPutChar(int fd, unsigned char c);
+void wiringXSerialPuts(int fd, char *s);
+void wiringXSerialPrintf(int fd, char *message, ...);
+int wiringXSerialDataAvail(int fd);
+int wiringXSerialGetChar(int fd);
 char *wiringXPlatform(void);
 int wiringXValidGPIO(int gpio);
 

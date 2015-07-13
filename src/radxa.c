@@ -56,6 +56,17 @@
 
 #define BIT(nr) (1UL << (nr))
 
+/* Ananlog input registers */
+#define RK30_AIN_BASE			0x2006c000
+#define SARADC_DATA			0x00
+#define SARADC_DATA_MASK		0x3ff
+#define SARADC_STAS			0x04
+#define SARADC_STAS_BUSY		BIT(0)
+#define SARADC_CTRL			0x08
+#define SARADC_CTRL_POWER_CTRL		BIT(3)
+#define SARADC_CTRL_CHN_MASK		0x7
+#define SARADC_DLY_PU_SOC		0x0c
+
 /**
  * Encode variants of iomux registers into a type variable
  */
@@ -228,12 +239,14 @@ static struct rockchip_pin_bank *pin_to_bank(unsigned pin) {
 }
 
 #ifndef __FreeBSD__
+static volatile void *ain = NULL;
+
 /* SPI Bus Parameters */
 static uint8_t     spiMode   = 0;
 static uint8_t     spiBPW    = 8;
 static uint16_t    spiDelay  = 0;
-static uint32_t    spiSpeeds[2];
-static int         spiFds[2];
+static uint32_t    spiSpeeds[2] = {0, 0};
+static int         spiFds[2] = {0, 0};
 #endif
 
 static int map_reg(void *reg, void **reg_mapped) {
@@ -680,8 +693,38 @@ static int radxaSetup(void)	{
 	if(ret < 0) {
 		return ret;
 	}
+	ret = map_reg(RK30_AIN_BASE, &ain);
+	if(ret < 0) {
+		return ret;
+	}
 
 	return 0;
+}
+
+int radxaAnalogRead(int channel) {
+
+	unsigned char saradc_stas = 1;
+	int value = 0;
+
+	/* 8 clock periods as delay between power up and start cmd */
+	writel(8, ain + SARADC_DLY_PU_SOC);
+	/* reset */
+	writel(0, ain + SARADC_CTRL);
+	/* Select the channel to be used and trigger conversion */
+	writel(SARADC_CTRL_POWER_CTRL | (channel & SARADC_CTRL_CHN_MASK), ain + SARADC_CTRL);
+
+	while(saradc_stas == SARADC_STAS_BUSY) {
+		saradc_stas = readl(ain+SARADC_STAS);
+		saradc_stas &= SARADC_STAS_BUSY;
+		delayMicroseconds(10);
+	}
+
+	/* Read value */
+	value = readl(ain + SARADC_DATA);
+	value &= SARADC_DATA_MASK;
+	writel(0, ain + SARADC_CTRL);
+
+	return value;
 }
 
 static int radxaDigitalRead(int pin) {
@@ -994,6 +1037,7 @@ void radxaInit(void) {
 	platform_register(&radxa, "radxa");
 	radxa->setup=&radxaSetup;
 	radxa->pinMode=&radxaPinMode;
+	radxa->analogRead=&radxaAnalogRead;
 	radxa->digitalWrite=&radxaDigitalWrite;
 	radxa->digitalRead=&radxaDigitalRead;
 	radxa->identify=&radxaBoardRev;
