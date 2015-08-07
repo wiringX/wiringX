@@ -261,6 +261,8 @@ static int ci20ISR(int pin, int mode) {
 		sMode = "rising" ;
 	} else if(mode == INT_EDGE_BOTH) {
 		sMode = "both";
+	} else if(mode == INT_EDGE_NONE) {
+		sMode = "none";
 	} else {
 		wiringXLog(LOG_ERR, "ci20->isr: Invalid mode. Should be INT_EDGE_BOTH, INT_EDGE_RISING, or INT_EDGE_FALLING");
 		return -1;

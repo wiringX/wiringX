@@ -54,6 +54,7 @@ extern "C" {
 #define INT_EDGE_FALLING	1
 #define INT_EDGE_RISING		2
 #define INT_EDGE_BOTH 		3
+#define INT_EDGE_NONE 		4
 
 #define	PWM_MODE_MS			0
 #define	PWM_MODE_BAL		1

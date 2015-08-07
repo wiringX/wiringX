@@ -434,6 +434,8 @@ static int radxaISR(int pin, int mode) {
 		} else {
 			sMode = "both";
 		}
+	} else if(mode == INT_EDGE_NONE) {
+		sMode = "none";
 	} else {
 		wiringXLog(LOG_ERR, "radxa->isr: Invalid mode. Should be INT_EDGE_RISING, INT_EDGE_FALLING, or INT_EDGE_BOTH");
 		return -1;
