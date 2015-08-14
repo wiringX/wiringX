@@ -516,17 +516,18 @@ static int radxaISR(int pin, int mode) {
 		wiringXLog(LOG_ERR, "radxa->isr: Failed to set interrupt edge to %s", sMode);
 		return -1;	
 	}
-
-	if(pinbaseFlag != 0) {
-		sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]+pinBase);
-	} else {
-		sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]);
+	if (sysFds[pin] == -1) {
+		if(pinbaseFlag != 0) {
+			sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]+pinBase);
+		} else {
+			sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGPIO[pin]);
+		}
+		if((sysFds[pin] = open(path, O_RDONLY)) < 0) {
+			wiringXLog(LOG_ERR, "radxa->isr: Unable to open GPIO value interface: %s", strerror(errno));
+			return -1;
+		}
+		changeOwner(path);
 	}
-	if((sysFds[pin] = open(path, O_RDONLY)) < 0) {
-		wiringXLog(LOG_ERR, "radxa->isr: Unable to open GPIO value interface: %s", strerror(errno));
-		return -1;
-	}
-	changeOwner(path);
 
 	if(pinbaseFlag != 0) {
 		sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGPIO[pin]+pinBase);
@@ -888,6 +889,7 @@ static int radxaGC(void) {
 		}
 		if(sysFds[i] > 0) {
 			close(sysFds[i]);
+			sysFds[i] = -1;
 		}
 	}
 

@@ -295,12 +295,14 @@ static int bananapiISR(int pin, int mode) {
 		return -1;
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d/value", npin);
-	if((sysFds[pin] = open(path, O_RDONLY)) < 0) {
-		wiringXLog(LOG_ERR, "bananapi->isr: Unable to open GPIO value interface: %s", strerror(errno));
-		return -1;
+	if (sysFds[pin] == -1) {
+		sprintf(path, "/sys/class/gpio/gpio%d/value", npin);
+		if((sysFds[pin] = open(path, O_RDONLY)) < 0) {
+			wiringXLog(LOG_ERR, "bananapi->isr: Unable to open GPIO value interface: %s", strerror(errno));
+			return -1;
+		}
+		changeOwner(path);
 	}
-	changeOwner(path);
 
 	sprintf(path, "/sys/class/gpio/gpio%d/edge", npin);
 	changeOwner(path);
@@ -576,6 +578,7 @@ static int bananapiGC(void) {
 		}
 		if(sysFds[i] > 0) {
 			close(sysFds[i]);
+			sysFds[i] = -1;
 		}
 	}
 

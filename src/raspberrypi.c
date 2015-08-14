@@ -521,15 +521,17 @@ static int raspberrypiISR(int pin, int mode) {
 
 	if(match == 0) {
 		wiringXLog(LOG_ERR, "raspberrypi->isr: Failed to set interrupt edge to %s", sMode);
-		return -1;	
-	}
-
-	sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGpio[pin]);
-	if((sysFds[pin] = open(path, O_RDONLY)) < 0) {
-		wiringXLog(LOG_ERR, "raspberrypi->isr: Unable to open GPIO value interface: %s", strerror(errno));
 		return -1;
 	}
-	changeOwner(path);
+
+	if (sysFds[pin] == -1) {
+		sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGpio[pin]);
+		if((sysFds[pin] = open(path, O_RDONLY)) < 0) {
+			wiringXLog(LOG_ERR, "raspberrypi->isr: Unable to open GPIO value interface: %s", strerror(errno));
+			return -1;
+		}
+		changeOwner(path);
+	}
 
 	sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGpio[pin]);
 	changeOwner(path);
@@ -567,8 +569,8 @@ static int raspberrypiWaitForInterrupt(int pin, int ms) {
 	polls.events = POLLPRI;
 
 	(void)read(sysFds[pin], &c, 1);
-	lseek(sysFds[pin], 0, SEEK_SET);	
-	
+	lseek(sysFds[pin], 0, SEEK_SET);
+
 	x = poll(&polls, 1, ms);
 
 	/* Don't react to signals */
@@ -601,6 +603,7 @@ static int raspberrypiGC(void) {
 		}
 		if(sysFds[i] > 0) {
 			close(sysFds[i]);
+			sysFds[i] = -1;
 		}
 	}
 
