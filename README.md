@@ -31,6 +31,12 @@ donate@pilight.org
 
 * Let it automatically build and generate a deb or rpm package:
 ```
+#Make sure you have prerequisites
+#For Debian based linuxes
+sudo apt-get install build-essential
+#For Red-Hat based linuxes
+yum groupinstall "Development tools"
+
 mkdir build
 cd build
 cmake ..
