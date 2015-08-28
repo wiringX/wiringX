@@ -6,7 +6,7 @@
 
 char *usage = "Usage: %s GPIO\n"
 			"       GPIO is the GPIO to write\n"
-			"Example: %s 10";
+			"Example: %s 10\n";
 
 int main(int argc, char *argv[]) {
 	int gpio;
