@@ -7,7 +7,7 @@
 char *usage = "Usage: %s GPIO GPIO\n"
 			"       first GPIO to write to = output\n"
 			"       second GPIO to read from = input\n"
-			"Example: %s 4 23";
+			"Example: %s 4 23\n";
 
 int main(int argc, char *argv[]) {
 	int gpio_out, gpio_in;
