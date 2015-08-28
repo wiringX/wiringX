@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.8)
+cmake_minimum_required(VERSION 2.8.9)
 
 project(wiringX C)
 
@@ -8,6 +8,7 @@ set(PROJECT_NAME wiringX)
 set(CMAKE_BUILD_TYPE Release)
 
 set(CMAKE_SKIP_RULE_DEPENDENCY TRUE)
+set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
 #Final compilation all platforms
 #Removing debugging for final compilation
