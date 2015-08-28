@@ -4,14 +4,14 @@
 
 #include "wiringX.h"
 
-char *usage = "Usage: blink GPIO\n"
+char *usage = "Usage: %s GPIO\n"
 			"       GPIO is the GPIO to write\n"
-			"Example: blink 10";
+			"Example: %s 10";
 
 int main(int argc, char *argv[]) {
 	int gpio;
 	int i, n, value;
-	char ch;
+	char ch, str [100];
 
 	// first, check for a valid, numeric argument
 	// found at http://stackoverflow.com/questions/17292545
@@ -26,7 +26,8 @@ int main(int argc, char *argv[]) {
 	// expect 1 argument for the programm blink ('blink gpio')
 	// these are argv[0-1], so argc = 2
 	if(argc != 2) {
-		printf("%s\n", usage);
+		sprintf(str, usage, argv[0], argv[0]);
+		printf(str);
 		return -1;
 	}
 

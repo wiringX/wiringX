@@ -4,15 +4,15 @@
 
 #include "wiringX.h"
 
-char *usage = "Usage: read GPIO GPIO\n"
+char *usage = "Usage: %s GPIO GPIO\n"
 			"       first GPIO to write to = output\n"
 			"       second GPIO to read from = input\n"
-			"Example: read 4 23";
+			"Example: %s 4 23";
 
 int main(int argc, char *argv[]) {
 	int gpio_out, gpio_in;
 	int i, n, value;
-	char ch;
+	char ch, str [100];
 
 	// first, check for valid, numeric arguments
 	// found at http://stackoverflow.com/questions/17292545
@@ -27,7 +27,8 @@ int main(int argc, char *argv[]) {
 	// expect 2 arguments for the programm read ('read gpio_out gpio_in')
 	// these are argv[0-2], so argc = 3
 	if(argc != 3) {
-		printf("%s\n", usage);
+		sprintf(str, usage, argv[0], argv[0]);
+		printf(str);
 		return -1;
 	}
 
