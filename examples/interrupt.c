@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
 		sleep(2);
 	}
 
-	printf("Main finshed, waiting for thread ...\n");
+	printf("Main finished, waiting for thread ...\n");
 	pthread_join(pth, NULL);
 
 	return 0;
