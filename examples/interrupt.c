@@ -66,7 +66,6 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 
-
 	wiringXSetup();
 
 	if(wiringXValidGPIO(gpio_out) != 0) {
@@ -74,7 +73,7 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 	if(wiringXValidGPIO(gpio_in) != 0) {
-		printf("%s: Invalid GPIO %d for input (interrupt) \n", argv[0], gpio_in);
+		printf("%s: Invalid GPIO %d for input (interrupt)\n", argv[0], gpio_in);
 		return -1;
 	}
 
