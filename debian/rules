@@ -9,9 +9,3 @@ export DESTDIR=$(CURDIR)/debian/tmp
 # main packaging script based on dh7 syntax
 %:
 	dh $@ 
-
-override_dh_auto_install:
-	mkdir -p $(DESTDIR)/usr/lib $(DESTDIR)/usr/include
-	install -v -m644 obj-$(DEB_BUILD_GNU_TYPE)/libwiringX.so $(DESTDIR)/usr/lib/
-	install -v -m644 obj-$(DEB_BUILD_GNU_TYPE)/libwiringX.a $(DESTDIR)/usr/lib/
-	install -v -m644 wiringX.h $(DESTDIR)/usr/include/
