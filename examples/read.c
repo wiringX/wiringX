@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
 	// expect 2 arguments => argc must be 3
 	if(argc != 3) {
 		snprintf(usagestr, 159, usage, argv[0], argv[0]);
-		printf(usagestr);
+		puts(usagestr);
 		return -1;
 	}
 
