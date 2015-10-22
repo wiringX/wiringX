@@ -1,3 +1,9 @@
+wiringx (1.0pkg2) unstable; urgency=low
+
+  * update
+
+ -- Josua Mayer <privacy@not.given>  Thu, 22 Oct 2015 12:43:58 +0200
+
 wiringx (1.0) unstable; urgency=low
 
   * Initial Release.
