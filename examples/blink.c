@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
 	// expect only 1 argument => argc must be 2
 	if(argc != 2) {
 		snprintf(usagestr, 119, usage, argv[0], argv[0]);
-		printf(usagestr);
+		puts(usagestr);
 		return -1;
 	}
 
