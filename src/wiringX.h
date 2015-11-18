@@ -1,18 +1,9 @@
 /*
 	Copyright (c) 2014 CurlyMo <curlymoo1@gmail.com>
 
-	This program is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
 #ifndef _WIRING_X_H_
@@ -38,13 +29,13 @@ extern "C" {
     #endif
 #endif
 
-#define HIGH		1
-#define LOW			0
+#define HIGH							1
+#define LOW								0
 
-#define INPUT				0
-#define OUTPUT				1
-#define	PWM_OUTPUT			2
-#define	GPIO_CLOCK			3
+#define INPUT							0
+#define OUTPUT						1
+#define	PWM_OUTPUT				2
+#define	GPIO_CLOCK				3
 #define	SOFT_PWM_OUTPUT		4
 #define	SOFT_TONE_OUTPUT	5
 #define	PWM_TONE_OUTPUT		6
@@ -56,8 +47,8 @@ extern "C" {
 #define INT_EDGE_BOTH 		3
 #define INT_EDGE_NONE 		4
 
-#define	PWM_MODE_MS			0
-#define	PWM_MODE_BAL		1
+#define	PWM_MODE_MS				0
+#define	PWM_MODE_BAL			1
 
 void (*wiringXLog)(int prio, const char *format_str, ...);
 
