@@ -60,7 +60,7 @@ void _fprintf(int prio, const char *format_str, ...) {
 	va_start(ap, format_str);
 	vsprintf(line, format_str, ap);
 	strcat(line, "\n");
-	fprintf(stderr, line);
+	fputs(line, stderr);
 	va_end(ap);
 }
 
