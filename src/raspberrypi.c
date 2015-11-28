@@ -368,7 +368,7 @@ static int raspberrypiDigitalRead(int pin) {
 	if(raspberrypiValidGPIO(pin) != 0) {
 		wiringXLog(LOG_ERR, "raspberrypi->digitalRead: Invalid pin number %d", pin);
 		return -1;
-	}	
+	}
 
 	if((pin & PI_GPIO_MASK) == 0) {
 		pin = pinToGpio[pin];
@@ -391,7 +391,7 @@ static int raspberrypiDigitalWrite(int pin, int value) {
 	if(raspberrypiValidGPIO(pin) != 0) {
 		wiringXLog(LOG_ERR, "raspberrypi->digitalWrite: Invalid pin number %d", pin);
 		return -1;
-	}	
+	}
 
 	if((pin & PI_GPIO_MASK) == 0) {
 		pin = pinToGpio[pin] ;
@@ -410,7 +410,7 @@ static int raspberrypiPinMode(int pin, int mode) {
 	if(raspberrypiValidGPIO(pin) != 0) {
 		wiringXLog(LOG_ERR, "raspberrypi->pinMode: Invalid pin number %d", pin);
 		return -1;
-	}	
+	}
 
 	if((pin & PI_GPIO_MASK) == 0) {
 		pinModes[pin] = mode;
@@ -437,7 +437,7 @@ static int raspberrypiISR(int pin, int mode) {
 	if(raspberrypiValidGPIO(pin) != 0) {
 		wiringXLog(LOG_ERR, "raspberrypi->isr: Invalid pin number %d", pin);
 		return -1;
-	}	
+	}
 
 	pinModes[pin] = SYS;
 
@@ -606,27 +606,27 @@ static int raspberrypiGC(void) {
 
 #ifndef __FreeBSD__
 static int raspberrypiI2CRead(int fd) {
-	return i2c_smbus_read_byte(fd);
+	i2c_smbus_read_byte(fd);
 }
 
 static int raspberrypiI2CReadReg8(int fd, int reg) {
-	return i2c_smbus_read_byte_data(fd, reg);
+	i2c_smbus_read_byte_data(fd, reg);
 }
 
 static int raspberrypiI2CReadReg16(int fd, int reg) {
-	return i2c_smbus_read_word_data(fd, reg);
+	i2c_smbus_read_word_data(fd, reg);
 }
 
 static int raspberrypiI2CWrite(int fd, int data) {
-	return i2c_smbus_write_byte(fd, data);
+	i2c_smbus_write_byte(fd, data);
 }
 
 static int raspberrypiI2CWriteReg8(int fd, int reg, int data) {
-	return i2c_smbus_write_byte_data(fd, reg, data);
+	i2c_smbus_write_byte_data(fd, reg, data);
 }
 
 static int raspberrypiI2CWriteReg16(int fd, int reg, int data) {
-	return i2c_smbus_write_word_data(fd, reg, data);
+	i2c_smbus_write_word_data(fd, reg, data);
 }
 
 static int raspberrypiI2CSetup(int devId) {
