@@ -48,7 +48,7 @@
 #define BIT(nr) (1UL << (nr))
 
 /* Ananlog input registers */
-#define RK30_AIN_BASE			0x2006c000
+#define RK30_AIN_BASE			((void*)0x2006c000)
 #define SARADC_DATA			0x00
 #define SARADC_DATA_MASK		0x3ff
 #define SARADC_STAS			0x04
@@ -72,7 +72,7 @@
  *	    an initial offset value the relevant source offset can be reset
  *	    to a new value for autocalculating the following iomux registers.
  */
-static struct rockchip_iomux {
+struct rockchip_iomux {
 	int type;
 	int offset;
 };
@@ -95,7 +95,7 @@ static struct rockchip_iomux {
  * @grange: gpio range
  * @slock: spinlock for the gpio bank
  */
-static struct rockchip_pin_bank {
+struct rockchip_pin_bank {
 	void *reg_base;
 	int irq;
 	int pin_base;
@@ -105,10 +105,10 @@ static struct rockchip_pin_bank {
 	struct rockchip_iomux iomux[4];
 	int valid;
 	int toggle_edge_mode;
-	void *reg_mapped_base;
+	volatile void *reg_mapped_base;
 };
 
-static struct rockchip_pin_ctrl {
+struct rockchip_pin_ctrl {
 	struct rockchip_pin_bank	*pin_banks;
 	unsigned int nr_banks;
 	unsigned int nr_pins;
@@ -117,8 +117,8 @@ static struct rockchip_pin_ctrl {
 	int pmu_mux_offset;
 	void *grf_base;
 	void *pmu_base;
-	void *grf_mapped_base;
-	void *pmu_mapped_base;
+	volatile void *grf_mapped_base;
+	volatile void *pmu_mapped_base;
 };
 
 #define PIN_BANK(id, addr, pins, label)			\
@@ -240,7 +240,7 @@ static uint32_t    spiSpeeds[2] = {0, 0};
 static int         spiFds[2] = {0, 0};
 #endif
 
-static int map_reg(void *reg, void **reg_mapped) {
+static int map_reg(void *reg, volatile void **reg_mapped) {
 	int fd;
 	unsigned int addr_start, addr_offset;
 	unsigned int pagesize, pagemask;
@@ -278,7 +278,7 @@ static int rockchip_gpio_set_mux(unsigned int pin, unsigned int mux) {
 	int iomux_num = (pin / 8);
 	unsigned int data, offset, mask;
 	unsigned char bit;
-	void *reg_mapped_base;
+	volatile void *reg_mapped_base;
 
 	if(iomux_num > 3) {
 		return -E_MUX_INVAL;
@@ -759,7 +759,7 @@ static int radxaDigitalWrite(int pin, int value) {
 	unsigned int data;
 	int i = 0, match = 0;
 	struct rockchip_pin_bank *bank = pin_to_bank(pinToGPIO[pin]);
-	void *reg = bank->reg_mapped_base + GPIO_SWPORT_DR;
+	volatile void *reg = bank->reg_mapped_base + GPIO_SWPORT_DR;
 	int offset = pinToGPIO[pin] - bank->pin_base;
 
 	if(pin < 0 || pin > 35) {
