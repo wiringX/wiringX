@@ -217,7 +217,7 @@ static int         spiFds[2];
 #endif
 
 int raspberrypiValidGPIO(int pin) {
-	if(pinToGpio[pin] != -1) {
+	if(pin >= 0 && pin < 64 && pinToGpio[pin] != -1) {
 		return 0;
 	}
 	return -1;
@@ -437,9 +437,7 @@ static int raspberrypiISR(int pin, int mode) {
 	if(raspberrypiValidGPIO(pin) != 0) {
 		wiringXLog(LOG_ERR, "raspberrypi->isr: Invalid pin number %d", pin);
 		return -1;
-	}	
-
-	pinModes[pin] = SYS;
+	}
 
 	if(mode == INT_EDGE_FALLING) {
 		sMode = "falling" ;
@@ -450,7 +448,7 @@ static int raspberrypiISR(int pin, int mode) {
 	} else if(mode == INT_EDGE_NONE) {
 		sMode = "none";
 	} else {
-		wiringXLog(LOG_ERR, "raspberrypi->isr: Invalid mode. Should be INT_EDGE_BOTH, INT_EDGE_RISING, or INT_EDGE_FALLING");
+		wiringXLog(LOG_ERR, "raspberrypi->isr: Invalid mode. Should be INT_EDGE_NONE, INT_EDGE_BOTH, INT_EDGE_RISING, or INT_EDGE_FALLING");
 		return -1;
 	}
 
@@ -459,7 +457,7 @@ static int raspberrypiISR(int pin, int mode) {
 
 	if(fd < 0) {
 		if((f = fopen("/sys/class/gpio/export", "w")) == NULL) {
-			wiringXLog(LOG_ERR, "raspberrypi->isr: Unable to open GPIO export interface: %s", strerror(errno));
+			wiringXLog(LOG_ERR, "raspberrypi->isr: Unable to open GPIO export interface for pin %d: %s", pin, strerror(errno));
 			return -1;
 		}
 
@@ -470,6 +468,7 @@ static int raspberrypiISR(int pin, int mode) {
 	sprintf(path, "/sys/class/gpio/gpio%d/direction", pinToGpio[pin]);
 	if((f = fopen(path, "w")) == NULL) {
 		wiringXLog(LOG_ERR, "raspberrypi->isr: Unable to open GPIO direction interface for pin %d: %s", pin, strerror(errno));
+		close(fd);
 		return -1;
 	}
 
@@ -479,6 +478,7 @@ static int raspberrypiISR(int pin, int mode) {
 	sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGpio[pin]);
 	if((f = fopen(path, "w")) == NULL) {
 		wiringXLog(LOG_ERR, "raspberrypi->isr: Unable to open GPIO edge interface for pin %d: %s", pin, strerror(errno));
+		close(fd);
 		return -1;
 	}
 
@@ -492,12 +492,14 @@ static int raspberrypiISR(int pin, int mode) {
 		fprintf(f, "both\n");
 	} else {
 		wiringXLog(LOG_ERR, "raspberrypi->isr: Invalid mode: %s. Should be rising, falling or both", sMode);
+		close(fd);
 		return -1;
 	}
 	fclose(f);
 
 	if((f = fopen(path, "r")) == NULL) {
 		wiringXLog(LOG_ERR, "raspberrypi->isr: Unable to open GPIO edge interface for pin %d: %s", pin, strerror(errno));
+		close(fd);
 		return -1;
 	}
 
@@ -512,6 +514,7 @@ static int raspberrypiISR(int pin, int mode) {
 
 	if(match == 0) {
 		wiringXLog(LOG_ERR, "raspberrypi->isr: Failed to set interrupt edge to %s", sMode);
+		close(fd);
 		return -1;
 	}
 
@@ -519,10 +522,13 @@ static int raspberrypiISR(int pin, int mode) {
 		sprintf(path, "/sys/class/gpio/gpio%d/value", pinToGpio[pin]);
 		if((sysFds[pin] = open(path, O_RDONLY)) < 0) {
 			wiringXLog(LOG_ERR, "raspberrypi->isr: Unable to open GPIO value interface: %s", strerror(errno));
+			close(fd);
 			return -1;
 		}
 		changeOwner(path);
 	}
+
+	pinModes[pin] = SYS;
 
 	sprintf(path, "/sys/class/gpio/gpio%d/edge", pinToGpio[pin]);
 	changeOwner(path);
@@ -552,7 +558,7 @@ static int raspberrypiWaitForInterrupt(int pin, int ms) {
 	}
 
 	if(sysFds[pin] == -1) {
-		wiringXLog(LOG_ERR, "raspberrypi->waitForInterrupt: GPIO %d not set as interrupt", pin);
+		wiringXLog(LOG_ERR, "raspberrypi->waitForInterrupt: pin %d set as interrupt but not attached to hardware", pin);
 		return -1;
 	}
 
@@ -586,13 +592,14 @@ static int raspberrypiGC(void) {
 				if((f = fopen("/sys/class/gpio/unexport", "w")) == NULL) {
 					wiringXLog(LOG_ERR, "raspberrypi->gc: Unable to open GPIO unexport interface: %s", strerror(errno));
 				}
-
-				fprintf(f, "%d\n", pinToGpio[i]);
-				fclose(f);
+				else {
+					fprintf(f, "%d\n", pinToGpio[i]);
+					fclose(f);
+				}
 				close(fd);
 			}
 		}
-		if(sysFds[i] > 0) {
+		if(sysFds[i] >= 0) {
 			close(sysFds[i]);
 			sysFds[i] = -1;
 		}
@@ -741,7 +748,7 @@ int raspberrypiSPISetup(int channel, int speed) {
 
 void raspberrypiInit(void) {
 
-	memset(pinModes, -1, NUM_PINS);
+	memset(pinModes, -1, sizeof(pinModes));
 
 	platform_register(&raspberrypi, "raspberrypi");
 	raspberrypi->setup=&setup;
