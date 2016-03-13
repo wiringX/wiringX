@@ -59,10 +59,13 @@ int main(void) {
 	unsigned char spi_data[4] = "0000";
 	char temp_str[5];
 
-	wiringXSetup();
+	if(wiringXSetup("pcduino1", NULL) == -1) {
+		wiringXGC();
+		return -1;
+	}
 
 	// set up I2C
-	if((fd_i2c = wiringXI2CSetup(I2C_ADDR)) < 0) {
+	if((fd_i2c = wiringXI2CSetup("/dev/i2c-0", I2C_ADDR)) < 0) {
 		fprintf(stderr, "I2C Setup failed: %i\n", fd_i2c);
 		return -1;
 	} else {

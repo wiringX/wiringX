@@ -6,13 +6,14 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-#ifndef _WIRING_X_RADXA_H_
-#define _WIRING_X_RADXA_H_
+#ifndef __WIRINGX_A10_H_
+#define __WIRINGX_A10_H_
 
-#include "wiringX.h"
+#include "../soc.h"
+#include "../../wiringX.h"
 
-struct platform_t *radxa;
+extern struct soc_t *allwinnerA10;
 
-void radxaInit(void);
+void allwinnerA10Init(void);
 
 #endif

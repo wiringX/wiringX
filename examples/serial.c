@@ -13,10 +13,14 @@ int main(void) {
 	int fd = -1;
 	int date_receive = 0;
 
-	wiringXSetup();
+	if(wiringXSetup("pcduino1", NULL) == -1) {
+		wiringXGC();
+		return -1;
+	}
 
 	if((fd = wiringXSerialOpen("/dev/ttyS0", wiringXSerial)) < 0) {
 		fprintf(stderr, "Unable to open serial device: %s\n", strerror(errno));
+		wiringXGC();
 		return -1;
 	}
 

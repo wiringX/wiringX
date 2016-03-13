@@ -80,6 +80,16 @@ include_directories(${PROJECT_SOURCE_DIR}/src/)
 file(GLOB wiringX
 	"${PROJECT_SOURCE_DIR}/src/*.h"
 	"${PROJECT_SOURCE_DIR}/src/*.c"
+	"${PROJECT_SOURCE_DIR}/src/platform/*.c"
+	"${PROJECT_SOURCE_DIR}/src/platform/*.h"
+	"${PROJECT_SOURCE_DIR}/src/platform/linksprite/*.c"
+	"${PROJECT_SOURCE_DIR}/src/platform/linksprite/*.h"
+	"${PROJECT_SOURCE_DIR}/src/platform/lemaker/*.c"
+	"${PROJECT_SOURCE_DIR}/src/platform/lemaker/*.h"
+	"${PROJECT_SOURCE_DIR}/src/soc/*.c"
+	"${PROJECT_SOURCE_DIR}/src/soc/*.h"
+	"${PROJECT_SOURCE_DIR}/src/soc/allwinner/*.c"
+	"${PROJECT_SOURCE_DIR}/src/soc/allwinner/*.h"
 )
 
 add_library(sources OBJECT ${wiringX})

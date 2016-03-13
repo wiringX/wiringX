@@ -6,13 +6,13 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-#ifndef _WIRING_X_HUMMINGBOARD_H_
-#define _WIRING_X_HUMMINGBOARD_H_
+#ifndef __WIRINGX_BANANAPIM2_H_
+#define __WIRINGX_BANANAPIM2_H_
 
-#include "wiringX.h"
+#include "../platform.h"
 
-struct platform_t *hummingboard;
+extern struct platform_t *bananapim2;
 
-void hummingboardInit(void);
+void bananapiM2Init(void);
 
 #endif

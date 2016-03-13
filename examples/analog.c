@@ -7,7 +7,10 @@
 int main(void) {
 	int data = 0;
 
-	wiringXSetup();
+	if(wiringXSetup("pcduino1", NULL) == -1) {
+		wiringXGC();
+		return -1;
+	}
 
 	while(1) {
 		data = wiringXAnalogRead(0);

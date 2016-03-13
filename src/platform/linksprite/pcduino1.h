@@ -6,13 +6,13 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-#ifndef _WIRING_X_CI20_H_
-#define _WIRING_X_CI20_H_
+#ifndef __WIRINGX_PCDUINO1_H_
+#define __WIRINGX_PCDUINO1_H_
 
-#include "wiringX.h"
+#include "../platform.h"
 
-struct platform_t *ci20;
+extern struct platform_t *pcduino1;
 
-void ci20Init(void);
+void pcduino1Init(void);
 
 #endif

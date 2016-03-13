@@ -19,50 +19,60 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
+#ifndef __FreeBSD__
+	#include <linux/spi/spidev.h>
+	#include "i2c-dev.h"
+#endif
 
 #include "wiringX.h"
-#include "hummingboard.h"
-#include "raspberrypi.h"
-#include "bananapi.h"
-#include "radxa.h"
-#include "ci20.h"
+
+#include "soc/allwinner/a10.h"
+#include "soc/allwinner/a31s.h"
+
+#include "platform/linksprite/pcduino1.h"
+#include "platform/lemaker/bananapim2.h"
+
+static struct platform_t *platform = NULL;
+void (*wiringXLog)(int, const char *, ...) = NULL;
+
+#ifndef __FreeBSD__
+/* SPI Bus Parameters */
+
+struct spi_t {
+	uint8_t mode;
+	uint8_t bits_per_word;
+	uint16_t delay;
+	uint32_t speed;
+	int fd;
+} spi_t;
+
+static struct spi_t spi[2] = {
+	{ 0, 0, 0, 0, 0 },
+	{ 0, 0, 0, 0, 0 }
+};
+#endif
 
 #ifdef _WIN32
 #define timeradd(a, b, result) \
-    do { \
-        (result)->tv_sec = (a)->tv_sec + (b)->tv_sec; \
-        (result)->tv_usec = (a)->tv_usec + (b)->tv_usec; \
-        if ((result)->tv_usec >= 1000000L) { \
-            ++(result)->tv_sec; \
-            (result)->tv_usec -= 1000000L; \
-        } \
-    } while (0)
+	do { \
+		(result)->tv_sec = (a)->tv_sec + (b)->tv_sec; \
+		(result)->tv_usec = (a)->tv_usec + (b)->tv_usec; \
+		if ((result)->tv_usec >= 1000000L) { \
+			++(result)->tv_sec; \
+			(result)->tv_usec -= 1000000L; \
+		} \
+	} while (0)
 
 #define timersub(a, b, result) \
-    do { \
-        (result)->tv_sec = (a)->tv_sec - (b)->tv_sec; \
-        (result)->tv_usec = (a)->tv_usec - (b)->tv_usec; \
-        if ((result)->tv_usec < 0) { \
-            --(result)->tv_sec; \
-            (result)->tv_usec += 1000000L; \
-        } \
-    } while (0)
+	do { \
+		(result)->tv_sec = (a)->tv_sec - (b)->tv_sec; \
+		(result)->tv_usec = (a)->tv_usec - (b)->tv_usec; \
+		if ((result)->tv_usec < 0) { \
+			--(result)->tv_sec; \
+			(result)->tv_usec += 1000000L; \
+		} \
+	} while (0)
 #endif
-
-static struct platform_t *platform = NULL;
-#ifndef _WIN32
-	static int setup = -2;
-#endif
-
-void _fprintf(int prio, const char *format_str, ...) {
-	char line[1024];
-	va_list ap;
-	va_start(ap, format_str);
-	vsprintf(line, format_str, ap);
-	strcat(line, "\n");
-	fputs(line, stderr);
-	va_end(ap);
-}
 
 /* Both the delayMicroseconds and the delayMicrosecondsHard
    are taken from wiringPi */
@@ -109,334 +119,294 @@ void delayMicroseconds(unsigned int howLong) {
 	}
 }
 
-void platform_register(struct platform_t **dev, const char *name) {
-	*dev = malloc(sizeof(struct platform_t));
-	(*dev)->name = NULL;
-	(*dev)->pinMode = NULL;
-	(*dev)->digitalWrite = NULL;
-	(*dev)->digitalRead = NULL;
-	(*dev)->identify = NULL;
-	(*dev)->waitForInterrupt = NULL;
-	(*dev)->isr = NULL;
-	(*dev)->I2CRead = NULL;
-	(*dev)->I2CReadReg8 = NULL;
-	(*dev)->I2CReadReg16 = NULL;
-	(*dev)->I2CWrite = NULL;
-	(*dev)->I2CWriteReg8 = NULL;
-	(*dev)->I2CWriteReg16 = NULL;
-	(*dev)->SPIGetFd = NULL;
-	(*dev)->SPIDataRW = NULL;
-	(*dev)->analogRead = NULL;
+void wiringXDefaultLog(int prio, const char *format_str, ...) {
+	va_list ap, apcpy;
+	char buf[64], *line = malloc(128);
+	int save_errno = -1, pos = 0, bytes = 0;
 
-	if(((*dev)->name = malloc(strlen(name)+1)) == NULL) {
+	if(line == NULL) {
 		fprintf(stderr, "out of memory\n");
-		exit(EXIT_FAILURE);
-	}
-	strcpy((*dev)->name, name);
-	(*dev)->next = platforms;
-	platforms = (*dev);
-}
-
-int wiringXGC(void) {
-	int i = 0;
-	if(platform != NULL) {
-		i = platform->gc();
-	}
-	platform = NULL;
-	struct platform_t *tmp = platforms;
-	while(platforms) {
-		tmp = platforms;
-		free(platforms->name);
-		platforms = platforms->next;
-		free(tmp);
-	}
-	if(platforms != NULL) {
-		free(platforms);
+		exit(-1);
 	}
 
-	wiringXLog(LOG_DEBUG, "garbage collected wiringX library");
-	return i;
-}
+	save_errno = errno;
 
-void pinMode(int pin, int mode) {
-	if(platform != NULL) {
-		if(platform->pinMode) {
-			if(platform->pinMode(pin, mode) == -1) {
-				wiringXLog(LOG_ERR, "%s: error while calling pinMode", platform->name);
-				wiringXGC();
-			}
-		} else {
-			wiringXLog(LOG_ERR, "%s: platform doesn't support pinMode", platform->name);
-			wiringXGC();
+	memset(line, '\0', 128);
+	memset(buf, '\0',  64);
+
+	switch(prio) {
+		case LOG_WARNING:
+			pos += sprintf(line, "WARNING: ");
+		break;
+		case LOG_ERR:
+			pos += sprintf(line, "ERROR: ");
+		break;
+		case LOG_INFO:
+			pos += sprintf(line, "INFO: ");
+		break;
+		case LOG_NOTICE:
+			pos += sprintf(line, "NOTICE: ");
+		break;
+		case LOG_DEBUG:
+			pos += sprintf(line, "DEBUG: ");
+		break;
+		default:
+		break;
+	}
+
+	va_copy(apcpy, ap);
+	va_start(apcpy, format_str);
+#ifdef _WIN32
+	bytes = _vscprintf(format_str, apcpy);
+#else
+	bytes = vsnprintf(NULL, 0, format_str, apcpy);
+#endif
+	if(bytes == -1) {
+		fprintf(stderr, "ERROR: unproperly formatted wiringX log message %s\n", format_str);
+	} else {
+		va_end(apcpy);
+		if((line = realloc(line, (size_t)bytes+(size_t)pos+3)) == NULL) {
+			fprintf(stderr, "out of memory\n");
+			exit(-1);
 		}
+		va_start(ap, format_str);
+		pos += vsprintf(&line[pos], format_str, ap);
+		va_end(ap);
 	}
+	line[pos++]='\n';
+	line[pos++]='\0';
+
+	fprintf(stderr, "%s", line);
+
+	free(line);
+	errno = save_errno;
 }
 
-int wiringXAnalogRead(int channel){
-	if(platform != NULL) {
-		if(platform->analogRead) {
-			int x = platform->analogRead(channel);
-			if(x == -1) {
-				wiringXLog(LOG_ERR, "%s: error while calling analogRead", platform->name);
-				wiringXGC();
-			} else {
-				return x;
-			}
-		} else {
-			wiringXLog(LOG_ERR, "%s: platform doesn't support analogRead", platform->name);
-			wiringXGC();
-		}
+int wiringXSetup(char *name, void (*func)(int, const char *, ...)) {
+	if(func != NULL) {
+		wiringXLog = func;
+	} else {
+		wiringXLog = wiringXDefaultLog;
 	}
-	return -1;
+
+	/* Init all SoC's */
+	allwinnerA10Init();
+	allwinnerA31sInit();
+	/* Init all platforms */
+	pcduino1Init();
+	bananapiM2Init();
+
+	if((platform = platform_get_by_name(name)) == NULL) {
+		struct platform_t *tmp = NULL;
+		char message[1024];
+		int l = snprintf(message, 1023-l, "The %s is an unsupported or unknown platform\n", name);
+		l += snprintf(&message[l], 1023-l, "\tsupported wiringX platforms are:\n");
+		int i = 0;
+		while((tmp = platform_iterate(i++)) != NULL) {
+			l += snprintf(&message[l], 1023-l, "\t- %s\n", tmp->name);
+		}
+		wiringXLog(LOG_ERR, message);
+		return -1;
+	}
+	platform->setup();
+	
+	return 0;
 }
 
-void digitalWrite(int pin, int value) {
-	if(platform != NULL) {
-		if(platform->digitalWrite) {
-			if(platform->digitalWrite(pin, value) == -1) {
-				wiringXLog(LOG_ERR, "%s: error while calling digitalWrite", platform->name);
-				wiringXGC();
-			}
-		} else {
-			wiringXLog(LOG_ERR, "%s: platform doesn't support digitalWrite", platform->name);
-			wiringXGC();
-		}
+char *wiringXPlatform(void) {
+	if(platform == NULL) {
+		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
 	}
+	return platform->name;
+}
+
+int pinMode(int pin, enum pinmode_t mode) {
+	if(platform == NULL) {
+		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
+	} else if(platform->pinMode == NULL) {
+		wiringXLog(LOG_ERR, "The %s does not support the pinMode functionality", platform->name);
+		return -1;
+	}
+	return platform->pinMode(pin, mode);
+}
+
+int digitalWrite(int pin, enum digital_value_t value) {
+	if(platform == NULL) {
+		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
+	}	else if(platform->digitalWrite == NULL) {
+		wiringXLog(LOG_ERR, "The %s does not support the digitalWrite functionality", platform->name);
+		return -1;
+	}
+	return platform->digitalWrite(pin, value);
 }
 
 int digitalRead(int pin) {
-	if(platform != NULL) {
-		if(platform->digitalRead) {
-			int x = platform->digitalRead(pin);
-			if(x == -1) {
-				wiringXLog(LOG_ERR, "%s: error while calling digitalRead", platform->name);
-				wiringXGC();
-			} else {
-				return x;
-			}
-		} else {
-			wiringXLog(LOG_ERR, "%s: platform doesn't support digitalRead", platform->name);
-			wiringXGC();
-		}
+	if(platform == NULL) {
+		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
+	}	else if(platform->digitalRead == NULL) {
+		wiringXLog(LOG_ERR, "The %s does not support the digitalRead functionality", platform->name);
+		return -1;
 	}
-	return -1;
+	return platform->digitalRead(pin);
+}
+
+int wiringXISR(int pin, enum isr_mode_t mode) {
+	if(platform == NULL) {
+		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
+	}	else if(platform->isr == NULL) {
+		wiringXLog(LOG_ERR, "The %s does not support the wiringXISR functionality", platform->name);
+		return -1;
+	}
+	return platform->isr(pin, mode);
 }
 
 int waitForInterrupt(int pin, int ms) {
-	if(platform != NULL) {
-		if(platform->waitForInterrupt) {
-			int x = platform->waitForInterrupt(pin, ms);
-			if(x == -1) {
-				wiringXLog(LOG_ERR, "%s: error while calling waitForInterrupt", platform->name);
-				wiringXGC();
-			} else {
-				return x;
-			}
-		} else {
-			wiringXLog(LOG_ERR, "%s: platform doesn't support waitForInterrupt", platform->name);
-			wiringXGC();
-		}
+	if(platform == NULL) {
+		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
+	}	else if(platform->waitForInterrupt == NULL) {
+		wiringXLog(LOG_ERR, "The %s does not support the waitForInterrupt functionality", platform->name);
+		return -1;
 	}
-	return -1;
+	return platform->waitForInterrupt(pin, ms);
 }
 
-int wiringXISR(int pin, int mode) {
-	if(platform != NULL) {
-		if(platform->isr) {
-			int x = platform->isr(pin, mode);
-			if(x == -1) {
-				wiringXLog(LOG_ERR, "%s: error while calling isr", platform->name);
-				wiringXGC();
-			} else {
-				return x;
-			}
-		} else {
-			wiringXLog(LOG_ERR, "%s: platform doesn't support isr", platform->name);
-			wiringXGC();
-		}
+int wiringXValidGPIO(int pin) {
+	if(platform == NULL) {
+		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
+	}	else if(platform->validGPIO == NULL) {
+		wiringXLog(LOG_ERR, "The %s does not support the wiringXValidGPIO functionality", platform->name);
+		return -1;
 	}
-	return -1;
+	return platform->validGPIO(pin);
 }
 
+#ifndef __FreeBSD__
 int wiringXI2CRead(int fd) {
-	if(platform != NULL) {
-		if(platform->I2CRead) {
-			int x = platform->I2CRead(fd);
-			if(x == -1) {
-				wiringXLog(LOG_ERR, "%s: error while calling I2CRead", platform->name);
-				wiringXGC();
-			} else {
-				return x;
-			}
-		} else {
-			wiringXLog(LOG_ERR, "%s: platform doesn't support I2CRead", platform->name);
-			wiringXGC();
-		}
-	}
-	return -1;
+	return i2c_smbus_read_byte(fd);
 }
 
 int wiringXI2CReadReg8(int fd, int reg) {
-	if(platform != NULL) {
-		if(platform->I2CReadReg8) {
-			int x = platform->I2CReadReg8(fd, reg);
-			if(x == -1) {
-				wiringXLog(LOG_ERR, "%s: error while calling I2CReadReg8", platform->name);
-				wiringXGC();
-			} else {
-				return x;
-			}
-		} else {
-			wiringXLog(LOG_ERR, "%s: platform doesn't support I2CReadReg8", platform->name);
-			wiringXGC();
-		}
-	}
-	return -1;
+	return i2c_smbus_read_byte_data(fd, reg);
 }
 
 int wiringXI2CReadReg16(int fd, int reg) {
-	if(platform != NULL) {
-		if(platform->I2CReadReg16) {
-			int x = platform->I2CReadReg16(fd, reg);
-			if(x == -1) {
-				wiringXLog(LOG_ERR, "%s: error while calling I2CReadReg16", platform->name);
-				wiringXGC();
-			} else {
-				return x;
-			}
-		} else {
-			wiringXLog(LOG_ERR, "%s: platform doesn't support I2CReadReg16", platform->name);
-			wiringXGC();
-		}
-	}
-	return -1;
+	return i2c_smbus_read_word_data(fd, reg);
 }
 
 int wiringXI2CWrite(int fd, int data) {
-	if(platform != NULL) {
-		if(platform->I2CWrite) {
-			int x = platform->I2CWrite(fd, data);
-			if(x == -1) {
-				wiringXLog(LOG_ERR, "%s: error while calling I2CWrite", platform->name);
-				wiringXGC();
-			} else {
-				return x;
-			}
-		} else {
-			wiringXLog(LOG_ERR, "%s: platform doesn't support I2CWrite", platform->name);
-			wiringXGC();
-		}
-	}
-	return -1;
+	return i2c_smbus_write_byte(fd, data);
 }
 
 int wiringXI2CWriteReg8(int fd, int reg, int data) {
-	if(platform != NULL) {
-		if(platform->I2CWriteReg8) {
-			int x = platform->I2CWriteReg8(fd, reg, data);
-			if(x == -1) {
-				wiringXLog(LOG_ERR, "%s: error while calling I2CWriteReg8", platform->name);
-				wiringXGC();
-			} else {
-				return x;
-			}
-		} else {
-			wiringXLog(LOG_ERR, "%s: platform doesn't support I2CWriteReg8", platform->name);
-			wiringXGC();
-		}
-	}
-	return -1;
+	return i2c_smbus_write_byte_data(fd, reg, data);
 }
 
 int wiringXI2CWriteReg16(int fd, int reg, int data) {
-	if(platform != NULL) {
-		if(platform->I2CWriteReg16) {
-			int x = platform->I2CWriteReg16(fd, reg, data);
-			if(x == -1) {
-				wiringXLog(LOG_ERR, "%s: error while calling I2CWriteReg16", platform->name);
-				wiringXGC();
-			} else {
-				return x;
-			}
-		} else {
-			wiringXLog(LOG_ERR, "%s: platform doesn't support I2CWriteReg16", platform->name);
-			wiringXGC();
-		}
-	}
-	return -1;
+	return i2c_smbus_write_word_data(fd, reg, data);
 }
 
-int wiringXI2CSetup(int devId) {
-	if(platform != NULL) {
-		if(platform->I2CSetup) {
-			int x = platform->I2CSetup(devId);
-			if(x == -1) {
-				wiringXLog(LOG_ERR, "%s: error while calling I2CSetup", platform->name);
-				wiringXGC();
-			} else {
-				return x;
-			}
-		} else {
-			wiringXLog(LOG_ERR, "%s: platform doesn't support I2CSetup", platform->name);
-			wiringXGC();
-		}
+int wiringXI2CSetup(char *path, int devId) {
+	int fd = 0;
+
+	if((fd = open(path, O_RDWR)) < 0) {
+		wiringXLog(LOG_ERR, "wiringX failed to open %s for reading and writing", path);
+		return -1;
 	}
-	return -1;
+
+	if(ioctl(fd, I2C_SLAVE, devId) < 0) {
+		wiringXLog(LOG_ERR, "wiringX failed to set %s to slave mode", path);
+		return -1;
+	}
+
+	return fd;
 }
 
 int wiringXSPIGetFd(int channel) {
-	if(platform != NULL) {
-		if(platform->SPIGetFd) {
-			int x = platform->SPIGetFd(channel);
-			if(x == -1) {
-				wiringXLog(LOG_ERR, "%s: error while calling SPIGetFd", platform->name);
-				wiringXGC();
-			} else {
-				return x;
-			}
-		} else {
-			wiringXLog(LOG_ERR, "%s: platform doesn't support SPIGetFd", platform->name);
-			wiringXGC();
-		}
-	}
-	return -1;
+	return spi[channel & 1].fd;
 }
 
 int wiringXSPIDataRW(int channel, unsigned char *data, int len) {
-	if(platform != NULL) {
-		if(platform->SPIDataRW) {
-			int x = platform->SPIDataRW(channel, data, len);
-			if(x == -1) {
-				wiringXLog(LOG_ERR, "%s: error while calling SPIDataRW", platform->name);
-				wiringXGC();
-			} else {
-				return x;
-			}
-		} else {
-			wiringXLog(LOG_ERR, "%s: platform doesn't support SPIDataRW", platform->name);
-			wiringXGC();
-		}
+	struct spi_ioc_transfer tmp;
+	memset(&tmp, 0, sizeof(tmp));
+	channel &= 1;
+
+	tmp.tx_buf = (unsigned long)data;
+	tmp.rx_buf = (unsigned long)data;
+	tmp.len = len;
+	tmp.delay_usecs = spi[channel].delay;
+	tmp.speed_hz = spi[channel].speed;
+	tmp.bits_per_word = spi[channel].bits_per_word;
+#ifdef SPI_IOC_WR_MODE32
+	tmp.tx_nbits = 0;
+#endif
+#ifdef SPI_IOC_RD_MODE32
+	tmp.rx_nbits = 0;
+#endif
+
+	if(ioctl(spi[channel].fd, SPI_IOC_MESSAGE(1), &tmp) < 0) {
+		wiringXLog(LOG_ERR, "wiringX is unable to read/write from channel %d (%s)", channel, strerror(errno));
+		return -1;
 	}
-	return -1;
+	return 0;
 }
 
 int wiringXSPISetup(int channel, int speed) {
-	if(platform != NULL) {
-		if(platform->SPISetup) {
-			int x = platform->SPISetup(channel, speed);
-			if(x == -1) {
-				wiringXLog(LOG_ERR, "%s: error while calling SPISetup", platform->name);
-				wiringXGC();
-			} else {
-				return x;
-			}
-		} else {
-			wiringXLog(LOG_ERR, "%s: platform doesn't support SPISetup", platform->name);
-			wiringXGC();
-		}
+	const char *device = NULL;
+
+	channel &= 1;
+
+	if(channel == 0) {
+		device = "/dev/spidev0.0";
+	} else {
+		device = "/dev/spidev0.1";
 	}
-	return -1;
+
+	if((spi[channel].fd = open(device, O_RDWR)) < 0) {
+		wiringXLog(LOG_ERR, "wiringX is unable to open SPI device %s (%s)", device, strerror(errno));
+		return -1;
+	}
+
+	spi[channel].speed = speed;
+
+	if(ioctl(spi[channel].fd, SPI_IOC_WR_MODE, &spi[channel].mode) < 0) {
+		wiringXLog(LOG_ERR, "wiringX is unable to set write mode for device %s (%s)", device, strerror(errno));
+		close(spi[channel].fd);
+		return -1;
+	}
+
+	if(ioctl(spi[channel].fd, SPI_IOC_RD_MODE, &spi[channel].mode) < 0) {
+		wiringXLog(LOG_ERR, "wiringX is unable to set read mode for device %s (%s)", device, strerror(errno));
+		close(spi[channel].fd);
+		return -1;
+	}
+
+	if(ioctl(spi[channel].fd, SPI_IOC_WR_BITS_PER_WORD, &spi[channel].bits_per_word) < 0) {
+		wiringXLog(LOG_ERR, "wiringX is unable to set write bits_per_word for device %s (%s)", device, strerror(errno));
+		close(spi[channel].fd);
+		return -1;
+	}
+
+	if(ioctl(spi[channel].fd, SPI_IOC_RD_BITS_PER_WORD, &spi[channel].bits_per_word) < 0) {
+		wiringXLog(LOG_ERR, "wiringX is unable to set read bits_per_word for device %s (%s)", device, strerror(errno));
+		close(spi[channel].fd);
+		return -1;
+	}
+
+	if(ioctl(spi[channel].fd, SPI_IOC_WR_MAX_SPEED_HZ, &spi[channel].speed) < 0) {
+		wiringXLog(LOG_ERR, "wiringX is unable to set write max_speed for device %s (%s)", device, strerror(errno));
+		close(spi[channel].fd);
+		return -1;
+	}
+
+	if(ioctl(spi[channel].fd, SPI_IOC_RD_MAX_SPEED_HZ, &spi[channel].speed) < 0) {
+		wiringXLog(LOG_ERR, "wirignX is unable to set read max_speed for device %s (%s)", device, strerror(errno));
+		close(spi[channel].fd);
+		return -1;
+	}
+
+	return spi[channel].fd;
 }
+#endif
 
 int wiringXSerialOpen(char *device, struct wiringXSerial_t wiringXSerial) {
 	struct termios options;
@@ -444,27 +414,26 @@ int wiringXSerialOpen(char *device, struct wiringXSerial_t wiringXSerial) {
 	int status = 0, fd = 0;
 
 	switch(wiringXSerial.baud) {
-		case     50:	myBaud = B50; break;
-		case     75:	myBaud = B75; break;
-		case    110:	myBaud = B110; break;
-		case    134:	myBaud = B134; break;
-		case    150:	myBaud = B150; break;
-		case    200:	myBaud = B200; break;
-		case    300:	myBaud = B300; break;
-		case    600:	myBaud = B600; break;
-		case   1200:	myBaud = B1200; break;
-		case   1800:	myBaud = B1800; break;
-		case   2400:	myBaud = B2400; break;
-		case   4800:	myBaud = B4800; break;
-		case   9600:	myBaud = B9600; break;
-		case  19200:	myBaud = B19200; break;
-		case  38400:	myBaud = B38400; break;
-		case  57600:	myBaud = B57600; break;
-		case 115200:	myBaud = B115200; break;
-		case 230400:	myBaud = B230400; break;
-
+		case 50: myBaud = B50; break;
+		case 75: myBaud = B75; break;
+		case 110:	myBaud = B110; break;
+		case 134:	myBaud = B134; break;
+		case 150:	myBaud = B150; break;
+		case 200:	myBaud = B200; break;
+		case 300:	myBaud = B300; break;
+		case 600:	myBaud = B600; break;
+		case 1200: myBaud = B1200; break;
+		case 1800: myBaud = B1800; break;
+		case 2400: myBaud = B2400; break;
+		case 4800: myBaud = B4800; break;
+		case 9600: myBaud = B9600; break;
+		case 19200: myBaud = B19200; break;
+		case 38400: myBaud = B38400; break;
+		case 57600: myBaud = B57600; break;
+		case 115200: myBaud = B115200; break;
+		case 230400: myBaud = B230400; break;
 		default:
-		return -2;
+		return -1;
 	}
 
 	if((fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY | O_NONBLOCK)) == -1) {
@@ -482,66 +451,67 @@ int wiringXSerialOpen(char *device, struct wiringXSerial_t wiringXSerial) {
 	options.c_cflag |= (CLOCAL | CREAD);
 
 	options.c_cflag &= ~CSIZE;
+
 	switch(wiringXSerial.databits) {
 		case 7:
 			options.c_cflag |= CS7;
-			break;
+		break;
 		case 8:
 			options.c_cflag |= CS8;
-			break;
+		break;
 		default:
-			wiringXLog(LOG_ERR, "Unsupported data size");
-			return -1;
+			wiringXLog(LOG_ERR, "wiringX serial interface can not handle the %d data size", wiringXSerial.databits);
+		return -1;
 	}
 	switch(wiringXSerial.parity) {
 		case 'n':
 		case 'N':/*no parity*/
 			options.c_cflag &= ~PARENB;
 			options.c_iflag &= ~INPCK;
-			break;
+		break;
 		case 'o':
 		case 'O':
 			options.c_cflag |= (PARODD | PARENB);
 			options.c_iflag |= INPCK; /* Disable parity checking */
-			break;
+		break;
 		case 'e':
 		case 'E':
 			options.c_cflag |= PARENB; /* Enable parity */
 			options.c_cflag &= ~PARODD;
 			options.c_iflag |= INPCK;
-			break;
+		break;
 		case 'S':
 		case 's': /*as no parity*/
 			options.c_cflag &= ~PARENB;
 			options.c_cflag &= ~CSTOPB;
-			break;
+		break;
 		default:
-			wiringXLog(LOG_ERR, "Unsupported parity");
-			return -1;
+			wiringXLog(LOG_ERR, "wiringX serial interface can not handle the %d parity", wiringXSerial.parity);
+		return -1;
 	}
 	switch(wiringXSerial.stopbits) {
 		case 1:
 			options.c_cflag &= ~CSTOPB;
-			break;
+		break;
 		case 2:
 			options.c_cflag |= CSTOPB;
-			break;
+		break;
 		default:
-			wiringXLog(LOG_ERR, "Unsupported data stop bits");
-			return -1;
+			wiringXLog(LOG_ERR, "wiringX serial interface can not handle the %d stop bit", wiringXSerial.stopbits);
+		return -1;
 	}
 	switch(wiringXSerial.flowcontrol) {
 		case 'x':
 		case 'X':
 			options.c_iflag |= (IXON | IXOFF | IXANY);
-			break;
+		break;
 		case 'n':
 		case 'N':
 			options.c_iflag &= ~(IXON | IXOFF | IXANY);
-			break;
+		break;
 		default:
-			wiringXLog(LOG_ERR, "Unsupported data flow control");
-			return -1;
+			wiringXLog(LOG_ERR, "wiringX serial interface can not handle the %d flowcontol", wiringXSerial.flowcontrol);
+		return -1;
 	}
 
 	options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
@@ -568,7 +538,7 @@ void wiringXSerialFlush(int fd) {
 	if(fd > 0) {
 		tcflush(fd, TCIOFLUSH);
 	} else {
-		wiringXLog(LOG_ERR, "Serial interface is not opened");
+		wiringXLog(LOG_ERR, "wiringX serial interface has not been opened");
 	}
 }
 
@@ -580,17 +550,17 @@ void wiringXSerialClose(int fd) {
 
 void wiringXSerialPutChar(int fd, unsigned char c) {
 	if(fd > 0) {
-		write(fd, &c, 1);
+		int x = write(fd, &c, 1);
 	} else {
-		wiringXLog(LOG_ERR, "Serial interface is not opened");
+		wiringXLog(LOG_ERR, "wiringX serial interface has not been opened");
 	}
 }
 
 void wiringXSerialPuts(int fd, char *s) {
 	if(fd > 0) {
-		write(fd, s, strlen(s));
+		int x = write(fd, s, strlen(s));
 	} else {
-		wiringXLog(LOG_ERR, "Serial interface is not opened");
+		wiringXLog(LOG_ERR, "wiringX serial interface has not been opened");
 	}
 }
 
@@ -607,7 +577,7 @@ void wiringXSerialPrintf(int fd, char *message, ...) {
 
 		wiringXSerialPuts(fd, buffer);
 	} else {
-		wiringXLog(LOG_ERR, "Serial interface is not opened");
+		wiringXLog(LOG_ERR, "wiringX serial interface has not been opened");
 	}
 }
 
@@ -620,7 +590,7 @@ int wiringXSerialDataAvail(int fd) {
 		}
 		return result;
 	} else {
-		wiringXLog(LOG_ERR, "Serial interface is not opened");
+		wiringXLog(LOG_ERR, "wiringX serial interface has not been opened");
 		return -1;
 	}
 }
@@ -634,77 +604,26 @@ int wiringXSerialGetChar(int fd) {
 		}
 		return ((int)x) & 0xFF;
 	} else {
-		wiringXLog(LOG_ERR, "Serial interface is not opened");
+		wiringXLog(LOG_ERR, "wiringX serial interface has not been opened");
 		return -1;
 	}
 }
 
-char *wiringXPlatform(void) {
-	if(platform != NULL) {
-		return platform->name;
-	} else {
-		return NULL;
+int wiringXSelectableFd(int gpio) {
+	if(platform == NULL) {
+		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
+	}	else if(platform->selectableFd == NULL) {
+		wiringXLog(LOG_ERR, "The %s does not support the wiringXSelectableFd functionality", platform->name);
+		return -1;
 	}
+	return platform->selectableFd(gpio);
 }
 
-int wiringXValidGPIO(int gpio) {
+int wiringXGC(void) {
 	if(platform != NULL) {
-		if(platform->validGPIO) {
-			return platform->validGPIO(gpio);
-		} else {
-			wiringXLog(LOG_ERR, "%s: platform doesn't support gpio number validation", platform->name);
-			wiringXGC();
-		}
+		platform->gc();
 	}
-	return -1;
-}
-
-int wiringXSupported(void) {
-#if defined(__arm__) || defined(__mips__)
+	platform_gc();
+	soc_gc();
 	return 0;
-#else
-	return -1;
-#endif
-}
-
-int wiringXSetup(void) {
-#ifndef _WIN32	
-	if(wiringXLog == NULL) {
-		wiringXLog = _fprintf;
-	}
-
-	if(wiringXSupported() == 0) {
-		if(setup == -2) {
-			hummingboardInit();
-			raspberrypiInit();
-			bananapiInit();
-			ci20Init();
-			radxaInit();
-
-			int match = 0;
-			struct platform_t *tmp = platforms;
-			while(tmp) {
-				if(tmp->identify() >= 0) {
-					platform = tmp;
-					match = 1;
-					break;
-				}
-				tmp = tmp->next;
-			}
-
-			if(match == 0) {
-				wiringXLog(LOG_ERR, "hardware not supported");
-				wiringXGC();
-				return -1;
-			} else {
-				wiringXLog(LOG_DEBUG, "running on a %s", platform->name);
-			}
-			setup = platform->setup();
-			return setup;
-		} else {
-			return setup;
-		}
-	}
-#endif
-	return -1;
 }
