@@ -26,6 +26,7 @@
 #include "bananapi.h"
 #include "radxa.h"
 #include "ci20.h"
+#include "chip.h"
 
 #ifdef _WIN32
 #define timeradd(a, b, result) \
@@ -678,6 +679,7 @@ int wiringXSetup(void) {
 			hummingboardInit();
 			raspberrypiInit();
 			bananapiInit();
+			chipInit();
 			ci20Init();
 			radxaInit();
 
