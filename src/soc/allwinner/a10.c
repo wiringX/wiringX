@@ -272,8 +272,8 @@ static int allwinnerA10DigitalRead(int i) {
 	unsigned long addr = 0;
 	unsigned long val = 0;
 
-	gpio = allwinnerA10->gpio[pin->addr];
 	pin = &allwinnerA10->layout[allwinnerA10->map[i]];
+	gpio = allwinnerA10->gpio[pin->addr];
 	addr = (unsigned long)(gpio + allwinnerA10->base_offs[pin->addr] + pin->select.offset);
 
 	if(allwinnerA10->map == NULL) {
@@ -419,8 +419,8 @@ static int allwinnerA10GC(void) {
 			}
 		}
 	}
-	if(allwinnerA10->gpio != NULL) {
-		munmap(allwinnerA10->gpio, allwinnerA10->page_size);
+	if(allwinnerA10->gpio[0] != NULL) {
+		munmap(allwinnerA10->gpio[0], allwinnerA10->page_size);
 	} 
 	return 0;
 }

@@ -18,6 +18,7 @@ typedef struct soc_t {
 	char chip[255];
 
 	int *map;
+	int *irq;
 	
 	struct layout_t *layout;
 
@@ -40,6 +41,7 @@ typedef struct soc_t {
 
 	int (*setup)(void);
 	void (*setMap)(int *);
+	void (*setIRQ)(int *);
 	char *(*getPinName)(int);	
 
 	int (*validGPIO)(int);

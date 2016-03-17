@@ -86,10 +86,14 @@ file(GLOB wiringX
 	"${PROJECT_SOURCE_DIR}/src/platform/linksprite/*.h"
 	"${PROJECT_SOURCE_DIR}/src/platform/lemaker/*.c"
 	"${PROJECT_SOURCE_DIR}/src/platform/lemaker/*.h"
+	"${PROJECT_SOURCE_DIR}/src/platform/solidrun/*.c"
+	"${PROJECT_SOURCE_DIR}/src/platform/solidrun/*.h"
 	"${PROJECT_SOURCE_DIR}/src/soc/*.c"
 	"${PROJECT_SOURCE_DIR}/src/soc/*.h"
 	"${PROJECT_SOURCE_DIR}/src/soc/allwinner/*.c"
 	"${PROJECT_SOURCE_DIR}/src/soc/allwinner/*.h"
+	"${PROJECT_SOURCE_DIR}/src/soc/nxp/*.c"
+	"${PROJECT_SOURCE_DIR}/src/soc/nxp/*.h"
 )
 
 add_library(sources OBJECT ${wiringX})

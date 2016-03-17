@@ -28,9 +28,11 @@
 
 #include "soc/allwinner/a10.h"
 #include "soc/allwinner/a31s.h"
+#include "soc/nxp/imx6dqrm.h"
 
 #include "platform/linksprite/pcduino1.h"
 #include "platform/lemaker/bananapim2.h"
+#include "platform/solidrun/hummingboard_edge.h"
 
 static struct platform_t *platform = NULL;
 void (*wiringXLog)(int, const char *, ...) = NULL;
@@ -192,9 +194,11 @@ int wiringXSetup(char *name, void (*func)(int, const char *, ...)) {
 	/* Init all SoC's */
 	allwinnerA10Init();
 	allwinnerA31sInit();
+	nxpIMX6DQRMInit();
 	/* Init all platforms */
 	pcduino1Init();
 	bananapiM2Init();
+	hummingboardEdgeInit();
 
 	if((platform = platform_get_by_name(name)) == NULL) {
 		struct platform_t *tmp = NULL;
