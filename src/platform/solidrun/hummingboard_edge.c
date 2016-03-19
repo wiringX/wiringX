@@ -63,27 +63,27 @@ static int irq[] = {
 
 static int map[] = {
 	/*	GPIO7_IO12,	GPIO7_IO11,	GPIO2_IO22 */
-			195,				194,				54,
+			195,				194,				 54,
 	/*	GPIO3_IO27,	GPIO3_IO26,	GPIO3_IO30 */
-			91,					90,					94,
+			 91,				 90,				 94,
 	/*	GPIO3_IO31,	GPIO5_IO04,	GPIO6_IO06 */
-			95,					125,				159,
+			 95,				125,				159,
 	/*	GPIO2_IO16,	GPIO2_IO17,	GPIO2_IO18 */
-			48,					47,					50,
+			 48,				 47,				 50,
 	/*	GPIO2_IO19,	GPIO2_IO20,	GPIO2_IO21 */
-			51,					52,					53,
+			 51,				 52,				 53,
 	/*	GPIO2_IO28,	GPIO2_IO29,	GPIO3_IO00 */
-			60,					61,					64,
+			 60,				 61,				 64,
 	/*	GPIO3_IO01,	GPIO3_IO12,	GPIO3_IO15 */
-			65,					76,					79,
+			 65,				 76,				 79,
 	/*	GPIO3_IO14,	GPIO3_IO13,	GPIO3_IO02 */
-			78,					77,					66,
+			 78,				 77,				 66,
 	/*	GPIO3_IO03,	GPIO3_IO04,	GPIO3_IO05 */
-			67,					68,					69,
+			 67,				 68,				 69,
 	/*	GPIO3_IO06,	GPIO3_IO07,	GPIO3_IO08 */
-			70,					71,					72,
+			 70,				 71,				 72,
 	/*	GPIO3_IO09,	GPIO3_IO11,	GPIO3_IO10 */
-			73,					75,					74
+			 73,				 75,				 74
 };
 
 static int hummingboardEdgeValidGPIO(int pin) {
