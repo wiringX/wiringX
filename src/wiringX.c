@@ -660,7 +660,7 @@ int wiringXValidGPIO(int gpio) {
 }
 
 int wiringXSupported(void) {
-#if defined(__arm__) || defined(__mips__)
+#if defined(__arm__) || defined(__mips__) || defined(__aarch64__)
 	return 0;
 #else
 	return -1;
@@ -680,6 +680,7 @@ int wiringXSetup(void) {
 			bananapiInit();
 			ci20Init();
 			radxaInit();
+			odroidInit();
 
 			int match = 0;
 			struct platform_t *tmp = platforms;
