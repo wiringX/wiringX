@@ -84,8 +84,8 @@
 #define C2_GPIOY_INP_REG_OFFSET    0x111
 
 // For ODROID-XU3/4
-#define XU_AinNode0                "/sys/devices/12d10000.adc/iio:device0/in_voltage0_raw"
-#define XU_AinNode1                "/sys/devices/12d10000.adc/iio:device0/in_voltage3_raw"
+#define XU_AinNode0                "/sys/devices/12d10000.adc/iio:device0/in_voltage3_raw"
+#define XU_AinNode1                "/sys/devices/12d10000.adc/iio:device0/in_voltage0_raw"
 #define XU_VERSION                 1
 
 #define ODROIDXU_GPX_BASE          0x13400000  // GPX0,1,2,3
