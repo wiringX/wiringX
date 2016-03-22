@@ -147,6 +147,7 @@ static const char *AinNode1 = NULL;
 
 static int odModel = 0;
 static volatile uint32_t *gpio;
+static volatile uint32_t *gpio1; // For ODROID-XU3/4
 static int pinModes[NUM_PINS];
 
 static uint8_t gpioToShift[] = {
@@ -653,12 +654,15 @@ static int setup(void)	{
 		if(pc == MAP_FAILED)
 			goto mmap_err;
 	} else if (odModel == OD_MODEL_ODROIDXU_34) {
+		void *pc1;
+
 		pc = (void *)mmap(0, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, ODROIDXU_GPX_BASE);
 		if(pc == MAP_FAILED)
 			goto mmap_err;
-		pc = (void *)mmap(0, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, ODROIDXU_GPA_BASE);
+		pc1 = (void *)mmap(0, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, ODROIDXU_GPA_BASE);
 		if(pc == MAP_FAILED)
 			goto mmap_err;
+		gpio1 = (uint32_t *)pc1;
 	} else {
 		wiringXLog(LOG_ERR, "odroid->setup: Unknown hardware");
 		return -1;
@@ -706,10 +710,10 @@ static int odroidDigitalRead(int pin) {
 	if((pin & ODROID_GPIO_MASK) == 0) {
 		pin = pinToGpio[pin] ;
 
-		 if ((*(gpio + gpioToGPLEVReg(pin)) & (1 << gpioToShiftReg(pin))) != 0) {
-			return HIGH;
+		if (odModel == OD_MODEL_ODROIDXU_34 && pin >= 100) {
+			return ((*(gpio1 + gpioToGPLEVReg(pin)) & (1 << gpioToShiftReg(pin))) != 0) ? HIGH : LOW;
 		} else {
-			return LOW;
+			return ((*(gpio + gpioToGPLEVReg(pin)) & (1 << gpioToShiftReg(pin))) != 0) ? HIGH : LOW;
 		}
 	}
 	return 0;
@@ -729,10 +733,17 @@ static int odroidDigitalWrite(int pin, int value) {
 	if((pin & ODROID_GPIO_MASK) == 0) {
 		pin = pinToGpio[pin] ;
 
-		if(value == LOW)
-			*(gpio + gpioToGPSETReg(pin)) &= ~(1 << gpioToShiftReg(pin));
-		else
-			*(gpio + gpioToGPSETReg(pin)) |=  (1 << gpioToShiftReg(pin));
+		if (odModel == OD_MODEL_ODROIDXU_34 && pin >= 100) {
+			if(value == LOW)
+				*(gpio1 + gpioToGPSETReg(pin)) &= ~(1 << gpioToShiftReg(pin));
+			else
+				*(gpio1 + gpioToGPSETReg(pin)) |=  (1 << gpioToShiftReg(pin));
+		} else {
+			if(value == LOW)
+				*(gpio + gpioToGPSETReg(pin)) &= ~(1 << gpioToShiftReg(pin));
+			else
+				*(gpio + gpioToGPSETReg(pin)) |=  (1 << gpioToShiftReg(pin));
+		}
 	}
 	return 0;
 }
@@ -752,10 +763,31 @@ static int odroidPinMode(int pin, int mode) {
 		fSel = gpioToGPFSEL[pin];
 		shift = gpioToShift[pin];
 
-		if(mode == INPUT) {
-			*(gpio + gpioToGPFSELReg(pin)) = (*(gpio + gpioToGPFSELReg(pin)) |  (1 << gpioToShiftReg(pin)));   
-		} else if(mode == OUTPUT) {
-			*(gpio + gpioToGPFSELReg(pin)) = (*(gpio + gpioToGPFSELReg(pin)) & ~(1 << gpioToShiftReg(pin)));
+		if (odModel == OD_MODEL_ODROIDXU_34) {
+			shift = (gpioToShiftReg(pin) * 4);
+
+			if (pin >= 100) {
+				if(mode == INPUT) {
+					*(gpio1 + gpioToGPFSELReg(pin)) &= ~(0xF << shift);
+				} else if(mode == OUTPUT) {
+					*(gpio1 + gpioToGPFSELReg(pin)) &= ~(0xF << shift);
+					*(gpio1 + gpioToGPFSELReg(pin)) |=  (0x1 << shift);
+				}
+			} else {
+				if(mode == INPUT) {
+					*(gpio + gpioToGPFSELReg(pin)) &= ~(0xF << shift);
+				} else if(mode == OUTPUT) {
+					*(gpio + gpioToGPFSELReg(pin)) &= ~(0xF << shift);
+					*(gpio + gpioToGPFSELReg(pin)) |=  (0x1 << shift);
+				}
+
+			}
+		} else {
+			if(mode == INPUT) {
+				*(gpio + gpioToGPFSELReg(pin)) = (*(gpio + gpioToGPFSELReg(pin)) |  (1 << gpioToShiftReg(pin)));
+			} else if(mode == OUTPUT) {
+				*(gpio + gpioToGPFSELReg(pin)) = (*(gpio + gpioToGPFSELReg(pin)) & ~(1 << gpioToShiftReg(pin)));
+			}
 		}
 	}
 	return 0;
