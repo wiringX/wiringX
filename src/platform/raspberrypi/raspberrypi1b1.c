@@ -25,11 +25,11 @@ struct platform_t *raspberrypi1b1 = NULL;
 
 static int map[] = {
 	/* 	FSEL17,	FSEL18,	FSEL27,	FSEL22 	*/
-			17, 		18, 		27, 		22,
+			17, 		18, 		21, 		22,
 	/* 	FSEL23,	FSEL24,	FSEL25,	FSEL4 	*/
 			23, 		24, 		25, 		4,
 	/* 	FSEL2,	FSEL3,	FSEL8,	FSEL7 	*/
-			2, 			3, 			8, 			7,
+			0, 			1, 			8, 			7,
 	/*	FSEL10,	FSEL9,	FSEL11,	FSEL14	*/
 			10,			9,			11,			14,
 	/*	FSEL15	*/

@@ -38,6 +38,7 @@
 #include "platform/solidrun/hummingboard_sdl.h"
 #include "platform/raspberrypi/raspberrypi1b1.h"
 #include "platform/raspberrypi/raspberrypi1b2.h"
+#include "platform/raspberrypi/raspberrypi1b+.h"
 
 static struct platform_t *platform = NULL;
 void (*wiringXLog)(int, const char *, ...) = NULL;
@@ -210,6 +211,7 @@ int wiringXSetup(char *name, void (*func)(int, const char *, ...)) {
 	hummingboardSDLInit();
 	raspberrypi1b1Init();
 	raspberrypi1b2Init();
+	raspberrypi1bpInit();
 
 	if((platform = platform_get_by_name(name)) == NULL) {
 		struct platform_t *tmp = NULL;

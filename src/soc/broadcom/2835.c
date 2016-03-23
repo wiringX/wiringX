@@ -240,7 +240,6 @@ static int broadcom2835PinMode(int i, enum pinmode_t mode) {
 	return 0;
 }
 
-
 static int broadcom2835ISR(int i, enum isr_mode_t mode) {
 	struct layout_t *pin = NULL;
 	char path[PATH_MAX];
