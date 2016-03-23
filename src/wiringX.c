@@ -1,5 +1,5 @@
 /*
-	Copyright (c) 2014 CurlyMo <curlymoo1@gmail.com>
+	Copyright (c) 2016 CurlyMo <curlymoo1@gmail.com>
 
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -30,11 +30,14 @@
 #include "soc/allwinner/a31s.h"
 #include "soc/nxp/imx6dqrm.h"
 #include "soc/nxp/imx6sdlrm.h"
+#include "soc/broadcom/2835.h"
 
 #include "platform/linksprite/pcduino1.h"
 #include "platform/lemaker/bananapim2.h"
 #include "platform/solidrun/hummingboard_edge.h"
 #include "platform/solidrun/hummingboard_sdl.h"
+#include "platform/raspberrypi/raspberrypi1b1.h"
+#include "platform/raspberrypi/raspberrypi1b2.h"
 
 static struct platform_t *platform = NULL;
 void (*wiringXLog)(int, const char *, ...) = NULL;
@@ -198,12 +201,15 @@ int wiringXSetup(char *name, void (*func)(int, const char *, ...)) {
 	allwinnerA31sInit();
 	nxpIMX6DQRMInit();
 	nxpIMX6SDLRMInit();
+	broadcom2835Init();
 
 	/* Init all platforms */
 	pcduino1Init();
 	bananapiM2Init();
 	hummingboardEdgeInit();
 	hummingboardSDLInit();
+	raspberrypi1b1Init();
+	raspberrypi1b2Init();
 
 	if((platform = platform_get_by_name(name)) == NULL) {
 		struct platform_t *tmp = NULL;
