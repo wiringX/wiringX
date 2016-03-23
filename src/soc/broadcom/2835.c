@@ -189,7 +189,7 @@ static int broadcom2835DigitalRead(int i) {
 
 	pin = &broadcom2835->layout[broadcom2835->map[i]];
 	gpio = broadcom2835->gpio[pin->addr];
-	addr = (unsigned long)(gpio + broadcom2835->base_offs[pin->addr] + pin->level.offset + 8);
+	addr = (unsigned long)(gpio + broadcom2835->base_offs[pin->addr] + pin->level.offset);
 
 	if(broadcom2835->map == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", broadcom2835->brand, broadcom2835->chip);
@@ -205,7 +205,7 @@ static int broadcom2835DigitalRead(int i) {
 	}
 
 	val = soc_readl(addr);
-	
+
 	return (int)((val & (1 << pin->level.bit)) >> pin->level.bit);
 }
 
@@ -236,8 +236,6 @@ static int broadcom2835PinMode(int i, enum pinmode_t mode) {
 	val &= ~(1 << (pin->select.bit+1));
 	val &= ~(1 << (pin->select.bit+2));
 	soc_writel(addr, val);
-
-	val = soc_readl(addr);
 
 	return 0;
 }
