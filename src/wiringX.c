@@ -31,6 +31,7 @@
 #include "soc/nxp/imx6dqrm.h"
 #include "soc/nxp/imx6sdlrm.h"
 #include "soc/broadcom/2835.h"
+#include "soc/broadcom/2836.h"
 
 #include "platform/linksprite/pcduino1.h"
 #include "platform/lemaker/bananapim2.h"
@@ -39,6 +40,8 @@
 #include "platform/raspberrypi/raspberrypi1b1.h"
 #include "platform/raspberrypi/raspberrypi1b2.h"
 #include "platform/raspberrypi/raspberrypi1b+.h"
+#include "platform/raspberrypi/raspberrypi2.h"
+#include "platform/raspberrypi/raspberrypi3.h"
 
 static struct platform_t *platform = NULL;
 void (*wiringXLog)(int, const char *, ...) = NULL;
@@ -203,6 +206,7 @@ int wiringXSetup(char *name, void (*func)(int, const char *, ...)) {
 	nxpIMX6DQRMInit();
 	nxpIMX6SDLRMInit();
 	broadcom2835Init();
+	broadcom2836Init();
 
 	/* Init all platforms */
 	pcduino1Init();
@@ -212,11 +216,14 @@ int wiringXSetup(char *name, void (*func)(int, const char *, ...)) {
 	raspberrypi1b1Init();
 	raspberrypi1b2Init();
 	raspberrypi1bpInit();
+	raspberrypi2Init();
+	raspberrypi3Init();
 
 	if((platform = platform_get_by_name(name)) == NULL) {
 		struct platform_t *tmp = NULL;
 		char message[1024];
-		int l = snprintf(message, 1023-l, "The %s is an unsupported or unknown platform\n", name);
+		int l = 0;
+		l = snprintf(message, 1023-l, "The %s is an unsupported or unknown platform\n", name);
 		l += snprintf(&message[l], 1023-l, "\tsupported wiringX platforms are:\n");
 		int i = 0;
 		while((tmp = platform_iterate(i++)) != NULL) {
@@ -568,6 +575,9 @@ void wiringXSerialClose(int fd) {
 void wiringXSerialPutChar(int fd, unsigned char c) {
 	if(fd > 0) {
 		int x = write(fd, &c, 1);
+		if(x != 1) {
+			wiringXLog(LOG_ERR, "wiringX failed to write to serial device");
+		}
 	} else {
 		wiringXLog(LOG_ERR, "wiringX serial interface has not been opened");
 	}
@@ -576,6 +586,9 @@ void wiringXSerialPutChar(int fd, unsigned char c) {
 void wiringXSerialPuts(int fd, char *s) {
 	if(fd > 0) {
 		int x = write(fd, s, strlen(s));
+		if(x != strlen(s)) {
+			wiringXLog(LOG_ERR, "wiringX failed to write to serial device");
+		}
 	} else {
 		wiringXLog(LOG_ERR, "wiringX serial interface has not been opened");
 	}

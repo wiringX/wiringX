@@ -1,18 +1,9 @@
 /*
-	Copyright (c) 2014 CurlyMo <curlymoo1@gmail.com>
+	Copyright (c) 2016 CurlyMo <curlymoo1@gmail.com>
 
-	This program is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
 #include <stdio.h>
@@ -34,6 +25,7 @@
 #include "Python.h"
 
 #include "wiringX.h"
+#include "platform/platform.h"
 
 PyThreadState *mainThreadState;
 static PyObject *module = NULL;
@@ -56,7 +48,8 @@ static void py_wiringXLog(int prio, const char *format_str, ...) {
 }
 
 static PyObject *py_digitalWrite(PyObject *self, PyObject *args) {
-	int gpio = 0, value = 0;
+	int gpio = 0;
+	enum digital_value_t value = LOW;
 
 	if(!PyArg_ParseTuple(args, "ii", &gpio, &value)) {
 		return NULL;
@@ -83,7 +76,8 @@ static PyObject *py_digitalRead(PyObject *self, PyObject *args) {
 }
 
 static PyObject *py_pinMode(PyObject *self, PyObject *args) {
-	int gpio = 0, value = 0;
+	int gpio = 0;
+	enum pinmode_t value = PINMODE_INPUT;
 
 	if(!PyArg_ParseTuple(args, "ii", &gpio, &value)) {
 		return NULL;
@@ -254,12 +248,13 @@ static PyObject *py_I2CWriteReg16(PyObject *self, PyObject *args) {
 
 static PyObject *py_setupI2C(PyObject *self, PyObject *args) {
 	int device = 0;
+	char *path = NULL;
 
-	if(!PyArg_ParseTuple(args, "i", &device)) {
+	if(!PyArg_ParseTuple(args, "si", &path, &device)) {
 		return NULL;
 	}
 
-	return Py_BuildValue("i", wiringXI2CSetup(device));
+	return Py_BuildValue("i", wiringXI2CSetup(path, device));
 }
 
 static PyObject *py_SPIGetFd(PyObject *self, PyObject *args) {
@@ -275,6 +270,7 @@ static PyObject *py_SPIGetFd(PyObject *self, PyObject *args) {
 static PyObject *py_SPIDataRW(PyObject *self, PyObject *args) {
 	int channel = 0, len = 0;
 	Py_buffer data;
+
 	if(!PyArg_ParseTuple(args, "is*i", &channel, &data, &len)) {
 		return NULL;
 	}
@@ -300,29 +296,35 @@ static PyObject *py_setupSPI(PyObject *self, PyObject *args) {
 	return Py_BuildValue("i", wiringXSPISetup(channel, speed));
 }
 
-static PyObject *py_setup(PyObject *self, PyObject *noarg) {
-	char name[8];
+static PyObject *py_setup(PyObject *self, PyObject *args) {
+	char gpio[8];
 	int pin = 0;
+	char *platform = NULL;
 
-	if(wiringXSetup() < 0){
+	if(!PyArg_ParseTuple(args, "s", &platform)) {
+		return NULL;
+	}
+
+	if(wiringXSetup(platform, py_wiringXLog) < 0){
 		return PyErr_SetFromErrno(PyExc_IOError);
 	}
 
 	while(wiringXValidGPIO(pin) == 0) {
-		sprintf(name, "pin%d", pin);
-		PyModule_AddObject(module, name, Py_BuildValue("i", pin));
+		sprintf(gpio, "pin%d", pin);
+		PyModule_AddObject(module, gpio, Py_BuildValue("i", pin));
 
-		sprintf(name, "PIN%d", pin);
-		PyModule_AddObject(module, name, Py_BuildValue("i", pin));
+		sprintf(gpio, "PIN%d", pin);
+		PyModule_AddObject(module, gpio, Py_BuildValue("i", pin));
 
 		pin++;
 	}
+
 	Py_RETURN_NONE;
 }
 
 /* Define module methods */
 static PyMethodDef module_methods[] = {
-    {"setup", py_setup, METH_NOARGS, "Initialize module"},
+    {"setup", py_setup, METH_VARARGS, "Initialize module"},
     {"pinMode", py_pinMode, METH_VARARGS,	"Set pin mode"},
     {"digitalWrite", py_digitalWrite, METH_VARARGS,	"Set output state"},
     {"digitalRead", py_digitalRead, METH_VARARGS,	"Read input state"},
@@ -370,16 +372,31 @@ PyMODINIT_FUNC initgpio(void) {
 		return;
 #endif
 	}
-
-	wiringXLog = py_wiringXLog;
 	
-	PyModule_AddObject(module, "HIGH", Py_BuildValue("i", 1));
-	PyModule_AddObject(module, "LOW", Py_BuildValue("i", 0));
-	PyModule_AddObject(module, "INPUT", Py_BuildValue("i", INPUT));
-	PyModule_AddObject(module, "OUTPUT", Py_BuildValue("i", OUTPUT));
-	PyModule_AddObject(module, "INT_EDGE_BOTH", Py_BuildValue("i", INT_EDGE_BOTH));
-	PyModule_AddObject(module, "INT_EDGE_RISING", Py_BuildValue("i", INT_EDGE_RISING));
-	PyModule_AddObject(module, "INT_EDGE_FALLING", Py_BuildValue("i", INT_EDGE_FALLING));
+	PyModule_AddObject(module, "HIGH", Py_BuildValue("i", HIGH));
+	PyModule_AddObject(module, "LOW", Py_BuildValue("i", LOW));
+	PyModule_AddObject(module, "PINMODE_NOTSET", Py_BuildValue("i", PINMODE_NOT_SET));
+	PyModule_AddObject(module, "PINMODE_INPUT", Py_BuildValue("i", PINMODE_INPUT));
+	PyModule_AddObject(module, "PINMODE_OUTPUT", Py_BuildValue("i", PINMODE_OUTPUT));
+	PyModule_AddObject(module, "PINMODE_INTERRUPT", Py_BuildValue("i", PINMODE_INTERRUPT));
+	PyModule_AddObject(module, "ISR_MODE_UNKNOWN", Py_BuildValue("i", ISR_MODE_UNKNOWN));
+	PyModule_AddObject(module, "ISR_MODE_RISING", Py_BuildValue("i", ISR_MODE_RISING));
+	PyModule_AddObject(module, "ISR_MODE_FALLING", Py_BuildValue("i", ISR_MODE_FALLING));
+	PyModule_AddObject(module, "ISR_MODE_BOTH", Py_BuildValue("i", ISR_MODE_BOTH));
+	PyModule_AddObject(module, "ISR_MODE_NONE", Py_BuildValue("i", ISR_MODE_NONE));
+
+	/*
+	 * All platforms supported
+	 */
+	PyModule_AddObject(module, "RASPBERRYPI3", Py_BuildValue("s", "raspberrypi3"));
+	PyModule_AddObject(module, "RASPBERRYPI2", Py_BuildValue("s", "raspberrypi2"));
+	PyModule_AddObject(module, "RASPBERRYPI1B+", Py_BuildValue("s", "raspberrypi1b+"));
+	PyModule_AddObject(module, "RASPBERRYPI1B2", Py_BuildValue("s", "raspberrypi1b2"));
+	PyModule_AddObject(module, "RASPBERRYPI1B1", Py_BuildValue("s", "raspberrypi1b1"));
+	PyModule_AddObject(module, "HUMMINGBOARD_SDL", Py_BuildValue("s", "hummingboard_sdl"));
+	PyModule_AddObject(module, "HUMMINGBOARD_EDGE", Py_BuildValue("s", "hummingboard_edge"));
+	PyModule_AddObject(module, "BANANAPIM2", Py_BuildValue("s", "bananapiM2"));
+	PyModule_AddObject(module, "PCDUINO1", Py_BuildValue("s", "pcduino1"));
 
 #if PY_MAJOR_VERSION >= 3
 	return module;

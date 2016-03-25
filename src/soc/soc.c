@@ -177,7 +177,10 @@ int soc_sysfs_gpio_reset_value(struct soc_t *soc, char *path) {
 	} else {	
 		ioctl(fd, FIONREAD, &count);
 		for(i=0; i<count; ++i) {
-			read(fd, &c, 1);
+			int x = read(fd, &c, 1);
+			if(x != 1) {
+				continue;
+			}
 		}
 	}
 
@@ -192,7 +195,10 @@ int soc_wait_for_interrupt(struct soc_t *soc, int fd, int ms) {
 	polls.fd = fd;
 	polls.events = POLLPRI;
 
-	(void)read(fd, &c, 1);
+	x = read(fd, &c, 1);
+	if(x != 1) {
+		return -1;
+	}
 	lseek(fd, 0, SEEK_SET);	
 	
 	x = poll(&polls, 1, ms);

@@ -374,7 +374,6 @@ static int nxpIMX6SDLRMPinMode(int i, enum pinmode_t mode) {
 static int nxpIMX6SDLRMISR(int i, enum isr_mode_t mode) {
 	struct layout_t *pin = NULL;
 	char path[PATH_MAX];
-	int x = 0;
 
 	if(nxpIMX6SDLRM->map == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", nxpIMX6SDLRM->brand, nxpIMX6SDLRM->chip);
@@ -432,7 +431,7 @@ static int nxpIMX6SDLRMWaitForInterrupt(int i, int ms) {
 static int nxpIMX6SDLRMGC(void) {
 	struct layout_t *pin = NULL;
 	char path[PATH_MAX];
-	int i = 0, l = 0, x = 0;
+	int i = 0, l = 0;
 
 	if(nxpIMX6SDLRM->map != NULL) {
 		l = sizeof(nxpIMX6SDLRM->map)/sizeof(nxpIMX6SDLRM->map[0]);

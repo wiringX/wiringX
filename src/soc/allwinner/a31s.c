@@ -323,8 +323,7 @@ static int allwinnerA31sPinMode(int i, enum pinmode_t mode) {
 
 static int allwinnerA31sGC(void) {
 	struct layout_t *pin = NULL;
-	char path[PATH_MAX];
-	int i = 0, l = 0, x = 0;
+	int i = 0, l = 0;
 
 	if(allwinnerA31s->map != NULL) {
 		l = sizeof(allwinnerA31s->map)/sizeof(allwinnerA31s->map[0]);
