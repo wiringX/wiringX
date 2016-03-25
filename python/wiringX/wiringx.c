@@ -393,9 +393,15 @@ PyMODINIT_FUNC initgpio(void) {
 	PyModule_AddObject(module, "RASPBERRYPI1B+", Py_BuildValue("s", "raspberrypi1b+"));
 	PyModule_AddObject(module, "RASPBERRYPI1B2", Py_BuildValue("s", "raspberrypi1b2"));
 	PyModule_AddObject(module, "RASPBERRYPI1B1", Py_BuildValue("s", "raspberrypi1b1"));
-	PyModule_AddObject(module, "HUMMINGBOARD_SDL", Py_BuildValue("s", "hummingboard_sdl"));
-	PyModule_AddObject(module, "HUMMINGBOARD_EDGE", Py_BuildValue("s", "hummingboard_edge"));
-	PyModule_AddObject(module, "BANANAPIM2", Py_BuildValue("s", "bananapiM2"));
+	PyModule_AddObject(module, "HUMMINGBOARD_PRO_DQ", Py_BuildValue("s", "hummingboard_pro_dq"));
+	PyModule_AddObject(module, "HUMMINGBOARD_PRO_SDL", Py_BuildValue("s", "hummingboard_pro_sdl"));
+	PyModule_AddObject(module, "HUMMINGBOARD_BASE_DQ", Py_BuildValue("s", "hummingboard_base_dq"));
+	PyModule_AddObject(module, "HUMMINGBOARD_BASE_SDL", Py_BuildValue("s", "hummingboard_base_sdl"));
+	PyModule_AddObject(module, "HUMMINGBOARD_EDGE_DQ", Py_BuildValue("s", "hummingboard_edge_dq"));
+	PyModule_AddObject(module, "HUMMINGBOARD_EDGE_SDL", Py_BuildValue("s", "hummingboard_edge_sdl"));
+	PyModule_AddObject(module, "HUMMINGBOARD_GATE_DQ", Py_BuildValue("s", "hummingboard_gate_dq"));
+	PyModule_AddObject(module, "HUMMINGBOARD_GATE_SDL", Py_BuildValue("s", "hummingboard_gate_sdl"));
+	PyModule_AddObject(module, "BANANAPIM2", Py_BuildValue("s", "bananapi_m2"));
 	PyModule_AddObject(module, "PCDUINO1", Py_BuildValue("s", "pcduino1"));
 
 #if PY_MAJOR_VERSION >= 3
