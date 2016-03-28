@@ -55,7 +55,7 @@ static int irq[] = {
 	 -1		 -1,	 -1,
 	 -1,   -1,	 -1,
 	 -1,	 -1
-}
+};
 
 static int map[] = {
 	/*	GPIO3_IO09,	GPIO3_IO08,	GPIO3_IO07	*/
