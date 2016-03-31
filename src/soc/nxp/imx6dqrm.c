@@ -1,5 +1,5 @@
 /*
-	Copyright (c) 2014 CurlyMo <curlymoo1@gmail.com>
+	Copyright (c) 2016 CurlyMo <curlymoo1@gmail.com>
 
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -45,38 +45,38 @@ static struct layout_t {
 	int fd;
 
 } layout[] = {
-	{ "GPIO1_IO00", 0, { 0xC9000, 0x00 }, { 0xE0220, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO01", 0, { 0xC9000, 0x01 }, { 0xE0224, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO02", 0, { 0xC9000, 0x02 }, { 0xE0234, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO03", 0, { 0xC9000, 0x03 }, { 0xE022C, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO04", 0, { 0xC9000, 0x04 }, { 0xE0238, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO05", 0, { 0xC9000, 0x05 }, { 0xE023C, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO06", 0, { 0xC9000, 0x06 }, { 0xE0230, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO07", 0, { 0xC9000, 0x07 }, { 0xE0240, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO08", 0, { 0xC9000, 0x08 }, { 0xE0244, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO09", 0, { 0xC9000, 0x09 }, { 0xE0228, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO10", 0, { 0xC9000, 0x0A }, { 0xE0354, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO11", 0, { 0xC9000, 0x0B }, { 0xE0358, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO12", 0, { 0xC9000, 0x0C }, { 0xE035C, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO13", 0, { 0xC9000, 0x0D }, { 0xE0050, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO14", 0, { 0xC9000, 0x0E }, { 0xE004C, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO15", 0, { 0xC9000, 0x0D }, { 0xE0054, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO16", 0, { 0xC9000, 0x10 }, { 0xE0340, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO17", 0, { 0xC9000, 0x11 }, { 0xE033C, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO18", 0, { 0xC9000, 0x12 }, { 0xE0348, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO19", 0, { 0xC9000, 0x13 }, { 0xE034C, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO20", 0, { 0xC9000, 0x14 }, { 0xE0350, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO21", 0, { 0xC9000, 0x15 }, { 0xE0344, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO22", 0, { 0xC9000, 0x16 }, { 0xE01D0, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO23", 0, { 0xC9000, 0x17 }, { 0xE01D4, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO24", 0, { 0xC9000, 0x18 }, { 0xE01D8, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO25", 0, { 0xC9000, 0x19 }, { 0xE01DC, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO26", 0, { 0xC9000, 0x1A }, { 0xE01E0, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO27", 0, { 0xC9000, 0x1B }, { 0xE01E4, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO28", 0, { 0xC9000, 0x1C }, { 0xE01E8, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO29", 0, { 0xC9000, 0x1D }, { 0xE01EC, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO30", 0, { 0xC9000, 0x1E }, { 0xE01F0, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
-	{ "GPIO1_IO31", 0, { 0xC9000, 0x1F }, { 0xE01F4, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO00", 0, { 0x9C000, 0x00 }, { 0xE0220, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO01", 0, { 0x9C000, 0x01 }, { 0xE0224, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO02", 0, { 0x9C000, 0x02 }, { 0xE0234, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO03", 0, { 0x9C000, 0x03 }, { 0xE022C, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO04", 0, { 0x9C000, 0x04 }, { 0xE0238, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO05", 0, { 0x9C000, 0x05 }, { 0xE023C, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO06", 0, { 0x9C000, 0x06 }, { 0xE0230, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO07", 0, { 0x9C000, 0x07 }, { 0xE0240, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO08", 0, { 0x9C000, 0x08 }, { 0xE0244, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO09", 0, { 0x9C000, 0x09 }, { 0xE0228, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO10", 0, { 0x9C000, 0x0A }, { 0xE0354, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO11", 0, { 0x9C000, 0x0B }, { 0xE0358, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO12", 0, { 0x9C000, 0x0C }, { 0xE035C, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO13", 0, { 0x9C000, 0x0D }, { 0xE0050, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO14", 0, { 0x9C000, 0x0E }, { 0xE004C, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO15", 0, { 0x9C000, 0x0D }, { 0xE0054, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO16", 0, { 0x9C000, 0x10 }, { 0xE0340, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO17", 0, { 0x9C000, 0x11 }, { 0xE033C, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO18", 0, { 0x9C000, 0x12 }, { 0xE0348, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO19", 0, { 0x9C000, 0x13 }, { 0xE034C, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO20", 0, { 0x9C000, 0x14 }, { 0xE0350, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO21", 0, { 0x9C000, 0x15 }, { 0xE0344, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO22", 0, { 0x9C000, 0x16 }, { 0xE01D0, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO23", 0, { 0x9C000, 0x17 }, { 0xE01D4, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO24", 0, { 0x9C000, 0x18 }, { 0xE01D8, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO25", 0, { 0x9C000, 0x19 }, { 0xE01DC, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO26", 0, { 0x9C000, 0x1A }, { 0xE01E0, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO27", 0, { 0x9C000, 0x1B }, { 0xE01E4, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO28", 0, { 0x9C000, 0x1C }, { 0xE01E8, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO29", 0, { 0x9C000, 0x1D }, { 0xE01EC, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO30", 0, { 0x9C000, 0x1E }, { 0xE01F0, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+	{ "GPIO1_IO31", 0, { 0x9C000, 0x1F }, { 0xE01F4, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
 
 	{ "GPIO2_IO00", 0, { 0xA0000, 0x00 }, { 0xE02FC, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
 	{ "GPIO2_IO01", 0, { 0xA0000, 0x01 }, { 0xE0300, 0x0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
@@ -374,7 +374,6 @@ static int nxpIMX6DQRMPinMode(int i, enum pinmode_t mode) {
 static int nxpIMX6DQRMISR(int i, enum isr_mode_t mode) {
 	struct layout_t *pin = NULL;
 	char path[PATH_MAX];
-	int x = 0;
 
 	if(nxpIMX6DQRM->map == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", nxpIMX6DQRM->brand, nxpIMX6DQRM->chip);
@@ -390,7 +389,7 @@ static int nxpIMX6DQRMISR(int i, enum isr_mode_t mode) {
 	sprintf(path, "/sys/class/gpio/gpio%d", nxpIMX6DQRM->irq[i]);
 	if((soc_sysfs_check_gpio(nxpIMX6DQRM, path)) == -1) {
 		sprintf(path, "/sys/class/gpio/export");
-		if(soc_sysfs_gpio_export(nxpIMX6DQRM, path, i) == -1) {
+		if(soc_sysfs_gpio_export(nxpIMX6DQRM, path, nxpIMX6DQRM->irq[i]) == -1) {
 			return -1;
 		}
 	}
@@ -432,7 +431,7 @@ static int nxpIMX6DQRMWaitForInterrupt(int i, int ms) {
 static int nxpIMX6DQRMGC(void) {
 	struct layout_t *pin = NULL;
 	char path[PATH_MAX];
-	int i = 0, l = 0, x = 0;
+	int i = 0, l = 0;
 
 	if(nxpIMX6DQRM->map != NULL) {
 		l = sizeof(nxpIMX6DQRM->map)/sizeof(nxpIMX6DQRM->map[0]);
@@ -477,13 +476,8 @@ static int nxpIMX6DQRMSelectableFd(int i) {
 }
 
 void nxpIMX6DQRMInit(void) {
-	nxpIMX6DQRM = malloc(sizeof(struct soc_t));
+	soc_register(&nxpIMX6DQRM, "NXP", "IMX6DQRM");
 
-	strcpy(nxpIMX6DQRM->brand, "NXP");
-	strcpy(nxpIMX6DQRM->chip, "IMX6DQRM");
-
-	nxpIMX6DQRM->map = NULL;
-	nxpIMX6DQRM->irq = NULL;
 	nxpIMX6DQRM->layout = layout;
 
 	nxpIMX6DQRM->support.isr_modes = ISR_MODE_RISING | ISR_MODE_FALLING | ISR_MODE_BOTH | ISR_MODE_NONE;
@@ -505,5 +499,4 @@ void nxpIMX6DQRMInit(void) {
 	nxpIMX6DQRM->isr = &nxpIMX6DQRMISR;
 	nxpIMX6DQRM->waitForInterrupt = &nxpIMX6DQRMWaitForInterrupt;
 
-	soc_register(nxpIMX6DQRM);
 }

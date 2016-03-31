@@ -6,14 +6,13 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-#ifndef __WIRINGX_A10_H_
-#define __WIRINGX_A10_H_
+#ifndef __WIRINGX_BANANAPI_H_
+#define __WIRINGX_BANANAPI_H_
 
-#include "../soc.h"
-#include "../../wiringX.h"
+#include "../platform.h"
 
-extern struct soc_t *allwinnerA10;
+extern struct platform_t *bananapi;
 
-void allwinnerA10Init(void);
+void bananapiInit(void);
 
 #endif

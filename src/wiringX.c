@@ -1,5 +1,5 @@
 /*
-	Copyright (c) 2014 CurlyMo <curlymoo1@gmail.com>
+	Copyright (c) 2016 CurlyMo <curlymoo1@gmail.com>
 
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -29,13 +29,27 @@
 #include "soc/allwinner/a10.h"
 #include "soc/allwinner/a31s.h"
 #include "soc/nxp/imx6dqrm.h"
+#include "soc/nxp/imx6sdlrm.h"
+#include "soc/broadcom/2835.h"
+#include "soc/broadcom/2836.h"
 
 #include "platform/linksprite/pcduino1.h"
 #include "platform/lemaker/bananapim2.h"
-#include "platform/solidrun/hummingboard_edge.h"
+#include "platform/solidrun/hummingboard_gate_edge_sdl.h"
+#include "platform/solidrun/hummingboard_gate_edge_dq.h"
+#include "platform/solidrun/hummingboard_base_pro_sdl.h"
+#include "platform/solidrun/hummingboard_base_pro_dq.h"
+#include "platform/raspberrypi/raspberrypi1b1.h"
+#include "platform/raspberrypi/raspberrypi1b2.h"
+#include "platform/raspberrypi/raspberrypi1b+.h"
+#include "platform/raspberrypi/raspberrypi2.h"
+#include "platform/raspberrypi/raspberrypi3.h"
 
 static struct platform_t *platform = NULL;
+static int namenr = 0;
 void (*wiringXLog)(int, const char *, ...) = NULL;
+
+static int issetup = 0;
 
 #ifndef __FreeBSD__
 /* SPI Bus Parameters */
@@ -185,6 +199,12 @@ void wiringXDefaultLog(int prio, const char *format_str, ...) {
 }
 
 int wiringXSetup(char *name, void (*func)(int, const char *, ...)) {
+	if(__sync_add_and_fetch(&issetup, 0) == 0) {
+		__sync_add_and_fetch(&issetup, 1);
+	} else {
+		return 0;
+	}
+
 	if(func != NULL) {
 		wiringXLog = func;
 	} else {
@@ -195,19 +215,32 @@ int wiringXSetup(char *name, void (*func)(int, const char *, ...)) {
 	allwinnerA10Init();
 	allwinnerA31sInit();
 	nxpIMX6DQRMInit();
+	nxpIMX6SDLRMInit();
+	broadcom2835Init();
+	broadcom2836Init();
+
 	/* Init all platforms */
 	pcduino1Init();
 	bananapiM2Init();
-	hummingboardEdgeInit();
+	hummingboardBaseProSDLInit();
+	hummingboardBaseProDQInit();
+	hummingboardGateEdgeSDLInit();
+	hummingboardGateEdgeDQInit();
+	raspberrypi1b1Init();
+	raspberrypi1b2Init();
+	raspberrypi1bpInit();
+	raspberrypi2Init();
+	raspberrypi3Init();
 
-	if((platform = platform_get_by_name(name)) == NULL) {
-		struct platform_t *tmp = NULL;
+	if((platform = platform_get_by_name(name, &namenr)) == NULL) {
+		char *tmp = NULL;
 		char message[1024];
-		int l = snprintf(message, 1023-l, "The %s is an unsupported or unknown platform\n", name);
+		int l = 0;
+		l = snprintf(message, 1023-l, "The %s is an unsupported or unknown platform\n", name);
 		l += snprintf(&message[l], 1023-l, "\tsupported wiringX platforms are:\n");
 		int i = 0;
-		while((tmp = platform_iterate(i++)) != NULL) {
-			l += snprintf(&message[l], 1023-l, "\t- %s\n", tmp->name);
+		while((tmp = platform_iterate_name(i++)) != NULL) {
+			l += snprintf(&message[l], 1023-l, "\t- %s\n", tmp);
 		}
 		wiringXLog(LOG_ERR, message);
 		return -1;
@@ -221,7 +254,7 @@ char *wiringXPlatform(void) {
 	if(platform == NULL) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
 	}
-	return platform->name;
+	return platform->name[namenr];
 }
 
 int pinMode(int pin, enum pinmode_t mode) {
@@ -555,6 +588,9 @@ void wiringXSerialClose(int fd) {
 void wiringXSerialPutChar(int fd, unsigned char c) {
 	if(fd > 0) {
 		int x = write(fd, &c, 1);
+		if(x != 1) {
+			wiringXLog(LOG_ERR, "wiringX failed to write to serial device");
+		}
 	} else {
 		wiringXLog(LOG_ERR, "wiringX serial interface has not been opened");
 	}
@@ -563,6 +599,9 @@ void wiringXSerialPutChar(int fd, unsigned char c) {
 void wiringXSerialPuts(int fd, char *s) {
 	if(fd > 0) {
 		int x = write(fd, s, strlen(s));
+		if(x != strlen(s)) {
+			wiringXLog(LOG_ERR, "wiringX failed to write to serial device");
+		}
 	} else {
 		wiringXLog(LOG_ERR, "wiringX serial interface has not been opened");
 	}

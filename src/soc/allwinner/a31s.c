@@ -1,5 +1,5 @@
 /*
-	Copyright (c) 2014 CurlyMo <curlymoo1@gmail.com>
+	Copyright (c) 2016 CurlyMo <curlymoo1@gmail.com>
 
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -323,8 +323,7 @@ static int allwinnerA31sPinMode(int i, enum pinmode_t mode) {
 
 static int allwinnerA31sGC(void) {
 	struct layout_t *pin = NULL;
-	char path[PATH_MAX];
-	int i = 0, l = 0, x = 0;
+	int i = 0, l = 0;
 
 	if(allwinnerA31s->map != NULL) {
 		l = sizeof(allwinnerA31s->map)/sizeof(allwinnerA31s->map[0]);
@@ -350,12 +349,8 @@ static int allwinnerA31sGC(void) {
 }
 
 void allwinnerA31sInit(void) {
-	allwinnerA31s = malloc(sizeof(struct soc_t));
+	soc_register(&allwinnerA31s, "Allwinner", "A31s");
 
-	strcpy(allwinnerA31s->brand, "Allwinner");
-	strcpy(allwinnerA31s->chip, "A31s");
-
-	allwinnerA31s->map = NULL;
 	allwinnerA31s->layout = layout;
 
 	allwinnerA31s->support.isr_modes = ISR_MODE_RISING | ISR_MODE_FALLING | ISR_MODE_BOTH | ISR_MODE_NONE;
@@ -368,7 +363,6 @@ void allwinnerA31sInit(void) {
 	allwinnerA31s->base_offs[1] = 0x00000C00;
 
 	allwinnerA31s->gc = &allwinnerA31sGC;
-	allwinnerA31s->selectableFd = NULL;
 
 	allwinnerA31s->pinMode = &allwinnerA31sPinMode;
 	allwinnerA31s->setup = &allwinnerA31sSetup;
@@ -376,8 +370,4 @@ void allwinnerA31sInit(void) {
 	allwinnerA31s->digitalWrite = &allwinnerA31sDigitalWrite;
 	allwinnerA31s->getPinName = &allwinnerA31sGetPinName;
 	allwinnerA31s->setMap = &allwinnerA31sSetMap;
-	allwinnerA31s->isr = NULL;
-	allwinnerA31s->waitForInterrupt = NULL;
-
-	soc_register(allwinnerA31s);
 }

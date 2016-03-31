@@ -5,16 +5,42 @@ from distutils.command.build_ext import build_ext as _build_ext
 import sys
 
 modules = [
-	Extension('wiringX.gpio', sources=['wiringX/wiringx.c', '../src/wiringX.c', '../src/hummingboard.c', '../src/bananapi.c', '../src/radxa.c', '../src/raspberrypi.c', '../src/ci20.c'], include_dirs=['../src/'], extra_compile_args=['-Wformat=0']),
+	Extension('wiringX.gpio', 
+		sources=[
+			'wiringX/wiringx.c',
+			'../src/i2c-dev.c',
+			'../src/wiringX.c',
+			'../src/soc/soc.c',
+			'../src/soc/broadcom/2836.c',
+			'../src/soc/broadcom/2835.c',
+			'../src/soc/allwinner/a31s.c',
+			'../src/soc/allwinner/a10.c',
+			'../src/soc/nxp/imx6sdlrm.c',
+			'../src/soc/nxp/imx6dqrm.c',
+			'../src/platform/solidrun/hummingboard_sdl.c',
+			'../src/platform/solidrun/hummingboard_edge.c',
+			'../src/platform/raspberrypi/raspberrypi1b+.c',
+			'../src/platform/raspberrypi/raspberrypi3.c',
+			'../src/platform/raspberrypi/raspberrypi2.c',
+			'../src/platform/raspberrypi/raspberrypi1b1.c',
+			'../src/platform/raspberrypi/raspberrypi1b2.c',
+			'../src/platform/linksprite/pcduino1.c',
+			'../src/platform/lemaker/bananapim2.c',
+			'../src/platform/platform.c'
+
+		], 
+		include_dirs=['../src/'],
+		extra_compile_args=['-Wformat=0']
+	),
 ]
 
 setup(
     name='wiringX',
-    version='1.0',
+    version='2.0',
     author='CurlyMo',
     author_email='curlymoo1@gmail.com',
     url='https://www.wiringx.org/',
-    license='GPLv3',
+    license='MPLv2',
     packages=['wiringX'],
     description='Cross-platform GPIO Interface',
     classifiers=['Environment :: Console',
