@@ -90,6 +90,8 @@ file(GLOB wiringX
 	"${PROJECT_SOURCE_DIR}/src/platform/solidrun/*.h"
 	"${PROJECT_SOURCE_DIR}/src/platform/raspberrypi/*.c"
 	"${PROJECT_SOURCE_DIR}/src/platform/raspberrypi/*.h"
+	"${PROJECT_SOURCE_DIR}/src/platform/hardkernel/*.c"
+	"${PROJECT_SOURCE_DIR}/src/platform/hardkernel/*.h"
 	"${PROJECT_SOURCE_DIR}/src/soc/*.c"
 	"${PROJECT_SOURCE_DIR}/src/soc/*.h"
 	"${PROJECT_SOURCE_DIR}/src/soc/allwinner/*.c"
@@ -98,6 +100,8 @@ file(GLOB wiringX
 	"${PROJECT_SOURCE_DIR}/src/soc/nxp/*.h"
 	"${PROJECT_SOURCE_DIR}/src/soc/broadcom/*.c"
 	"${PROJECT_SOURCE_DIR}/src/soc/broadcom/*.h"
+	"${PROJECT_SOURCE_DIR}/src/soc/amlogic/*.h"
+	"${PROJECT_SOURCE_DIR}/src/soc/amlogic/*.c"
 )
 
 add_library(sources OBJECT ${wiringX})

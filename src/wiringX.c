@@ -32,6 +32,7 @@
 #include "soc/nxp/imx6sdlrm.h"
 #include "soc/broadcom/2835.h"
 #include "soc/broadcom/2836.h"
+#include "soc/amlogic/s805.h"
 
 #include "platform/linksprite/pcduino1.h"
 #include "platform/lemaker/bananapim2.h"
@@ -44,6 +45,7 @@
 #include "platform/raspberrypi/raspberrypi1b+.h"
 #include "platform/raspberrypi/raspberrypi2.h"
 #include "platform/raspberrypi/raspberrypi3.h"
+#include "platform/hardkernel/odroidc1.h"
 
 static struct platform_t *platform = NULL;
 static int namenr = 0;
@@ -218,6 +220,7 @@ int wiringXSetup(char *name, void (*func)(int, const char *, ...)) {
 	nxpIMX6SDLRMInit();
 	broadcom2835Init();
 	broadcom2836Init();
+	amlogicS805Init();
 
 	/* Init all platforms */
 	pcduino1Init();
@@ -231,6 +234,7 @@ int wiringXSetup(char *name, void (*func)(int, const char *, ...)) {
 	raspberrypi1bpInit();
 	raspberrypi2Init();
 	raspberrypi3Init();
+	odroidc1Init();
 
 	if((platform = platform_get_by_name(name, &namenr)) == NULL) {
 		char *tmp = NULL;
