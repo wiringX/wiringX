@@ -90,6 +90,8 @@ file(GLOB wiringX
 	"${PROJECT_SOURCE_DIR}/src/platform/solidrun/*.h"
 	"${PROJECT_SOURCE_DIR}/src/platform/raspberrypi/*.c"
 	"${PROJECT_SOURCE_DIR}/src/platform/raspberrypi/*.h"
+	"${PROJECT_SOURCE_DIR}/src/platform/hardkernel/*.c"
+	"${PROJECT_SOURCE_DIR}/src/platform/hardkernel/*.h"
 	"${PROJECT_SOURCE_DIR}/src/soc/*.c"
 	"${PROJECT_SOURCE_DIR}/src/soc/*.h"
 	"${PROJECT_SOURCE_DIR}/src/soc/allwinner/*.c"

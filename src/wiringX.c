@@ -45,6 +45,7 @@
 #include "platform/raspberrypi/raspberrypi1b+.h"
 #include "platform/raspberrypi/raspberrypi2.h"
 #include "platform/raspberrypi/raspberrypi3.h"
+#include "platform/hardkernel/odroidc1.h"
 
 static struct platform_t *platform = NULL;
 static int namenr = 0;
@@ -233,6 +234,7 @@ int wiringXSetup(char *name, void (*func)(int, const char *, ...)) {
 	raspberrypi1bpInit();
 	raspberrypi2Init();
 	raspberrypi3Init();
+	odroidc1Init();
 
 	if((platform = platform_get_by_name(name, &namenr)) == NULL) {
 		char *tmp = NULL;
