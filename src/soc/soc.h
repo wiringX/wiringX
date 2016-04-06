@@ -12,6 +12,8 @@
 #include "../wiringX.h"
 #include <stdint.h>
 
+#define MAX_REG_AREA	8
+
 struct layout_t;
 
 typedef struct soc_t {
@@ -27,12 +29,12 @@ typedef struct soc_t {
 		int isr_modes;
 	} support;
 	
-	void *gpio[2];
+	void *gpio[MAX_REG_AREA];
 	int fd;
 	
 	unsigned long page_size;
-	unsigned long base_addr[2];
-	unsigned long base_offs[2];
+	unsigned long base_addr[MAX_REG_AREA];
+	unsigned long base_offs[MAX_REG_AREA];
 	
 	int (*digitalWrite)(int, enum digital_value_t);
 	int (*digitalRead)(int);
