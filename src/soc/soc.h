@@ -10,6 +10,7 @@
 #define __WIRINGX_SOC_H_
 
 #include "../wiringX.h"
+#include <stdint.h>
 
 struct layout_t;
 
@@ -53,8 +54,8 @@ typedef struct soc_t {
 
 void soc_register(struct soc_t **, char *, char *);
 struct soc_t *soc_get(char *, char *);
-void soc_writel(unsigned long, unsigned long);
-unsigned long soc_readl(unsigned long);
+void soc_writel(unsigned long, uint32_t);
+uint32_t soc_readl(unsigned long);
 int soc_gc(void);
 
 int soc_sysfs_check_gpio(struct soc_t *, char *);

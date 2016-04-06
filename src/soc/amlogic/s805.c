@@ -213,7 +213,7 @@ static void amlogicS805SetIRQ(int *irq) {
 static int amlogicS805DigitalWrite(int i, enum digital_value_t value) {
 	struct layout_t *pin = NULL;
 	unsigned long addr = 0;
-	unsigned long val = 0;
+	uint32_t val = 0;
 
 	pin = &amlogicS805->layout[amlogicS805->map[i]];
 
@@ -245,7 +245,7 @@ static int amlogicS805DigitalRead(int i) {
 	void *gpio = NULL;
 	struct layout_t *pin = NULL;
 	unsigned long addr = 0;
-	unsigned long val = 0;
+	uint32_t val = 0;
 
 	pin = &amlogicS805->layout[amlogicS805->map[i]];
 	gpio = amlogicS805->gpio[pin->addr];
@@ -272,7 +272,7 @@ static int amlogicS805DigitalRead(int i) {
 static int amlogicS805PinMode(int i, enum pinmode_t mode) {
 	struct layout_t *pin = NULL;
 	unsigned long addr = 0;
-	unsigned long val = 0;
+	uint32_t val = 0;
 
 	if(amlogicS805->map == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", amlogicS805->brand, amlogicS805->chip);
