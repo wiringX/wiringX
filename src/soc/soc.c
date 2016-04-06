@@ -62,12 +62,12 @@ void soc_register(struct soc_t **soc, char *brand, char *type) {
 	socs = *soc;
 }
 
-void soc_writel(unsigned long addr, unsigned long val) {
-	*((unsigned long *)(addr)) = val;
+void soc_writel(unsigned long addr, uint32_t val) {
+	*((volatile uint32_t *)(addr)) = val;
 }
 
-unsigned long soc_readl(unsigned long addr) {
-	return *((unsigned long *)(addr));
+uint32_t soc_readl(unsigned long addr) {
+	return *((volatile uint32_t *)(addr));
 }
 
 int soc_sysfs_check_gpio(struct soc_t *soc, char *path) {
