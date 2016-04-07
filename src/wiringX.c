@@ -34,6 +34,7 @@
 #include "soc/broadcom/2836.h"
 #include "soc/amlogic/s805.h"
 #include "soc/amlogic/s905.h"
+#include "soc/samsung/exynos5422.h"
 
 #include "platform/linksprite/pcduino1.h"
 #include "platform/lemaker/bananapim2.h"
@@ -224,6 +225,7 @@ int wiringXSetup(char *name, void (*func)(int, const char *, ...)) {
 	broadcom2836Init();
 	amlogicS805Init();
 	amlogicS905Init();
+	exynos5422Init();
 
 	/* Init all platforms */
 	pcduino1Init();
