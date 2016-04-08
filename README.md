@@ -22,6 +22,7 @@ The supported devices are:
 - BananaPi
 - Radxa Rock 
 - MIPS CI20 Creator
+- ODROID
 
 ###Donations
 

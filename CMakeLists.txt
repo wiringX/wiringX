@@ -102,6 +102,8 @@ file(GLOB wiringX
 	"${PROJECT_SOURCE_DIR}/src/soc/broadcom/*.h"
 	"${PROJECT_SOURCE_DIR}/src/soc/amlogic/*.h"
 	"${PROJECT_SOURCE_DIR}/src/soc/amlogic/*.c"
+	"${PROJECT_SOURCE_DIR}/src/soc/samsung/*.h"
+	"${PROJECT_SOURCE_DIR}/src/soc/samsung/*.c"
 )
 
 add_library(sources OBJECT ${wiringX})

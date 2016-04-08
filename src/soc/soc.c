@@ -23,6 +23,8 @@
 static struct soc_t *socs = NULL;
 
 void soc_register(struct soc_t **soc, char *brand, char *type) {
+	int i = 0;
+
 	if((*soc = malloc(sizeof(struct soc_t))) == NULL) {
 		fprintf(stderr, "out of memory\n");
 		exit(EXIT_FAILURE);
@@ -35,15 +37,9 @@ void soc_register(struct soc_t **soc, char *brand, char *type) {
 	(*soc)->layout = NULL;
 	(*soc)->support.isr_modes = 0;
 
-	(*soc)->gpio[0] = NULL;
-	(*soc)->gpio[1] = NULL;
 	(*soc)->fd = 0;	
 	
 	(*soc)->page_size = 0;
-	(*soc)->base_addr[0] = 0;
-	(*soc)->base_addr[1] = 0;
-	(*soc)->base_offs[0] = 0;
-	(*soc)->base_offs[1] = 0;
 
 	(*soc)->gc = NULL;
 	(*soc)->selectableFd = NULL;
@@ -57,6 +53,12 @@ void soc_register(struct soc_t **soc, char *brand, char *type) {
 	(*soc)->validGPIO = NULL;
 	(*soc)->isr = NULL;
 	(*soc)->waitForInterrupt = NULL;
+
+	for (i = 0; i < MAX_REG_AREA; ++i) {
+		(*soc)->gpio[i] = NULL;
+		(*soc)->base_addr[i] = 0;
+		(*soc)->base_offs[i] = 0;
+	}
 
 	(*soc)->next = socs;
 	socs = *soc;
