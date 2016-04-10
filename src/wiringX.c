@@ -205,8 +205,8 @@ void wiringXDefaultLog(int prio, const char *format_str, ...) {
 }
 
 int wiringXSetup(char *name, void (*func)(int, const char *, ...)) {
-	if(__sync_add_and_fetch(&issetup, 0) == 0) {
-		__sync_add_and_fetch(&issetup, 1);
+	if(issetup == 0) {
+		issetup = 1;
 	} else {
 		return 0;
 	}
