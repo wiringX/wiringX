@@ -40,9 +40,9 @@ struct platform_t *odroidc1 = NULL;
  * |0v|11|
  * |17|18|
  * |21|0v|
- * |22|23|
- * |24|0v|
- * |30|25|
+ * |22|26|
+ * |23|0v|
+ * |24|27|
  * |AD|2v|
  * |0v|AD|
  * |-----|
@@ -59,12 +59,10 @@ static int map[] = {
 			107,				106,				105,				 -1,
 	/*	(Padding),	GPIODV_26,	GPIODV_27,	(Padding)	*/
 			 -1,				 76,				 77,				 -1,
-	/*	(Padding),	GPIOX_4,		GPIOX_3,		GPIOX_2		*/
-			 -1,				101,				100,				 99,
-	/*	GPIOX_11,	 	GPIOX_1,		(Padding),	(Padding)	*/
-			108,				 98,				 -1,				 -1,
-	/* 	(Padding),	(Padding),	GPIOX_0								*/
-			 -1, -1, 								 97
+	/*	(Padding),	GPIOX_4,		GPIOX_3,		GPIOX_11		*/
+			 -1,				101,				100,				108,
+	/*	GPIOX_0,	 	(Padding),	GPIOX_2,		GPIOX_1	*/
+			 97,				 -1,				 99,				 98
 };
 
 static int odroidc1ValidGPIO(int pin) {
