@@ -101,6 +101,7 @@ static int bananapiM2DigitalWrite(int i, enum digital_value_t value) {
 static int bananapiM2Setup(void) {
 	bananapim2->soc->setup();
 	bananapim2->soc->setMap(map);
+	bananapim2->soc->setIRQ(map);
 	return 0;
 }
 

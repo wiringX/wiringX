@@ -53,6 +53,7 @@ static int raspberrypi3ValidGPIO(int pin) {
 static int raspberrypi3Setup(void) {
 	raspberrypi3->soc->setup();
 	raspberrypi3->soc->setMap(map);
+	raspberrypi3->soc->setIRQ(map);
 	return 0;
 }
 

@@ -79,6 +79,7 @@ static int odroidc1ValidGPIO(int pin) {
 static int odroidc1Setup(void) {
 	odroidc1->soc->setup();
 	odroidc1->soc->setMap(map);
+	odroidc1->soc->setIRQ(map);
 	return 0;
 }
 

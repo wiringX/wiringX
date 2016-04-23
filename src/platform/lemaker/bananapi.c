@@ -70,6 +70,7 @@ static int bananapiValidGPIO(int pin) {
 static int bananapiSetup(void) {
 	bananapi->soc->setup();
 	bananapi->soc->setMap(map);
+	bananapi->soc->setIRQ(map);
 	return 0;
 }
 

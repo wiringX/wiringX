@@ -49,6 +49,7 @@ static int raspberrypi1b2ValidGPIO(int pin) {
 static int raspberrypi1b2Setup(void) {
 	raspberrypi1b2->soc->setup();
 	raspberrypi1b2->soc->setMap(map);
+	raspberrypi1b2->soc->setIRQ(map);
 	return 0;
 }
 

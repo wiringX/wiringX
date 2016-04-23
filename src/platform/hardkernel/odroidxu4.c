@@ -82,6 +82,7 @@ static int odroidxu4ValidGPIO(int pin) {
 static int odroidxu4Setup(void) {
 	odroidxu4->soc->setup();
 	odroidxu4->soc->setMap(map);
+	odroidxu4->soc->setIRQ(map);
 	return 0;
 }
 
