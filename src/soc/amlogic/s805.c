@@ -389,7 +389,7 @@ static int amlogicS805GC(void) {
 static int amlogicS805SelectableFd(int i) {
 	struct layout_t *pin = NULL;
 
-	if(amlogicS805->map == NULL) {
+	if(amlogicS805->irq == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", amlogicS805->brand, amlogicS805->chip);
 		return -1;
 	}
@@ -398,7 +398,7 @@ static int amlogicS805SelectableFd(int i) {
 		return -1;
 	}
 
-	pin = &amlogicS805->layout[amlogicS805->map[i]];
+	pin = &amlogicS805->layout[amlogicS805->irq[i]];
 	return pin->fd;
 }
 

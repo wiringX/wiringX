@@ -330,7 +330,7 @@ static int broadcom2836GC(void) {
 static int broadcom2836SelectableFd(int i) {
 	struct layout_t *pin = NULL;
 
-	if(broadcom2836->map == NULL) {
+	if(broadcom2836->irq == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", broadcom2836->brand, broadcom2836->chip);
 		return -1; 
 	} 
@@ -339,7 +339,7 @@ static int broadcom2836SelectableFd(int i) {
 		return -1;
 	}
 
-	pin = &broadcom2836->layout[broadcom2836->map[i]];
+	pin = &broadcom2836->layout[broadcom2836->irq[i]];
 	return pin->fd;
 }
 

@@ -491,7 +491,7 @@ static int exynos5422GC(void) {
 static int exynos5422SelectableFd(int i) {
 	struct layout_t *pin = NULL;
 
-	if(exynos5422->map == NULL) {
+	if(exynos5422->irq == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", exynos5422->brand, exynos5422->chip);
 		return -1;
 	}
@@ -500,7 +500,7 @@ static int exynos5422SelectableFd(int i) {
 		return -1;
 	}
 
-	pin = &exynos5422->layout[exynos5422->map[i]];
+	pin = &exynos5422->layout[exynos5422->irq[i]];
 	return pin->fd;
 }
 

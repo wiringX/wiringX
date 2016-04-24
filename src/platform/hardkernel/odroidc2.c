@@ -80,7 +80,7 @@ static int odroidc2ValidGPIO(int pin) {
 
 static int odroidc2ISR(int i, enum isr_mode_t mode) {
 	// if(irq[i] == -1) {
-		wiringXLog(LOG_ERR, "The %s gpio %d cannot be used as interrupt", odroidc2->name[0], i);
+		wiringXLog(LOG_ERR, "Interrupts are not supported on the %s", );
 		// return -1;
 	// }
 	// return odroidc2->soc->isr(i, mode);
@@ -91,12 +91,14 @@ static int odroidc2Setup(void) {
 	int i = 0;
 	odroidc2->soc->setup();
 	odroidc2->soc->setMap(map);
+	/*
 	for(i=0;i<(sizeof(map)/sizeof(map[0]));i++) {
 		if(map[i] != -1) {
 			irq[i] = map[i]+122;
 		}
 	}
 	odroidc2->soc->setIRQ(irq);
+	*/
 	return 0;
 }
 

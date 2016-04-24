@@ -27,19 +27,19 @@ static int map[] = {
 	/* 	FSEL17,	FSEL18,	FSEL27,	FSEL22 	*/
 			17, 		18, 		27, 		22,
 	/* 	FSEL23,	FSEL24,	FSEL25,	FSEL4 	*/
-			23, 		24, 		25, 		4,
+			23, 		24, 		25, 		 4,
 	/* 	FSEL2,	FSEL3,	FSEL8,	FSEL7 	*/
-			2, 			3, 			8, 			7,
+			 2, 		 3, 		 8, 		 7,
 	/*	FSEL10,	FSEL9,	FSEL11,	FSEL14	*/
-			10,			9,			11,			14,
+			10,			 9,			11,			14,
 	/*	FSEL15, FSEL28,	FSEL29,	FSEL30	*/
 			15,			28,			29,			30,
 	/*	FSEL31,	FSEL5,	FSEL6,	FSEL13	*/
-			31,			5,			6,			13,
+			31,			 5,			 6,			13,
 	/*	FSEL19,	FSEL26,	FSEL12,	FSEL16	*/
 			19,			26,			12,			16,
 	/*	FSEL20,	FSEL21,	FSEL0,	FSEL1		*/
-			20,			21,			0,			1
+			20,			21,			 0,			 1
 };
 
 static int raspberrypi3ValidGPIO(int pin) {
