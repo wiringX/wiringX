@@ -96,24 +96,32 @@ static int pinToGpio[NUM_PINS] = {
 		121, // wiringX # 36 - Physical U13-40 - LCD-DE    (PD-25)
 };
 
+//********************************************************************
+// PinMode Registers: Offset and bit
 static int pinToRegMode[] = { 
 	  -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1, // no MMAP access for XIO 0-7 (I2C proxy)
 	0x90, 0x90, 0x90, 0x90, 0x94, 0x94, 0x94, 0x94, // CSID0-7 (PE 4..11)
-	0x7c, 0x7c, 0x7c, 0x7c, 0x7c, 0x7c, 0x7c, 0x7c, // 16..23 (PD-3..7,10..12)
-	0x7c, 0x7c, 0x7c, 0x7c, 0x7c, 0x7c, 0x7c, 0x7c, // 24..31 (PD-13..15,18..22)
-	0x7c, 0x7c, 0x7c, 0x7c, 0x7c,   -1,   -1,   -1, // 32..36 (PD-23,24,26,27,25)
+	0x6c, 0x6c, 0x6c, 0x6c, 0x6c, 0x70, 0x70, 0x70, // 16..23 (PD-3..7,10..12)
+	0x70, 0x70, 0x70, 0x74, 0x74, 0x74, 0x74, 0x74, // 24..31 (PD-13..15,18..22)
+	0x74, 0x78, 0x78, 0x78, 0x78,   -1,   -1,   -1, // 32..36 (PD-23,24,26,27,25)
 };
 static int pinToRegMBit[] = { 
      0,  0,  0,  0,  0,  0,  0,  0, // no mmap access for XIO 0-7
     16, 20, 24, 28,  0,  4,  8, 12, // 8..15   (PE-4..11)
-     3,  4,  5,  6,  7, 10, 11, 12, // 16..23  (PD-3..7,10..12)
-    13, 14, 15, 18, 19, 20, 21, 22, // 24..31  (PD-13..15,18..22)
-    23, 24, 26, 27, 25,  0,  0,  0, // 32..36  (PD-23,24,26,27,25)
+    12, 16, 20, 24, 28,  8, 12, 16, // 16..23  (PD-3..7,10..12)
+    20, 24, 28,  8, 12, 16, 20, 24, // 24..31  (PD-13..15,18..22)
+    28,  0,  8, 12,  4,  0,  0,  0, // 32..36  (PD-23,24,26,27,25)
 };
 
+//********************************************************************
+// Data Registers: Offset and bit
+#define PORT_IN   0
+#define PORT_OUT  1
+#define PORT_ALT1 2
+#define PORT_ALT2 3
 static int pinToRegData[] = { 
 	  -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1, //  0.. 7 XIO 0-7 no MMAP access (I2C proxy)
-	0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, //  8..15 CSID0-7 (PE 4..11)
+	0xA0, 0xA0, 0xA0, 0xA0, 0xA0, 0xA0, 0xA0, 0xA0, //  8..15 CSID0-7 (PE 4..11)
 	0x7c, 0x7c, 0x7c, 0x7c, 0x7c, 0x7c, 0x7c, 0x7c, // 16..23 LCD3..(PD-3..7,10..12)
 	0x7c, 0x7c, 0x7c, 0x7c, 0x7c, 0x7c, 0x7c, 0x7c, // 24..31 LCD13.. (PD-13..15,18..22)
 	0x7c, 0x7c, 0x7c, 0x7c, 0x7c,   -1,   -1,   -1, // 32..36 LCD23.. (PD-23,24,26,27,25)
@@ -124,6 +132,27 @@ static int pinToRegDBit[] = {
      3,  4,  5,  6,  7, 10, 11, 12, // 16..23  (PD-3..7,10..12)
     13, 14, 15, 18, 19, 20, 21, 22, // 24..31  (PD-13..15,18..22)
     23, 24, 26, 27, 25,  0,  0,  0, // 32..36  (PD-23,24,26,27,25)
+};
+//********************************************************************
+// Port Pullup/Down resistor
+#define PULL_OFF  0
+#define PULL_UP   1
+#define PULL_DOWN 2
+//#define PULL_RESERVED 3
+
+static int pinToPullUpDown[] = { 
+	  -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1, // no MMAP access for XIO 0-7 (I2C proxy)
+	0xAC, 0xAC, 0xAC, 0xAC, 0xAC, 0xAC, 0xAC, 0xAC, // CSID0-7 (PE 4..11)
+	0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, // 16..23 (PD-3..7,10..12)
+	0x88, 0x88, 0x88, 0x8C, 0x8C, 0x8C, 0x8C, 0x8C, // 24..31 (PD-13..15,18..22)
+	0x8C, 0x8C, 0x8C, 0x8C, 0x8C,   -1,   -1,   -1, // 32..36 (PD-23,24,26,27,25)
+};
+static int pinToPullBits[] = { 
+	  -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1, // no MMAP access for XIO 0-7 (I2C proxy)
+	   8,   10,   12,   14,   16,   18,   20,   22, // CSID0-7 (PE 4..11)
+	   6,    8,   10,   12,   14,   20,   22,   24, // 16..23 (PD-3..7,10..12)
+	  26,   28,   30,    4,    6,    8,   10,   12, // 24..31 (PD-13..15,18..22)
+	  14,   16,   20,   22,   18,   -1,   -1,   -1, // 32..36 (PD-23,24,26,27,25)
 };
 
 static int sysFds[64] = {
@@ -149,6 +178,7 @@ static unsigned int memReadl(uint32_t addr) {
 	uint32_t mmap_base = (addr & ~PAGE_MASK);
 	uint32_t mmap_seek = ((addr - mmap_base) >> 2);
 	val = *((volatile uint32_t *) (gpio + mmap_seek));
+	//wiringXLog(LOG_DEBUG, "chip->memRead: %x = %x", (gpio + mmap_seek), val);
 	return val;
 }
 
@@ -156,6 +186,7 @@ static void memWritel(uint32_t addr, uint32_t val) {
 	uint32_t mmap_base = (addr & ~PAGE_MASK);
 	uint32_t mmap_seek = ((addr - mmap_base) >> 2);
 	*(gpio + mmap_seek) = ((volatile uint32_t) val);
+	//wiringXLog(LOG_DEBUG, "chip->memWrite: %x = %x", (gpio + mmap_seek), val);
 }
 
 
@@ -228,7 +259,9 @@ static int setup(void) {
 	if((int32_t)gpio == -1) {
 		wiringXLog(LOG_ERR, "chip->setup: mmap (GPIO) failed");
 		return -1;
-	}
+	} else
+		wiringXLog(LOG_DEBUG, "chip->setup: GPIO at %x", gpio);
+
 	return 0;
 }
 
@@ -265,7 +298,7 @@ static int chipDigitalRead(int pin) {
  ***************************************************************************/
 static int chipDigitalWrite(int pin, int value) {
 
-	if (pinModes[pin] == SYS) {
+	if (pinModes[pin] == SYS ) {
 		if (sysFds[pin] != -1)
 		{
 			if (value == LOW)
@@ -278,15 +311,15 @@ static int chipDigitalWrite(int pin, int value) {
 		// mmap access
 		uint32_t physaddr = (uint32_t)(GPIO_OFFSET + pinToRegData[pin]);
         uint32_t regval = memReadl(physaddr);
-        uint32_t nval;;
+        uint32_t nval;
 		if(value == LOW) {
 			nval = regval & ~(1 << pinToRegDBit[pin]);
 		} else {
 			nval = regval | (1 << pinToRegDBit[pin]);
 		}
 		memWritel(physaddr, nval);
-		//wiringXLog(LOG_DEBUG, "write pin %d, addr %04x, bit %d, val %08x -> %08x = %08x", 
-		//		   pin, pinToRegData[pin], pinToRegDBit[pin], regval, nval, (uint32_t) memReadl(physaddr));
+		wiringXLog(LOG_DEBUG, "write pin %d, addr %04x, bit %d, val %08x -> %08x = %08x", 
+				   pin, pinToRegData[pin], pinToRegDBit[pin], regval, nval, (uint32_t) memReadl(physaddr));
 		return 0;
 	}
 	wiringXLog(LOG_ERR, "Invalid output for pin %d", pin);
@@ -294,33 +327,11 @@ static int chipDigitalWrite(int pin, int value) {
 }
 
 /*
- * chipPinModeMem
- *
- *********************************************************************/
-static int chipPinModeMem(int pin, int mode) {
-	// pin is the absolute number of a pin (0-36), regardless of the port
-
-	pinModes[pin] = mode; // INPUT (system default) | OUTPUT
-	uint32_t regaddr = pinToRegMode[pin];
-	int bit = pinToRegMBit[pin]; 
-	uint32_t val = memReadl(((uint32_t)GPIO_OFFSET) + regaddr);
-	// remove current 3 bits
-	uint32_t nval = val & ~ ((uint32_t) (7 << bit));
-	// 000 = Input, 001 = Output, others for special functions
-	if (mode == OUTPUT) 
-		nval = nval | ((uint32_t)(1 << bit));
-		
-	memWritel(regaddr, nval);
-	wiringXLog(LOG_DEBUG, "ControlReg: %x , bit %d = %08x -> %08x = %08x", regaddr, bit, val, nval, (uint32_t) memReadl(regaddr));
-	return 0;
-}
-
-/*
- * enablePin:
+ * enableSysPin:
  *	
  *********************************************************************************
  */
-static int enablePin(int pin) {
+static int enableSysPin(int pin) {
 	
 	//if (pinModes[pin] == SYS ) {
 		// must use sysfs, workaround for OUTPUT
@@ -333,12 +344,39 @@ static int enablePin(int pin) {
 			return TRUE;
 		} else {
 			// alread enabled?
-			wiringXLog(LOG_ERR, "enablePin: %d, %s", pin, strerror(errno));
+			wiringXLog(LOG_ERR, "enableSysPin: %d, %s", pin, strerror(errno));
 		}
 		return FALSE;
 	//} else {
 		// use mmap access
 	//}
+}
+
+/*
+ * chipPinModeMem
+ *
+ *********************************************************************/
+static int chipPinModeMem(int pin, int mode) {
+	// pin is the absolute number of a pin (0-36), regardless of the port
+
+	uint32_t regaddr = (uint32_t) (GPIO_OFFSET + pinToRegMode[pin]);
+
+	int bit = pinToRegMBit[pin]; 
+	uint32_t val = memReadl(regaddr);
+	// remove current 3 bits
+	uint32_t nval = val & ~ ((uint32_t) (7 << bit));
+	// 000 = Input, 001 = Output, others for special functions
+	if (mode == OUTPUT) 
+		nval = nval | ((uint32_t)(1 << bit));
+		
+	memWritel(regaddr, nval);
+    uint32_t rval = memReadl(regaddr);
+	wiringXLog(LOG_DEBUG, "ControlReg: %x , bit %d = %08x -> %08x = %08x", regaddr, bit, val, nval, rval);
+	if (nval != rval) {
+	    enableSysPin(pin);
+		wiringXLog(LOG_DEBUG, "ControlReg failed: using file system");
+	}
+	return 0;
 }
 
 /*
@@ -360,7 +398,6 @@ static int setPinSysPath(char *path, int len, int pin, const char *elem) {
  *
  ******************************************************************************/
 static void openSysFd(int pin, int mode) {
-
 	//  use sysfs
 	char path[35];
 	if (setPinSysPath(path, 35, pin, "value")) {
@@ -389,11 +426,12 @@ static void openSysFd(int pin, int mode) {
 static int chipPinMode (int pin, int mode)
 {
 	//wiringXLog(LOG_DEBUG, "pinMode: %d -> %s", pin, mode == OUTPUT ? "out" : "in");
-	//if (pinToRegData[pin] == -1) {
+	if (pinToRegMode[pin] == -1) {
+	//if ( 1 == 1) {
 		// must use sysfs
 		char path[35];
 		if (setPinSysPath(path, 35, pin, "direction")) {
-			enablePin(pin);
+			enableSysPin(pin);
 			int fd = open(path, O_WRONLY ); 
 			if (fd != -1) {
 				if (mode == INPUT) {
@@ -410,17 +448,17 @@ static int chipPinMode (int pin, int mode)
 				wiringXLog(LOG_ERR, "pinMode: %d -> %d, %s", pin, mode, strerror(errno));
 			}
 		} 
-
-	if (pinToRegData[pin] != -1) {
-		pinModes[pin] = mode;
-		wiringXLog(LOG_DEBUG, "pinMode: %d -> %s, MMAPed", pin, mode == 0 ? "in" : "out");
+		if (pinToRegMode[pin] != -1) {
+			pinModes[pin] = mode;
+			wiringXLog(LOG_DEBUG, "pinMode: %d -> %s, MMAPed access forced", pin, mode == 0 ? "in" : "out");		
+		}
 	}
-	//} else {
-		// use mmap access
-	//	chipPinModeMem(pin, mode);
+	else {
 		// set direction via control register
-		
-	//}
+		chipPinModeMem(pin, mode);
+		pinModes[pin] = mode;
+		wiringXLog(LOG_DEBUG, "pinMode: %d -> %s, MMAPed", pin, mode == 0 ? "in" : "out");		
+	}
 }
 
 
@@ -572,12 +610,11 @@ static int chipGC(void) {
 	FILE *f = NULL;
 
 	for(pin=0; pin<NUM_PINS; pin++) {
-		//if(pinModes[i] == OUTPUT) {
-		//	pinMode(i, INPUT);
-		//} else if(pinModes[i] == SYS) {
-
-		if(pinModes[pin] != -1) { 
-			// all Pins accessed via sysfs
+		if(pinModes[i] == OUTPUT) {
+			// default INPUT
+			pinMode(i, INPUT);
+		} else if(pinModes[i] == SYS) {
+			// Pins accessed via sysfs
 			setPinSysPath(path, 35, pin, "value");
 			if((fd = open(path, O_RDWR)) > 0) {
 				if((f = fopen("/sys/class/gpio/unexport", "w")) == NULL) {
