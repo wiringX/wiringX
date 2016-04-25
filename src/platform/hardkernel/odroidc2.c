@@ -80,7 +80,7 @@ static int odroidc2ValidGPIO(int pin) {
 
 static int odroidc2ISR(int i, enum isr_mode_t mode) {
 	// if(irq[i] == -1) {
-		wiringXLog(LOG_ERR, "Interrupts are not supported on the %s", );
+		wiringXLog(LOG_ERR, "Interrupts are not supported on the %s", odroidc2->name[0]);
 		// return -1;
 	// }
 	// return odroidc2->soc->isr(i, mode);
