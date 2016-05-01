@@ -32,10 +32,10 @@ static int map[] = {
 			 2, 		 3, 		 8, 		 7,
 	/*	FSEL10,	FSEL9,	FSEL11,	FSEL14	*/
 			10,			 9,			11,			14,
-	/*	FSEL15, FSEL28,	FSEL29,	FSEL30	*/
-			15,			28,			29,			30,
-	/*	FSEL31,	FSEL5,	FSEL6,	FSEL13	*/
-			31,			 5,			 6,			13,
+	/*	FSEL15													*/
+			15,			-1,			-1,			-1,
+	/*					FSEL5,	FSEL6,	FSEL13	*/
+			-1,			 5,			 6,			13,
 	/*	FSEL19,	FSEL26,	FSEL12,	FSEL16	*/
 			19,			26,			12,			16,
 	/*	FSEL20,	FSEL21,	FSEL0,	FSEL1		*/
@@ -44,6 +44,9 @@ static int map[] = {
 
 static int raspberrypi1bpValidGPIO(int pin) {
 	if(pin >= 0 && pin < (sizeof(map)/sizeof(map[0]))) {
+		if(map[pin] == -1) {
+			return -1;
+		}		
 		return 0;
 	} else {
 		return -1;
