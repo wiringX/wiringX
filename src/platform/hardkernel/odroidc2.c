@@ -65,7 +65,7 @@ static int map[] = {
 			92,				 	 -1,				102,				 96
 };
 
-static int irq[28] = { -1 };
+static int irq[sizeof(map)/sizeof(map[0])];
 
 static int odroidc2ValidGPIO(int pin) {
 	if(pin >= 0 && pin < (sizeof(map)/sizeof(map[0]))) {
@@ -78,27 +78,20 @@ static int odroidc2ValidGPIO(int pin) {
 	}
 }
 
-static int odroidc2ISR(int i, enum isr_mode_t mode) {
-	// if(irq[i] == -1) {
-		wiringXLog(LOG_ERR, "Interrupts are not supported on the %s", odroidc2->name[0]);
-		// return -1;
-	// }
-	// return odroidc2->soc->isr(i, mode);
-	return -1;
-}
-
 static int odroidc2Setup(void) {
 	int i = 0;
 	odroidc2->soc->setup();
 	odroidc2->soc->setMap(map);
-	/*
+
 	for(i=0;i<(sizeof(map)/sizeof(map[0]));i++) {
 		if(map[i] != -1) {
 			irq[i] = map[i]+122;
+		} else {
+			irq[i] = -1;
 		}
 	}
 	odroidc2->soc->setIRQ(irq);
-	*/
+
 	return 0;
 }
 
@@ -116,7 +109,6 @@ void odroidc2Init(void) {
 	odroidc2->isr = odroidc2->soc->isr;
 	odroidc2->waitForInterrupt = odroidc2->soc->waitForInterrupt;
 
-	odroidc2->isr = &odroidc2ISR;
 	odroidc2->selectableFd = odroidc2->soc->selectableFd;
 	odroidc2->gc = odroidc2->soc->gc;
 
