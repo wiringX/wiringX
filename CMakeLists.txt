@@ -132,7 +132,7 @@ configure_file("${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake.in"
     IMMEDIATE @ONLY)
 add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 
-set(CPACK_GENERATOR "DEB RPM")
+set(CPACK_GENERATOR "DEB" "RPM")
 set(CPACK_PACKAGING_INSTALL_PREFIX "/usr/local")
 set(CPACK_SOURCE_STRIP_FILES TRUE)
 set(CPACK_STRIP_FILES TRUE)
