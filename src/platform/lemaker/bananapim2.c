@@ -85,7 +85,7 @@ static int bananapiM2PinMode(int i, enum pinmode_t mode) {
 		return -1;
 	}
 	if((i == 0 || i == 1) && (mode != PINMODE_OUTPUT)) {
-		wiringXLog(LOG_ERR, "The %s pin %d can only be used as output", bananapim2->name, i);
+		wiringXLog(LOG_ERR, "The %s pin %d can only be used as output", bananapim2->name[0], i);
 		return -1;
 	}
 	return bananapim2->soc->pinMode(i, mode);
