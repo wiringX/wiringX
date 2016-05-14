@@ -19,7 +19,7 @@
 #include "../../soc/soc.h"
 #include "../../wiringX.h"	
 #include "../platform.h"	
-#include "bananapi.h"			
+#include "bananapi1.h"			
 
 struct platform_t *bananapi = NULL;
 
