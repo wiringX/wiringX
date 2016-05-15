@@ -320,12 +320,14 @@ static int allwinnerA10PinMode(int i, enum pinmode_t mode) {
 
 	val = soc_readl(addr);
 	if(mode == PINMODE_OUTPUT) {
-		soc_writel(addr, val | (1 << pin->select.bit));
+		val |= (1 << pin->select.bit);
 	} else if(mode == PINMODE_INPUT) {
-		soc_writel(addr, val & ~(1 << pin->select.bit));
+		val &= ~(1 << pin->select.bit);
 	}
-	soc_writel(addr, val & ~(1 << (pin->select.bit+1)));
-	soc_writel(addr, val & ~(1 << (pin->select.bit+2)));
+	val &= ~(1 << (pin->select.bit+1));
+	val &= ~(1 << (pin->select.bit+2));
+
+	soc_writel(addr, val);
 	return 0;
 }
 
