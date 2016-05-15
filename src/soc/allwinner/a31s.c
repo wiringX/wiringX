@@ -322,6 +322,7 @@ static int allwinnerA31sPinMode(int i, enum pinmode_t mode) {
 	}
 	val &= ~(1 << (pin->select.bit+1));
 	val &= ~(1 << (pin->select.bit+2));
+	soc_writel(addr, val);
 	return 0;
 }
 
