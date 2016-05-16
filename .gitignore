@@ -2,3 +2,6 @@
 python/__pycache__/
 python/build/
 build
+.cproject
+.project
+.settings

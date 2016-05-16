@@ -81,6 +81,9 @@ void bananapi1Init(void) {
 
 	bananapi1->digitalRead = bananapi1->soc->digitalRead;
 	bananapi1->digitalWrite = bananapi1->soc->digitalWrite;
+	bananapi1->pwmSetClock = bananapi1->soc->pwmSetClock;
+	bananapi1->pwmSetRange = bananapi1->soc->pwmSetRange;
+	bananapi1->pwmWrite = bananapi1->soc->pwmWrite;
 	bananapi1->pinMode = bananapi1->soc->pinMode;
 	bananapi1->setup = &bananapi1Setup;
 

@@ -30,11 +30,15 @@ typedef struct soc_t {
 	} support;
 	
 	void *gpio[MAX_REG_AREA];
+	void *pwm;
+	void *clock;
 	int fd;
 	
 	unsigned long page_size;
 	unsigned long base_addr[MAX_REG_AREA];
 	unsigned long base_offs[MAX_REG_AREA];
+	unsigned long pwm_addr;
+	unsigned long clock_addr;
 	
 	int (*digitalWrite)(int, enum digital_value_t);
 	int (*digitalRead)(int);
@@ -45,7 +49,10 @@ typedef struct soc_t {
 	int (*setup)(void);
 	void (*setMap)(int *);
 	void (*setIRQ)(int *);
-	char *(*getPinName)(int);	
+	char *(*getPinName)(int);
+	int (*pwmSetClock)(int pin, uint32_t frequency);
+	int (*pwmSetRange)(int pin, uint32_t val);
+	int (*pwmWrite)(int pin, uint32_t val);
 
 	int (*validGPIO)(int);
 	int (*selectableFd)(int);

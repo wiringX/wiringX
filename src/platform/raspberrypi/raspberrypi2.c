@@ -78,5 +78,8 @@ void raspberrypi2Init(void) {
 	raspberrypi2->gc = raspberrypi2->soc->gc;
 
 	raspberrypi2->validGPIO = &raspberrypi2ValidGPIO;
+	raspberrypi2->pwmSetClock = raspberrypi2->soc->pwmSetClock;
+	raspberrypi2->pwmSetRange = raspberrypi2->soc->pwmSetRange;
+	raspberrypi2->pwmWrite = raspberrypi2->soc->pwmWrite;
 
 }

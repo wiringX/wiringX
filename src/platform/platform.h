@@ -10,6 +10,7 @@
 #define __WIRINGX_PLATFORM_H_
 
 #include <limits.h>
+#include <stdint.h>
 
 #include "../wiringX.h"
 #include "../soc/soc.h"
@@ -28,7 +29,9 @@ typedef struct platform_t {
 	int (*waitForInterrupt)(int, int);
 	int (*isr)(int, enum isr_mode_t);
 	int (*selectableFd)(int);
-
+	int (*pwmSetClock)(int pin, uint32_t frequency);
+	int (*pwmSetRange)(int pin, uint32_t val);
+	int (*pwmWrite)(int pin, uint32_t val);
 	int (*validGPIO)(int);
 	int (*gc)(void);
 	

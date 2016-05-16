@@ -83,4 +83,7 @@ void raspberrypi3Init(void) {
 	raspberrypi3->gc = raspberrypi3->soc->gc;
 
 	raspberrypi3->validGPIO = &raspberrypi3ValidGPIO;
+	raspberrypi3->pwmSetClock = raspberrypi3->soc->pwmSetClock;
+	raspberrypi3->pwmSetRange = raspberrypi3->soc->pwmSetRange;
+	raspberrypi3->pwmWrite = raspberrypi3->soc->pwmWrite;
 }

@@ -5,7 +5,10 @@ project(wiringX C)
 set(PROJECT_VERSION 1.0)
 set(PROJECT_NAME wiringX)
 
-set(CMAKE_BUILD_TYPE Release)
+if( NOT CMAKE_BUILD_TYPE )
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
 
 set(CMAKE_SKIP_RULE_DEPENDENCY TRUE)
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
@@ -115,10 +118,12 @@ set_target_properties(wiringx_shared wiringx_static PROPERTIES OUTPUT_NAME wirin
 add_executable(wiringx-blink ${PROJECT_SOURCE_DIR}/examples/blink.c)
 add_executable(wiringx-interrupt ${PROJECT_SOURCE_DIR}/examples/interrupt.c)
 add_executable(wiringx-read ${PROJECT_SOURCE_DIR}/examples/read.c)
+add_executable(wiringx-pwm ${PROJECT_SOURCE_DIR}/examples/pwm.c)
 
 target_link_libraries(wiringx-blink wiringx_shared)
 target_link_libraries(wiringx-interrupt wiringx_shared pthread)
 target_link_libraries(wiringx-read wiringx_shared)
+target_link_libraries(wiringx-pwm wiringx_shared)
 
 install(FILES ${CMAKE_BINARY_DIR}/libwiringX.so DESTINATION lib/ COMPONENT library)
 install(FILES ${CMAKE_BINARY_DIR}/libwiringX.a DESTINATION lib/ COMPONENT library)
@@ -127,6 +132,7 @@ install(FILES ${PROJECT_SOURCE_DIR}/src/wiringX.h DESTINATION include/ COMPONENT
 install(PROGRAMS ${CMAKE_BINARY_DIR}/wiringx-blink DESTINATION sbin/ COMPONENT library)
 install(PROGRAMS ${CMAKE_BINARY_DIR}/wiringx-interrupt DESTINATION sbin/ COMPONENT library)
 install(PROGRAMS ${CMAKE_BINARY_DIR}/wiringx-read DESTINATION sbin/ COMPONENT library)
+install(PROGRAMS ${CMAKE_BINARY_DIR}/wiringx-pwm DESTINATION sbin/ COMPONENT library)
 
 WRITE_UNINSTALL_TARGET_SCRIPT()
 configure_file("${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake.in"

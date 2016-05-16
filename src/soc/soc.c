@@ -48,6 +48,9 @@ void soc_register(struct soc_t **soc, char *brand, char *type) {
 	(*soc)->setup = NULL;
 	(*soc)->digitalRead = NULL;
 	(*soc)->digitalWrite = NULL;
+	(*soc)->pwmSetClock = NULL;
+	(*soc)->pwmSetRange = NULL;
+	(*soc)->pwmWrite = NULL;
 	(*soc)->getPinName = NULL;
 	(*soc)->setMap = NULL;
 	(*soc)->validGPIO = NULL;
@@ -59,6 +62,8 @@ void soc_register(struct soc_t **soc, char *brand, char *type) {
 		(*soc)->base_addr[i] = 0;
 		(*soc)->base_offs[i] = 0;
 	}
+	(*soc)->clock = NULL;
+	(*soc)->pwm = NULL;
 
 	(*soc)->next = socs;
 	socs = *soc;

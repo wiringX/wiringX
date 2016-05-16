@@ -73,6 +73,9 @@ void raspberrypi1bpInit(void) {
 	raspberrypi1bp->isr = raspberrypi1bp->soc->isr;
 	raspberrypi1bp->waitForInterrupt = raspberrypi1bp->soc->waitForInterrupt;
 
+	raspberrypi1bp->pwmSetClock = raspberrypi1bp->soc->pwmSetClock;
+	raspberrypi1bp->pwmSetRange = raspberrypi1bp->soc->pwmSetRange;
+	raspberrypi1bp->pwmWrite = raspberrypi1bp->soc->pwmWrite;
 	raspberrypi1bp->selectableFd = raspberrypi1bp->soc->selectableFd;
 	raspberrypi1bp->gc = raspberrypi1bp->soc->gc;
 

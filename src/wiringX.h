@@ -15,6 +15,7 @@ extern "C" {
 
 #include <errno.h>
 #include <syslog.h>
+#include <stdint.h>
 
 extern void (*wiringXLog)(int, const char *, ...);
 
@@ -38,7 +39,8 @@ enum pinmode_t {
 	PINMODE_NOT_SET = 0,
 	PINMODE_INPUT = 2,
 	PINMODE_OUTPUT = 4,
-	PINMODE_INTERRUPT = 8
+	PINMODE_INTERRUPT = 8,
+	PINMODE_PWM_OUTPUT = 16
 };
 
 enum isr_mode_t {
@@ -93,6 +95,16 @@ void wiringXSerialPuts(int, char *);
 void wiringXSerialPrintf(int, char *, ...);
 int wiringXSerialDataAvail(int);
 int wiringXSerialGetChar(int);
+
+// Set the hardware PCM Clock to frequency. Not all platforms supports
+// hardware PCM pins, or a different clock for each PCM pin. The RasPI has
+// only one clock for all pins, so the pin is ignored there.
+// frequency is in Hz, default is set to 100kHz.
+int wiringXPwmSetClock(int pin, uint32_t frequency);
+// Range for PWM counter, defaults to 1024
+int wiringXPwmSetRange(int pin, uint32_t range);
+// Write a value to the PWM counter.
+int wiringXPwmWrite(int pin, uint32_t val);
 
 char *wiringXPlatform(void);
 int wiringXValidGPIO(int);

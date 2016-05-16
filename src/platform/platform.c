@@ -42,6 +42,9 @@ void platform_register(struct platform_t **platform, char *name) {
 	(*platform)->waitForInterrupt = NULL;
 	(*platform)->isr = NULL;
 	(*platform)->selectableFd = NULL;
+	(*platform)->pwmSetClock = NULL;
+	(*platform)->pwmSetRange = NULL;
+	(*platform)->pwmWrite = NULL;
 	(*platform)->validGPIO = NULL;
 	(*platform)->gc = NULL;
 	

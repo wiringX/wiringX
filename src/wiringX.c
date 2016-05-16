@@ -259,9 +259,8 @@ int wiringXSetup(char *name, void (*func)(int, const char *, ...)) {
 		wiringXLog(LOG_ERR, message);
 		return -1;
 	}
-	platform->setup();
-	
-	return 0;
+
+	return platform->setup();
 }
 
 char *wiringXPlatform(void) {
@@ -664,6 +663,60 @@ int wiringXSerialGetChar(int fd) {
 		wiringXLog(LOG_ERR, "wiringX serial interface has not been opened");
 		return -1;
 	}
+}
+
+int wiringXPwmSetClock(int pin, uint32_t frequency) {
+	if(platform != NULL) {
+		if(platform->pwmSetClock) {
+			int x = platform->pwmSetClock(pin, frequency);
+			if(x == -1) {
+				wiringXLog(LOG_ERR, "%s: error while calling pwmSetClock", platform->name[0]);
+				wiringXGC();
+			} else {
+				return x;
+			}
+		} else {
+			wiringXLog(LOG_ERR, "%s: platform doesn't support wiringXPwmSetClock", platform->name[0]);
+			wiringXGC();
+		}
+	}
+	return -1;
+}
+
+int wiringXPwmSetRange(int pin, uint32_t duty) {
+	if(platform != NULL) {
+		if(platform->pwmSetRange) {
+			int x = platform->pwmSetRange(pin, duty);
+			if(x == -1) {
+				wiringXLog(LOG_ERR, "%s: error while calling pwmSetRange", platform->name[0]);
+				wiringXGC();
+			} else {
+				return x;
+			}
+		} else {
+			wiringXLog(LOG_ERR, "%s: platform doesn't support wiringXPwmSetRange", platform->name[0]);
+			wiringXGC();
+		}
+	}
+	return -1;
+}
+
+int wiringXPwmWrite(int pin, uint32_t val) {
+	if(platform != NULL) {
+		if(platform->pwmWrite) {
+			int x = platform->pwmWrite(pin, val);
+			if(x == -1) {
+				wiringXLog(LOG_ERR, "%s: error while calling pwmWrite", platform->name[0]);
+				wiringXGC();
+			} else {
+				return x;
+			}
+		} else {
+			wiringXLog(LOG_ERR, "%s: platform doesn't support wiringXPwmWrite", platform->name[0]);
+			wiringXGC();
+		}
+	}
+	return -1;
 }
 
 int wiringXSelectableFd(int gpio) {
