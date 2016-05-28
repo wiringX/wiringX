@@ -679,8 +679,10 @@ int wiringXSelectableFd(int gpio) {
 int wiringXGC(void) {
 	if(platform != NULL) {
 		platform->gc();
+		platform = NULL;
 	}
 	platform_gc();
 	soc_gc();
+	issetup = 0;
 	return 0;
 }
