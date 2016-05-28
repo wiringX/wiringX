@@ -267,6 +267,7 @@ int wiringXSetup(char *name, void (*func)(int, const char *, ...)) {
 char *wiringXPlatform(void) {
 	if(platform == NULL) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
+		return -1;
 	}
 	return platform->name[namenr];
 }
@@ -274,6 +275,7 @@ char *wiringXPlatform(void) {
 int pinMode(int pin, enum pinmode_t mode) {
 	if(platform == NULL) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
+		return -1;
 	} else if(platform->pinMode == NULL) {
 		wiringXLog(LOG_ERR, "The %s does not support the pinMode functionality", platform->name);
 		return -1;
@@ -284,6 +286,7 @@ int pinMode(int pin, enum pinmode_t mode) {
 int digitalWrite(int pin, enum digital_value_t value) {
 	if(platform == NULL) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
+		return -1;
 	}	else if(platform->digitalWrite == NULL) {
 		wiringXLog(LOG_ERR, "The %s does not support the digitalWrite functionality", platform->name);
 		return -1;
@@ -294,6 +297,7 @@ int digitalWrite(int pin, enum digital_value_t value) {
 int digitalRead(int pin) {
 	if(platform == NULL) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
+		return -1;
 	}	else if(platform->digitalRead == NULL) {
 		wiringXLog(LOG_ERR, "The %s does not support the digitalRead functionality", platform->name);
 		return -1;
@@ -304,6 +308,7 @@ int digitalRead(int pin) {
 int wiringXISR(int pin, enum isr_mode_t mode) {
 	if(platform == NULL) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
+		return -1;
 	}	else if(platform->isr == NULL) {
 		wiringXLog(LOG_ERR, "The %s does not support the wiringXISR functionality", platform->name);
 		return -1;
@@ -314,6 +319,7 @@ int wiringXISR(int pin, enum isr_mode_t mode) {
 int waitForInterrupt(int pin, int ms) {
 	if(platform == NULL) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
+		return -1;
 	}	else if(platform->waitForInterrupt == NULL) {
 		wiringXLog(LOG_ERR, "The %s does not support the waitForInterrupt functionality", platform->name);
 		return -1;
@@ -324,6 +330,7 @@ int waitForInterrupt(int pin, int ms) {
 int wiringXValidGPIO(int pin) {
 	if(platform == NULL) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
+		return -1;
 	}	else if(platform->validGPIO == NULL) {
 		wiringXLog(LOG_ERR, "The %s does not support the wiringXValidGPIO functionality", platform->name);
 		return -1;
@@ -669,6 +676,7 @@ int wiringXSerialGetChar(int fd) {
 int wiringXSelectableFd(int gpio) {
 	if(platform == NULL) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
+		return -1;
 	}	else if(platform->selectableFd == NULL) {
 		wiringXLog(LOG_ERR, "The %s does not support the wiringXSelectableFd functionality", platform->name);
 		return -1;
