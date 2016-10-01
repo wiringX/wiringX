@@ -146,5 +146,6 @@ set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
 set(CPACK_PACKAGE_DESCRIPTION "Cross-platform GPIO Interface")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Cross-platform GPIO Interface")
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA ${PROJECT_SOURCE_DIR}/res/deb/prerm;)
+set(CPACK_DEBIAN_PACKAGE_PROVIDES libwiringx-dev)
 
 include(CPack)
