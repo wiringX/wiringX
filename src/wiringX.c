@@ -205,7 +205,7 @@ void wiringXDefaultLog(int prio, const char *format_str, ...) {
 	errno = save_errno;
 }
 
-int wiringXSetup(char *name, void (*func)(int, const char *, ...)) {
+int wiringXSetup(const char *name, void (*func)(int, const char *, ...)) {
 	if(issetup == 0) {
 		issetup = 1;
 	} else {
@@ -363,7 +363,7 @@ int wiringXI2CWriteReg16(int fd, int reg, int data) {
 	return i2c_smbus_write_word_data(fd, reg, data);
 }
 
-int wiringXI2CSetup(char *path, int devId) {
+int wiringXI2CSetup(const char *path, int devId) {
 	int fd = 0;
 
 	if((fd = open(path, O_RDWR)) < 0) {
@@ -466,7 +466,7 @@ int wiringXSPISetup(int channel, int speed) {
 }
 #endif
 
-int wiringXSerialOpen(char *device, struct wiringXSerial_t wiringXSerial) {
+int wiringXSerialOpen(const char *device, struct wiringXSerial_t wiringXSerial) {
 	struct termios options;
 	speed_t myBaud;
 	int status = 0, fd = 0;
@@ -617,7 +617,7 @@ void wiringXSerialPutChar(int fd, unsigned char c) {
 	}
 }
 
-void wiringXSerialPuts(int fd, char *s) {
+void wiringXSerialPuts(int fd, const char *s) {
 	if(fd > 0) {
 		int x = write(fd, s, strlen(s));
 		if(x != strlen(s)) {
@@ -628,7 +628,7 @@ void wiringXSerialPuts(int fd, char *s) {
 	}
 }
 
-void wiringXSerialPrintf(int fd, char *message, ...) {
+void wiringXSerialPrintf(int fd, const char *message, ...) {
 	va_list argp;
 	char buffer[1024];
 

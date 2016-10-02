@@ -62,7 +62,7 @@ void platform_add_alias(struct platform_t **platform, char *name) {
 	(*platform)->nralias++;
 }
 
-struct platform_t *platform_get_by_name(char *name, int *nr) {
+struct platform_t *platform_get_by_name(const char *name, int *nr) {
 	struct platform_t *tmp = platforms;
 	int i = 0;
 	while(tmp) {

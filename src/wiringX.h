@@ -64,7 +64,7 @@ typedef struct wiringXSerial_t {
 
 void delayMicroseconds(unsigned int);
 int pinMode(int, enum pinmode_t);
-int wiringXSetup(char *, void (*)(int, const char *, ...));
+int wiringXSetup(const char *, void (*)(int, const char *, ...));
 int wiringXGC(void);
 
 // int analogRead(int channel);
@@ -79,18 +79,18 @@ int wiringXI2CReadReg16(int, int);
 int wiringXI2CWrite(int, int);
 int wiringXI2CWriteReg8(int, int, int);
 int wiringXI2CWriteReg16(int, int, int);
-int wiringXI2CSetup(char *, int);
+int wiringXI2CSetup(const char *, int);
 
 int wiringXSPIGetFd(int channel);
 int wiringXSPIDataRW(int channel, unsigned char *data, int len);
 int wiringXSPISetup(int channel, int speed);
 
-int wiringXSerialOpen(char *, struct wiringXSerial_t);
+int wiringXSerialOpen(const char *, struct wiringXSerial_t);
 void wiringXSerialFlush(int);
 void wiringXSerialClose(int);
 void wiringXSerialPutChar(int, unsigned char);
-void wiringXSerialPuts(int, char *);
-void wiringXSerialPrintf(int, char *, ...);
+void wiringXSerialPuts(int, const char *);
+void wiringXSerialPrintf(int, const char *, ...);
 int wiringXSerialDataAvail(int);
 int wiringXSerialGetChar(int);
 
