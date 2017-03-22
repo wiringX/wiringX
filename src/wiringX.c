@@ -28,6 +28,7 @@
 
 #include "soc/allwinner/a10.h"
 #include "soc/allwinner/a31s.h"
+#include "soc/allwinner/a64.h"
 #include "soc/nxp/imx6dqrm.h"
 #include "soc/nxp/imx6sdlrm.h"
 #include "soc/broadcom/2835.h"
@@ -51,6 +52,7 @@
 #include "platform/hardkernel/odroidc1.h"
 #include "platform/hardkernel/odroidc2.h"
 #include "platform/hardkernel/odroidxu4.h"
+#include "platform/pine64/pinea64.h"
 
 static struct platform_t *platform = NULL;
 static int namenr = 0;
@@ -221,6 +223,7 @@ int wiringXSetup(const char *name, void (*func)(int, const char *, ...)) {
 	/* Init all SoC's */
 	allwinnerA10Init();
 	allwinnerA31sInit();
+	allwinnerA64Init();
 	nxpIMX6DQRMInit();
 	nxpIMX6SDLRMInit();
 	broadcom2835Init();
@@ -245,6 +248,7 @@ int wiringXSetup(const char *name, void (*func)(int, const char *, ...)) {
 	odroidc1Init();
 	odroidc2Init();
 	odroidxu4Init();
+	pineA64Init();
 
 	if((platform = platform_get_by_name(name, &namenr)) == NULL) {
 		char *tmp = NULL;
