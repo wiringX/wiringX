@@ -271,12 +271,14 @@ static char *nxpIMX6SDLRMGetPinName(int pin) {
 	return nxpIMX6SDLRM->layout[pin].name;
 }
 
-static void nxpIMX6SDLRMSetMap(int *map) {
+static void nxpIMX6SDLRMSetMap(int *map, size_t size) {
 	nxpIMX6SDLRM->map = map;
+	nxpIMX6SDLRM->map_size = size;
 }
 
-static void nxpIMX6SDLRMSetIRQ(int *irq) {
+static void nxpIMX6SDLRMSetIRQ(int *irq, size_t size) {
 	nxpIMX6SDLRM->irq = irq;
+	nxpIMX6SDLRM->irq_size = size;
 }
 
 static int nxpIMX6SDLRMDigitalWrite(int i, enum digital_value_t value) {

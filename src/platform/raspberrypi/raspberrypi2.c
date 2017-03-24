@@ -54,9 +54,10 @@ static int raspberrypi2ValidGPIO(int pin) {
 }
 
 static int raspberrypi2Setup(void) {
+	const size_t size = sizeof(map) / sizeof(map[0]);
 	raspberrypi2->soc->setup();
-	raspberrypi2->soc->setMap(map);
-	raspberrypi2->soc->setIRQ(map);
+	raspberrypi2->soc->setMap(map, size);
+	raspberrypi2->soc->setIRQ(map, size);
 	return 0;
 }
 
@@ -64,7 +65,7 @@ void raspberrypi2Init(void) {
 	platform_register(&raspberrypi2, "raspberrypi2");
 
 	raspberrypi2->soc = soc_get("Broadcom", "2836");
-	raspberrypi2->soc->setMap(map);
+	raspberrypi2->soc->setMap(map, sizeof(map) / sizeof(map[0]));
 
 	raspberrypi2->digitalRead = raspberrypi2->soc->digitalRead;
 	raspberrypi2->digitalWrite = raspberrypi2->soc->digitalWrite;

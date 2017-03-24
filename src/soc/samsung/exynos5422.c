@@ -303,12 +303,14 @@ static char *exynos5422GetPinName(int pin) {
 	return exynos5422->layout[pin].name;
 }
 
-static void exynos5422SetMap(int *map) {
+static void exynos5422SetMap(int *map, size_t size) {
 	exynos5422->map = map;
+	exynos5422->map_size = size;
 }
 
-static void exynos5422SetIRQ(int *irq) {
+static void exynos5422SetIRQ(int *irq, size_t size) {
 	exynos5422->irq = irq;
+	exynos5422->irq_size = size;
 }
 
 static int exynos5422DigitalWrite(int i, enum digital_value_t value) {

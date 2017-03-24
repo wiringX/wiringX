@@ -205,12 +205,14 @@ static char *amlogicS905GetPinName(int pin) {
 	return amlogicS905->layout[pin].name;
 }
 
-static void amlogicS905SetMap(int *map) {
+static void amlogicS905SetMap(int *map, size_t size) {
 	amlogicS905->map = map;
+	amlogicS905->map_size = size;
 }
 
-static void amlogicS905SetIRQ(int *irq) {
+static void amlogicS905SetIRQ(int *irq, size_t size) {
 	amlogicS905->irq = irq;
+	amlogicS905->irq_size = size;
 }
 
 static int amlogicS905DigitalWrite(int i, enum digital_value_t value) {

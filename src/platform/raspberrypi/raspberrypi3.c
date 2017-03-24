@@ -54,9 +54,10 @@ static int raspberrypi3ValidGPIO(int pin) {
 }
 
 static int raspberrypi3Setup(void) {
+	const size_t size = sizeof(map) / sizeof(map[0]);
 	raspberrypi3->soc->setup();
-	raspberrypi3->soc->setMap(map);
-	raspberrypi3->soc->setIRQ(map);
+	raspberrypi3->soc->setMap(map, size);
+	raspberrypi3->soc->setIRQ(map, size);
 	return 0;
 }
 
@@ -69,7 +70,7 @@ void raspberrypi3Init(void) {
 	 * Broadcom 2836.
 	 */
 	raspberrypi3->soc = soc_get("Broadcom", "2836");
-	raspberrypi3->soc->setMap(map);
+	raspberrypi3->soc->setMap(map, sizeof(map) / sizeof(map[0]));
 
 	raspberrypi3->digitalRead = raspberrypi3->soc->digitalRead;
 	raspberrypi3->digitalWrite = raspberrypi3->soc->digitalWrite;

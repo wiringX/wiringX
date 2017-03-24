@@ -90,8 +90,8 @@ static int hummingboardBaseProDQISR(int i, enum isr_mode_t mode) {
 
 static int hummingboardBaseProDQSetup(void) {
 	hummingboardBaseProDQ->soc->setup();
-	hummingboardBaseProDQ->soc->setMap(map);
-	hummingboardBaseProDQ->soc->setIRQ(irq);
+	hummingboardBaseProDQ->soc->setMap(map, sizeof(map) / sizeof(map[0]));
+	hummingboardBaseProDQ->soc->setIRQ(irq, sizeof(irq) / sizeof(irq[0]));
 	return 0;
 }
 

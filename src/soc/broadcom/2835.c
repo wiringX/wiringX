@@ -143,12 +143,14 @@ static char *broadcom2835GetPinName(int pin) {
 	return broadcom2835->layout[pin].name;
 }
 
-static void broadcom2835SetMap(int *map) {
+static void broadcom2835SetMap(int *map, size_t size) {
 	broadcom2835->map = map;
+	broadcom2835->map_size = size;
 }
 
-static void broadcom2835SetIRQ(int *irq) {
+static void broadcom2835SetIRQ(int *irq, size_t size) {
 	broadcom2835->irq = irq;
+	broadcom2835->irq_size = size;
 }
 
 static int broadcom2835DigitalWrite(int i, enum digital_value_t value) {
