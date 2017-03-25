@@ -87,9 +87,10 @@ static int pcduino1DigitalWrite(int i, enum digital_value_t value) {
 }
 
 static int pcduino1Setup(void) {
+	const size_t size = sizeof(map) / sizeof(map[0]);
 	pcduino1->soc->setup();
-	pcduino1->soc->setMap(map);
-	pcduino1->soc->setIRQ(map);
+	pcduino1->soc->setMap(map, size);
+	pcduino1->soc->setIRQ(map, size);
 	return 0;
 }
 

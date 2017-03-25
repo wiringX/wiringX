@@ -143,8 +143,8 @@ static int hummingboardGateEdgeDQISR(int i, enum isr_mode_t mode) {
 
 static int hummingboardGateEdgeDQSetup(void) {
 	hummingboardGateEdgeDQ->soc->setup();
-	hummingboardGateEdgeDQ->soc->setMap(map);
-	hummingboardGateEdgeDQ->soc->setIRQ(irq);
+	hummingboardGateEdgeDQ->soc->setMap(map, sizeof(map) / sizeof(map[0]));
+	hummingboardGateEdgeDQ->soc->setIRQ(irq, sizeof(irq) / sizeof(irq[0]));
 	return 0;
 }
 
@@ -153,8 +153,8 @@ void hummingboardGateEdgeDQInit(void) {
 	platform_add_alias(&hummingboardGateEdgeDQ, "hummingboard_gate_dq");
 
 	hummingboardGateEdgeDQ->soc = soc_get("NXP", "IMX6DQRM");
-	hummingboardGateEdgeDQ->soc->setMap(map);
-	hummingboardGateEdgeDQ->soc->setIRQ(irq);
+	hummingboardGateEdgeDQ->soc->setMap(map, sizeof(map) / sizeof(map[0]));
+	hummingboardGateEdgeDQ->soc->setIRQ(irq, sizeof(irq) / sizeof(irq[0]));
 
 	hummingboardGateEdgeDQ->digitalRead = hummingboardGateEdgeDQ->soc->digitalRead;
 	hummingboardGateEdgeDQ->digitalWrite = hummingboardGateEdgeDQ->soc->digitalWrite;

@@ -54,9 +54,10 @@ static int raspberrypi1bpValidGPIO(int pin) {
 }
 
 static int raspberrypi1bpSetup(void) {
+	const size_t size = sizeof(map) / sizeof(map[0]);
 	raspberrypi1bp->soc->setup();
-	raspberrypi1bp->soc->setMap(map);
-	raspberrypi1bp->soc->setIRQ(map);
+	raspberrypi1bp->soc->setMap(map, size);
+	raspberrypi1bp->soc->setIRQ(map, size);
 	return 0;
 }
 

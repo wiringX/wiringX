@@ -107,8 +107,8 @@ static int hummingboardGateEdgeSDLISR(int i, enum isr_mode_t mode) {
 
 static int hummingboardGateEdgeSDLSetup(void) {
 	hummingboardGateEdgeSDL->soc->setup();
-	hummingboardGateEdgeSDL->soc->setMap(map);
-	hummingboardGateEdgeSDL->soc->setIRQ(irq);
+	hummingboardGateEdgeSDL->soc->setMap(map, sizeof(map) / sizeof(map[0]));
+	hummingboardGateEdgeSDL->soc->setIRQ(irq, sizeof(irq) / sizeof(irq[0]));
 	return 0;
 }
 
@@ -117,8 +117,8 @@ void hummingboardGateEdgeSDLInit(void) {
 	platform_add_alias(&hummingboardGateEdgeSDL, "hummingboard_gate_sdl");
 
 	hummingboardGateEdgeSDL->soc = soc_get("NXP", "IMX6SDLRM");
-	hummingboardGateEdgeSDL->soc->setMap(map);
-	hummingboardGateEdgeSDL->soc->setIRQ(irq);
+	hummingboardGateEdgeSDL->soc->setMap(map, sizeof(map) / sizeof(map[0]));
+	hummingboardGateEdgeSDL->soc->setIRQ(irq, sizeof(irq) / sizeof(irq[0]));
 
 	hummingboardGateEdgeSDL->digitalRead = hummingboardGateEdgeSDL->soc->digitalRead;
 	hummingboardGateEdgeSDL->digitalWrite = hummingboardGateEdgeSDL->soc->digitalWrite;

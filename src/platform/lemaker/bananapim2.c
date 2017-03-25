@@ -94,9 +94,10 @@ static int bananapiM2DigitalWrite(int i, enum digital_value_t value) {
 }
 
 static int bananapiM2Setup(void) {
+	const size_t size = sizeof(map) / sizeof(map[0]);
 	bananapim2->soc->setup();
-	bananapim2->soc->setMap(map);
-	bananapim2->soc->setIRQ(map);
+	bananapim2->soc->setMap(map, size);
+	bananapim2->soc->setIRQ(map, size);
 	return 0;
 }
 

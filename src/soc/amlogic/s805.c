@@ -202,12 +202,14 @@ static char *amlogicS805GetPinName(int pin) {
 	return amlogicS805->layout[pin].name;
 }
 
-static void amlogicS805SetMap(int *map) {
+static void amlogicS805SetMap(int *map, size_t size) {
 	amlogicS805->map = map;
+	amlogicS805->map_size = size;
 }
 
-static void amlogicS805SetIRQ(int *irq) {
+static void amlogicS805SetIRQ(int *irq, size_t size) {
 	amlogicS805->irq = irq;
+	amlogicS805->irq_size = size;
 }
 
 static int amlogicS805DigitalWrite(int i, enum digital_value_t value) {

@@ -271,12 +271,14 @@ static char *nxpIMX6DQRMGetPinName(int pin) {
 	return nxpIMX6DQRM->layout[pin].name;
 }
 
-static void nxpIMX6DQRMSetMap(int *map) {
+static void nxpIMX6DQRMSetMap(int *map, size_t size) {
 	nxpIMX6DQRM->map = map;
+	nxpIMX6DQRM->map_size = size;
 }
 
-static void nxpIMX6DQRMSetIRQ(int *irq) {
+static void nxpIMX6DQRMSetIRQ(int *irq, size_t size) {
 	nxpIMX6DQRM->irq = irq;
+	nxpIMX6DQRM->irq_size = size;
 }
 
 static int nxpIMX6DQRMDigitalWrite(int i, enum digital_value_t value) {

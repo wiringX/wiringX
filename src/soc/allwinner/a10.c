@@ -233,12 +233,14 @@ static char *allwinnerA10GetPinName(int pin) {
 	return allwinnerA10->layout[pin].name;
 }
 
-static void allwinnerA10SetMap(int *map) {
+static void allwinnerA10SetMap(int *map, size_t size) {
 	allwinnerA10->map = map;
+	allwinnerA10->map_size = size;
 }
 
-static void allwinnerA10SetIRQ(int *irq) {
+static void allwinnerA10SetIRQ(int *irq, size_t size) {
 	allwinnerA10->irq = irq;
+	allwinnerA10->irq_size = size;
 }
 
 static int allwinnerA10DigitalWrite(int i, enum digital_value_t value) {

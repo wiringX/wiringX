@@ -267,7 +267,7 @@ int wiringXSetup(const char *name, void (*func)(int, const char *, ...)) {
 char *wiringXPlatform(void) {
 	if(platform == NULL) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
-		return -1;
+		return NULL;
 	}
 	return platform->name[namenr];
 }
@@ -388,8 +388,8 @@ int wiringXSPIDataRW(int channel, unsigned char *data, int len) {
 	memset(&tmp, 0, sizeof(tmp));
 	channel &= 1;
 
-	tmp.tx_buf = (unsigned long)data;
-	tmp.rx_buf = (unsigned long)data;
+	tmp.tx_buf = (uintptr_t)data;
+	tmp.rx_buf = (uintptr_t)data;
 	tmp.len = len;
 	tmp.delay_usecs = spi[channel].delay;
 	tmp.speed_hz = spi[channel].speed;
