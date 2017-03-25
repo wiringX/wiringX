@@ -360,12 +360,10 @@ static int amlogicS805WaitForInterrupt(int i, int ms) {
 static int amlogicS805GC(void) {
 	struct layout_t *pin = NULL;
 	char path[PATH_MAX];
-	int i = 0, l = 0;
+	int i = 0;
 
 	if(amlogicS805->map != NULL) {
-		l = sizeof(amlogicS805->map)/sizeof(amlogicS805->map[0]);
-
-		for(i=0;i<l;i++) {
+		for(i=0;i<amlogicS805->map_size;i++) {
 			pin = &amlogicS805->layout[amlogicS805->map[i]];
 			if(pin->mode == PINMODE_OUTPUT) {
 				pinMode(i, PINMODE_INPUT);

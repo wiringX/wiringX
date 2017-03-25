@@ -330,12 +330,10 @@ static int allwinnerA31sPinMode(int i, enum pinmode_t mode) {
 
 static int allwinnerA31sGC(void) {
 	struct layout_t *pin = NULL;
-	int i = 0, l = 0;
+	int i = 0;
 
 	if(allwinnerA31s->map != NULL) {
-		l = sizeof(allwinnerA31s->map)/sizeof(allwinnerA31s->map[0]);
-
-		for(i=0;i<l;i++) {
+		for(i=0;i<allwinnerA31s->map_size;i++) {
 			pin = &allwinnerA31s->layout[allwinnerA31s->map[i]];
 			if(pin->mode == PINMODE_OUTPUT) {
 				pinMode(i, PINMODE_INPUT);

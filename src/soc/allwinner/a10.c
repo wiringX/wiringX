@@ -401,12 +401,10 @@ static int allwinnerA10WaitForInterrupt(int i, int ms) {
 static int allwinnerA10GC(void) {
 	struct layout_t *pin = NULL;
 	char path[PATH_MAX];
-	int i = 0, l = 0, x = 0;
+	int i = 0, x = 0;
 
 	if(allwinnerA10->map != NULL) {
-		l = sizeof(allwinnerA10->map)/sizeof(allwinnerA10->map[0]);
-
-		for(i=0;i<l;i++) {
+		for(i=0;i<allwinnerA10->map_size;i++) {
 			pin = &allwinnerA10->layout[allwinnerA10->map[i]];
 			if(pin->mode == PINMODE_OUTPUT) {
 				pinMode(i, PINMODE_INPUT);
