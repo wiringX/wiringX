@@ -364,12 +364,10 @@ static int amlogicS905WaitForInterrupt(int i, int ms) {
 static int amlogicS905GC(void) {
 	struct layout_t *pin = NULL;
 	char path[PATH_MAX];
-	int i = 0, l = 0;
+	int i = 0;
 
 	if(amlogicS905->map != NULL) {
-		l = sizeof(amlogicS905->map)/sizeof(amlogicS905->map[0]);
-
-		for(i=0;i<l;i++) {
+		for(i=0;i<amlogicS905->map_size;i++) {
 			pin = &amlogicS905->layout[amlogicS905->map[i]];
 			if(pin->mode == PINMODE_OUTPUT) {
 				pinMode(i, PINMODE_INPUT);

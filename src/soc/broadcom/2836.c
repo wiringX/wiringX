@@ -301,12 +301,10 @@ static int broadcom2836WaitForInterrupt(int i, int ms) {
 static int broadcom2836GC(void) {
 	struct layout_t *pin = NULL;
 	char path[PATH_MAX];
-	int i = 0, l = 0;
+	int i = 0;
 
 	if(broadcom2836->map != NULL) {
-		l = sizeof(broadcom2836->map)/sizeof(broadcom2836->map[0]);
-
-		for(i=0;i<l;i++) {
+		for(i=0;i<broadcom2836->map_size;i++) {
 			pin = &broadcom2836->layout[broadcom2836->map[i]];
 			if(pin->mode == PINMODE_OUTPUT) {
 				pinMode(i, PINMODE_INPUT);

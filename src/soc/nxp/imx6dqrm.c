@@ -432,12 +432,10 @@ static int nxpIMX6DQRMWaitForInterrupt(int i, int ms) {
 static int nxpIMX6DQRMGC(void) {
 	struct layout_t *pin = NULL;
 	char path[PATH_MAX];
-	int i = 0, l = 0;
+	int i = 0;
 
 	if(nxpIMX6DQRM->map != NULL) {
-		l = sizeof(nxpIMX6DQRM->map)/sizeof(nxpIMX6DQRM->map[0]);
-
-		for(i=0;i<l;i++) {
+		for(i=0;i<nxpIMX6DQRM->map_size;i++) {
 			pin = &nxpIMX6DQRM->layout[nxpIMX6DQRM->map[i]];
 			if(pin->mode == PINMODE_OUTPUT) {
 				pinMode(i, PINMODE_INPUT);
