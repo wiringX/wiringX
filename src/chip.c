@@ -610,10 +610,10 @@ static int chipGC(void) {
 	FILE *f = NULL;
 
 	for(pin=0; pin<NUM_PINS; pin++) {
-		if(pinModes[i] == OUTPUT) {
+		if(pinModes[pin] == OUTPUT) {
 			// default INPUT
-			pinMode(i, INPUT);
-		} else if(pinModes[i] == SYS) {
+			pinMode(pin, INPUT);
+		} else if(pinModes[pin] == SYS) {
 			// Pins accessed via sysfs
 			setPinSysPath(path, 35, pin, "value");
 			if((fd = open(path, O_RDWR)) > 0) {
