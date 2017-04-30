@@ -46,6 +46,7 @@
 #include "platform/raspberrypi/raspberrypi1b1.h"
 #include "platform/raspberrypi/raspberrypi1b2.h"
 #include "platform/raspberrypi/raspberrypi1b+.h"
+#include "platform/raspberrypi/raspberrypizero.h"
 #include "platform/raspberrypi/raspberrypi2.h"
 #include "platform/raspberrypi/raspberrypi3.h"
 #include "platform/hardkernel/odroidc1.h"
@@ -240,6 +241,7 @@ int wiringXSetup(const char *name, void (*func)(int, const char *, ...)) {
 	raspberrypi1b1Init();
 	raspberrypi1b2Init();
 	raspberrypi1bpInit();
+	raspberrypizeroInit();
 	raspberrypi2Init();
 	raspberrypi3Init();
 	odroidc1Init();
