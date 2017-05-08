@@ -1,0 +1,22 @@
+Source: wiringx
+Priority: optional
+Maintainer: Maintainer: CurlyMo <info@pilight.org>
+Build-Depends: debhelper (>= 9), cmake
+Standards-Version: 3.9.5
+Section: libs
+Homepage: http://wiringx.org/
+Vcs-Git: https://github.com/wiringX/wiringX.git
+Vcs-Browser: https://github.com/pilight/wiringX
+
+Package: libwiringx-dev
+Section: libdevel
+Architecture: any
+Depends: libwiringx (= ${binary:Version}), ${misc:Depends}
+Description: Todo
+ T. O. D. O.
+
+Package: libwiringx
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Todo
+ T. O. D. O.

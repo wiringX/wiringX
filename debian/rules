@@ -1,0 +1,11 @@
+#!/usr/bin/make -f
+# See debhelper(7) (uncomment to enable)
+# output every command that modifies files on the build system.
+#DH_VERBOSE = 1
+
+export DEB_BUILD_GNU_TYPE=$(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+export DESTDIR=$(CURDIR)/debian/tmp
+
+# main packaging script based on dh7 syntax
+%:
+	dh $@ 
