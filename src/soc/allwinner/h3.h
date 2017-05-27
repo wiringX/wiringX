@@ -6,13 +6,13 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-#ifndef __WIRINGX_RASPBERRYPIZERO_H_
-#define __WIRINGX_RASPBERRYPIZERO_H_
+#ifndef __WIRINGX_H3_H_
+#define __WIRINGX_H3_H_
 
-#include "../platform.h"
+#include "../soc.h"
 
-extern struct platform_t *raspberrypizero;
+extern struct soc_t *allwinnerH3;
 
-void raspberrypizeroInit(void);
+void allwinnerH3Init(void);
 
 #endif

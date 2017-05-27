@@ -85,6 +85,7 @@ int main(int argc, char *argv[]) {
 		wiringXGC();
 		return -1;
 	}
+
 	if(wiringXValidGPIO(gpio_in) != 0) {
 		printf("%s: Invalid GPIO %d for input (interrupt)\n", argv[0], gpio_in);
 		wiringXGC();
@@ -93,6 +94,7 @@ int main(int argc, char *argv[]) {
 
 	pinMode(gpio_out, PINMODE_OUTPUT);
 	if((wiringXISR(gpio_in, ISR_MODE_BOTH)) != 0) {
+		printf("%s: Cannot set GPIO %d to interrupt BOTH\n", argv[0], gpio_in);
 		wiringXGC();
 		return -1;
 	}

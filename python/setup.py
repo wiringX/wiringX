@@ -5,7 +5,7 @@ from distutils.command.build_ext import build_ext as _build_ext
 import sys
 
 modules = [
-	Extension('wiringX.gpio', 
+	Extension('wiringX.gpio',
 		sources=[
 			'wiringX/wiringx.c',
 			'../src/i2c-dev.c',
@@ -13,6 +13,7 @@ modules = [
 			'../src/soc/soc.c',
 			'../src/soc/allwinner/a10.c',
 			'../src/soc/allwinner/a31s.c',
+			'../src/soc/allwinner/h3.c',
 			'../src/soc/amlogic/s805.c',
 			'../src/soc/amlogic/s905.c',
 			'../src/soc/broadcom/2835.c',
@@ -26,6 +27,7 @@ modules = [
 			'../src/platform/hardkernel/odroidxu4.c',
 			'../src/platform/lemaker/bananapi1.c',
 			'../src/platform/lemaker/bananapim2.c',
+			'../src/platform/xunlong/orangepipc+.c',
 			'../src/platform/linksprite/pcduino1.c',
 			'../src/platform/raspberrypi/raspberrypi1b1.c',
 			'../src/platform/raspberrypi/raspberrypi1b2.c',
@@ -37,7 +39,7 @@ modules = [
 			'../src/platform/solidrun/hummingboard_base_pro_sdl.c',
 			'../src/platform/solidrun/hummingboard_gate_edge_dq.c',
 			'../src/platform/solidrun/hummingboard_gate_edge_sdl.c'
-		], 
+		],
 		include_dirs=['../src/'],
 		extra_compile_args=['-Wformat=0']
 	),

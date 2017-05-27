@@ -28,6 +28,7 @@
 
 #include "soc/allwinner/a10.h"
 #include "soc/allwinner/a31s.h"
+#include "soc/allwinner/h3.h"
 #include "soc/nxp/imx6dqrm.h"
 #include "soc/nxp/imx6sdlrm.h"
 #include "soc/broadcom/2835.h"
@@ -39,6 +40,7 @@
 #include "platform/linksprite/pcduino1.h"
 #include "platform/lemaker/bananapi1.h"
 #include "platform/lemaker/bananapim2.h"
+#include "platform/xunlong/orangepipc+.h"
 #include "platform/solidrun/hummingboard_gate_edge_sdl.h"
 #include "platform/solidrun/hummingboard_gate_edge_dq.h"
 #include "platform/solidrun/hummingboard_base_pro_sdl.h"
@@ -222,6 +224,7 @@ int wiringXSetup(const char *name, void (*func)(int, const char *, ...)) {
 	/* Init all SoC's */
 	allwinnerA10Init();
 	allwinnerA31sInit();
+	allwinnerH3Init();
 	nxpIMX6DQRMInit();
 	nxpIMX6SDLRMInit();
 	broadcom2835Init();
@@ -234,6 +237,7 @@ int wiringXSetup(const char *name, void (*func)(int, const char *, ...)) {
 	pcduino1Init();
 	bananapi1Init();
 	bananapiM2Init();
+	orangepipcpInit();
 	hummingboardBaseProSDLInit();
 	hummingboardBaseProDQInit();
 	hummingboardGateEdgeSDLInit();
@@ -279,7 +283,7 @@ int pinMode(int pin, enum pinmode_t mode) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
 		return -1;
 	} else if(platform->pinMode == NULL) {
-		wiringXLog(LOG_ERR, "The %s does not support the pinMode functionality", platform->name);
+		wiringXLog(LOG_ERR, "The %s does not support the pinMode functionality", platform->name[namenr]);
 		return -1;
 	}
 	return platform->pinMode(pin, mode);
@@ -290,7 +294,7 @@ int digitalWrite(int pin, enum digital_value_t value) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
 		return -1;
 	}	else if(platform->digitalWrite == NULL) {
-		wiringXLog(LOG_ERR, "The %s does not support the digitalWrite functionality", platform->name);
+		wiringXLog(LOG_ERR, "The %s does not support the digitalWrite functionality", platform->name[namenr]);
 		return -1;
 	}
 	return platform->digitalWrite(pin, value);
@@ -301,7 +305,7 @@ int digitalRead(int pin) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
 		return -1;
 	}	else if(platform->digitalRead == NULL) {
-		wiringXLog(LOG_ERR, "The %s does not support the digitalRead functionality", platform->name);
+		wiringXLog(LOG_ERR, "The %s does not support the digitalRead functionality", platform->name[namenr]);
 		return -1;
 	}
 	return platform->digitalRead(pin);
@@ -312,7 +316,7 @@ int wiringXISR(int pin, enum isr_mode_t mode) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
 		return -1;
 	}	else if(platform->isr == NULL) {
-		wiringXLog(LOG_ERR, "The %s does not support the wiringXISR functionality", platform->name);
+		wiringXLog(LOG_ERR, "The %s does not support the wiringXISR functionality", platform->name[namenr]);
 		return -1;
 	}
 	return platform->isr(pin, mode);
@@ -323,7 +327,7 @@ int waitForInterrupt(int pin, int ms) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
 		return -1;
 	}	else if(platform->waitForInterrupt == NULL) {
-		wiringXLog(LOG_ERR, "The %s does not support the waitForInterrupt functionality", platform->name);
+		wiringXLog(LOG_ERR, "The %s does not support the waitForInterrupt functionality", platform->name[namenr]);
 		return -1;
 	}
 	return platform->waitForInterrupt(pin, ms);
@@ -334,7 +338,7 @@ int wiringXValidGPIO(int pin) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
 		return -1;
 	}	else if(platform->validGPIO == NULL) {
-		wiringXLog(LOG_ERR, "The %s does not support the wiringXValidGPIO functionality", platform->name);
+		wiringXLog(LOG_ERR, "The %s does not support the wiringXValidGPIO functionality", platform->name[namenr]);
 		return -1;
 	}
 	return platform->validGPIO(pin);
@@ -680,7 +684,7 @@ int wiringXSelectableFd(int gpio) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
 		return -1;
 	}	else if(platform->selectableFd == NULL) {
-		wiringXLog(LOG_ERR, "The %s does not support the wiringXSelectableFd functionality", platform->name);
+		wiringXLog(LOG_ERR, "The %s does not support the wiringXSelectableFd functionality", platform->name[namenr]);
 		return -1;
 	}
 	return platform->selectableFd(gpio);

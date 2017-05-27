@@ -6,13 +6,13 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-#ifndef __WIRINGX_RASPBERRYPIZERO_H_
-#define __WIRINGX_RASPBERRYPIZERO_H_
+#ifndef __WIRINGX_ORANGEPIPCP_H_
+#define __WIRINGX_ORANGEPIPCP_H_
 
 #include "../platform.h"
 
-extern struct platform_t *raspberrypizero;
+extern struct platform_t *orangepipcp;
 
-void raspberrypizeroInit(void);
+void orangepipcpInit(void);
 
 #endif

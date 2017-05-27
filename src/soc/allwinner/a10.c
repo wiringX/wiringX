@@ -282,7 +282,7 @@ static int allwinnerA10DigitalRead(int i) {
 
 	pin = &allwinnerA10->layout[allwinnerA10->map[i]];
 	gpio = allwinnerA10->gpio[pin->addr];
-	addr = (unsigned long)(gpio + allwinnerA10->base_offs[pin->addr] + pin->select.offset);
+	addr = (unsigned long)(gpio + allwinnerA10->base_offs[pin->addr] + pin->data.offset);
 
 	if(allwinnerA10->map == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", allwinnerA10->brand, allwinnerA10->chip);
