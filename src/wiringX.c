@@ -266,7 +266,7 @@ int wiringXSetup(const char *name, void (*func)(int, const char *, ...)) {
 		return -1;
 	}
 	platform->setup();
-	
+
 	return 0;
 }
 

@@ -252,7 +252,7 @@ static int allwinnerA10DigitalWrite(int i, enum digital_value_t value) {
 
 	if(allwinnerA10->map == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", allwinnerA10->brand, allwinnerA10->chip);
-		return -1; 
+		return -1;
 	}
 	if(allwinnerA10->fd <= 0 || allwinnerA10->gpio == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been setup by wiringX", allwinnerA10->brand, allwinnerA10->chip);
@@ -269,7 +269,7 @@ static int allwinnerA10DigitalWrite(int i, enum digital_value_t value) {
 	if(value == HIGH) {
 		soc_writel(addr, val | (1 << pin->data.bit));
 	} else {
-		soc_writel(addr, val & ~(1 << pin->data.bit)); 
+		soc_writel(addr, val & ~(1 << pin->data.bit));
 	}
 	return 0;
 }
@@ -286,7 +286,7 @@ static int allwinnerA10DigitalRead(int i) {
 
 	if(allwinnerA10->map == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", allwinnerA10->brand, allwinnerA10->chip);
-		return -1; 
+		return -1;
 	}
 	if(allwinnerA10->fd <= 0 || allwinnerA10->gpio == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been setup by wiringX", allwinnerA10->brand, allwinnerA10->chip);
@@ -309,8 +309,8 @@ static int allwinnerA10PinMode(int i, enum pinmode_t mode) {
 
 	if(allwinnerA10->map == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", allwinnerA10->brand, allwinnerA10->chip);
-		return -1; 
-	} 
+		return -1;
+	}
 	if(allwinnerA10->fd <= 0 || allwinnerA10->gpio == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been setup by wiringX", allwinnerA10->brand, allwinnerA10->chip);
 		return -1;
@@ -341,8 +341,8 @@ static int allwinnerA10ISR(int i, enum isr_mode_t mode) {
 
 	if(allwinnerA10->irq == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", allwinnerA10->brand, allwinnerA10->chip);
-		return -1; 
-	} 
+		return -1;
+	}
 	if(allwinnerA10->fd <= 0 || allwinnerA10->gpio == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been setup by wiringX", allwinnerA10->brand, allwinnerA10->chip);
 		return -1;
@@ -354,7 +354,7 @@ static int allwinnerA10ISR(int i, enum isr_mode_t mode) {
 	memset(&name, '\0', strlen(pin->name)+1);
 	for(x = 0; pin->name[x]; x++){
 		name[x] = tolower(pin->name[x]);
-	} 
+	}
 
 	sprintf(path, "/sys/class/gpio/gpio%d_%s", i, name);
 	if((soc_sysfs_check_gpio(allwinnerA10, path)) == -1) {
@@ -364,7 +364,7 @@ static int allwinnerA10ISR(int i, enum isr_mode_t mode) {
 		}
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d_%s/direction", i, name); 
+	sprintf(path, "/sys/class/gpio/gpio%d_%s/direction", i, name);
 	if(soc_sysfs_set_gpio_direction(allwinnerA10, path, "in") == -1) {
 		return -1;
 	}
@@ -378,7 +378,7 @@ static int allwinnerA10ISR(int i, enum isr_mode_t mode) {
 	if((pin->fd = soc_sysfs_gpio_reset_value(allwinnerA10, path)) == -1) {
 		return -1;
 	}
-	pin->mode = PINMODE_INTERRUPT; 
+	pin->mode = PINMODE_INTERRUPT;
 
 	return 0;
 }
@@ -429,7 +429,7 @@ static int allwinnerA10GC(void) {
 	}
 	if(allwinnerA10->gpio[0] != NULL) {
 		munmap(allwinnerA10->gpio[0], allwinnerA10->page_size);
-	} 
+	}
 	return 0;
 }
 
@@ -438,8 +438,8 @@ static int allwinnerA10SelectableFd(int i) {
 
 	if(allwinnerA10->irq == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", allwinnerA10->brand, allwinnerA10->chip);
-		return -1; 
-	} 
+		return -1;
+	}
 	if(allwinnerA10->fd <= 0 || allwinnerA10->gpio == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been setup by wiringX", allwinnerA10->brand, allwinnerA10->chip);
 		return -1;

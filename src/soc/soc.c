@@ -31,7 +31,7 @@ void soc_register(struct soc_t **soc, char *brand, char *type) {
 	}
 
 	strcpy((*soc)->brand, brand);
-	strcpy((*soc)->chip, type);	
+	strcpy((*soc)->chip, type);
 
 	(*soc)->map = NULL;
 	(*soc)->map_size = 0;
@@ -40,8 +40,8 @@ void soc_register(struct soc_t **soc, char *brand, char *type) {
 	(*soc)->layout = NULL;
 	(*soc)->support.isr_modes = 0;
 
-	(*soc)->fd = 0;	
-	
+	(*soc)->fd = 0;
+
 	(*soc)->page_size = 0;
 
 	(*soc)->digitalWrite = NULL;
@@ -216,7 +216,7 @@ int soc_sysfs_gpio_reset_value(struct soc_t *soc, char *path) {
 	if((fd = open(path, O_RDWR)) <= 0) {
 		wiringXLog(LOG_ERR, "wiringX failed to open %s for gpio reading (%s)", path, strerror(errno));
 		return -1;
-	} else {	
+	} else {
 		ioctl(fd, FIONREAD, &count);
 		for(i=0; i<count; ++i) {
 			int x = read(fd, &c, 1);
@@ -242,8 +242,8 @@ int soc_wait_for_interrupt(struct soc_t *soc, int fd, int ms) {
 	if(x != 1) {
 		return -1;
 	}
-	lseek(fd, 0, SEEK_SET);	
-	
+	lseek(fd, 0, SEEK_SET);
+
 	x = poll(&polls, 1, ms);
 
 	/* Don't react to signals */

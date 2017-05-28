@@ -14,12 +14,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
-#include <signal.h>   
-	
+#include <signal.h>
+
 #include "../../soc/soc.h"
-#include "../../wiringX.h"	
-#include "../platform.h"	
-#include "bananapi1.h"			
+#include "../../wiringX.h"
+#include "../platform.h"
+#include "bananapi1.h"
 
 struct platform_t *bananapi1 = NULL;
 

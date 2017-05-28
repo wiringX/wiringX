@@ -17,7 +17,7 @@
 typedef struct platform_t {
 	char **name;
 	int nralias;
-	
+
 	struct soc_t *soc;
 
 	int (*setup)(void);
@@ -31,7 +31,7 @@ typedef struct platform_t {
 
 	int (*validGPIO)(int);
 	int (*gc)(void);
-	
+
 	struct platform_t *next;
 } platform_t;
 

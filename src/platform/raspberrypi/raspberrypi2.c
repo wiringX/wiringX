@@ -14,12 +14,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
-#include <signal.h>   
-	
+#include <signal.h>
+
 #include "../../soc/soc.h"
-#include "../../wiringX.h"	
-#include "../platform.h"	
-#include "raspberrypi2.h"			
+#include "../../wiringX.h"
+#include "../platform.h"
+#include "raspberrypi2.h"
 
 struct platform_t *raspberrypi2 = NULL;
 

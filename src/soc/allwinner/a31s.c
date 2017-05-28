@@ -24,7 +24,7 @@ struct soc_t *allwinnerA31s = NULL;
 static struct layout_t {
 	char *name;
 
-	int addr; 
+	int addr;
 
 	struct {
 		unsigned long offset;
@@ -220,7 +220,7 @@ static int allwinnerA31sSetup(void) {
 	if((allwinnerA31s->gpio[1] = (unsigned char *)mmap(0, allwinnerA31s->page_size, PROT_READ|PROT_WRITE, MAP_SHARED, allwinnerA31s->fd, allwinnerA31s->base_addr[1])) == NULL) {
 		wiringXLog(LOG_ERR, "wiringX failed to map the %s %s GPIO memory address", allwinnerA31s->brand, allwinnerA31s->chip);
 		return -1;
-	}	
+	}
 
 	return 0;
 }
@@ -248,7 +248,7 @@ static int allwinnerA31sDigitalWrite(int i, enum digital_value_t value) {
 
 	if(allwinnerA31s->map == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", allwinnerA31s->brand, allwinnerA31s->chip);
-		return -1; 
+		return -1;
 	}
 	if(allwinnerA31s->fd <= 0 || allwinnerA31s->gpio[pin->addr] == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been setup by wiringX", allwinnerA31s->brand, allwinnerA31s->chip);
@@ -265,7 +265,7 @@ static int allwinnerA31sDigitalWrite(int i, enum digital_value_t value) {
 	if(value == HIGH) {
 		soc_writel(addr, val | (1 << pin->data.bit));
 	} else {
-		soc_writel(addr, val & ~(1 << pin->data.bit)); 
+		soc_writel(addr, val & ~(1 << pin->data.bit));
 	}
 	return 0;
 }
@@ -282,7 +282,7 @@ static int allwinnerA31sDigitalRead(int i) {
 
 	if(allwinnerA31s->map == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", allwinnerA31s->brand, allwinnerA31s->chip);
-		return -1; 
+		return -1;
 	}
 	if(allwinnerA31s->fd <= 0 || allwinnerA31s->gpio[pin->addr] == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been setup by wiringX", allwinnerA31s->brand, allwinnerA31s->chip);
@@ -305,8 +305,8 @@ static int allwinnerA31sPinMode(int i, enum pinmode_t mode) {
 
 	if(allwinnerA31s->map == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", allwinnerA31s->brand, allwinnerA31s->chip);
-		return -1; 
-	} 
+		return -1;
+	}
 	pin = &allwinnerA31s->layout[allwinnerA31s->map[i]];
 	if(allwinnerA31s->fd <= 0 || allwinnerA31s->gpio[pin->addr] == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been setup by wiringX", allwinnerA31s->brand, allwinnerA31s->chip);
@@ -349,7 +349,7 @@ static int allwinnerA31sGC(void) {
 	}
 	if(allwinnerA31s->gpio[1] != NULL) {
 		munmap(allwinnerA31s->gpio[1], allwinnerA31s->page_size);
-	} 
+	}
 	return 0;
 }
 

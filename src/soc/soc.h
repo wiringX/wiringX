@@ -25,20 +25,20 @@ typedef struct soc_t {
 	size_t map_size;
 	int *irq;
 	size_t irq_size;
-	
+
 	struct layout_t *layout;
 
 	struct {
 		int isr_modes;
 	} support;
-	
+
 	void *gpio[MAX_REG_AREA];
 	int fd;
-	
+
 	size_t page_size;
 	uintptr_t base_addr[MAX_REG_AREA];
 	uintptr_t base_offs[MAX_REG_AREA];
-	
+
 	int (*digitalWrite)(int, enum digital_value_t);
 	int (*digitalRead)(int);
 	int (*pinMode)(int, enum pinmode_t);
@@ -48,12 +48,12 @@ typedef struct soc_t {
 	int (*setup)(void);
 	void (*setMap)(int *, size_t size);
 	void (*setIRQ)(int *, size_t size);
-	char *(*getPinName)(int);	
+	char *(*getPinName)(int);
 
 	int (*validGPIO)(int);
 	int (*selectableFd)(int);
 	int (*gc)(void);
-	
+
 	struct soc_t *next;
 } soc_t;
 

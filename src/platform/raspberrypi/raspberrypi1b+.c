@@ -14,12 +14,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
-#include <signal.h>   
-	
+#include <signal.h>
+
 #include "../../soc/soc.h"
-#include "../../wiringX.h"	
-#include "../platform.h"	
-#include "raspberrypi1b+.h"			
+#include "../../wiringX.h"
+#include "../platform.h"
+#include "raspberrypi1b+.h"
 
 struct platform_t *raspberrypi1bp = NULL;
 
@@ -46,7 +46,7 @@ static int raspberrypi1bpValidGPIO(int pin) {
 	if(pin >= 0 && pin < (sizeof(map)/sizeof(map[0]))) {
 		if(map[pin] == -1) {
 			return -1;
-		}		
+		}
 		return 0;
 	} else {
 		return -1;

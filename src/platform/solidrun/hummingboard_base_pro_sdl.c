@@ -14,12 +14,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
-#include <signal.h>   
-	
+#include <signal.h>
+
 #include "../../soc/soc.h"
-#include "../../wiringX.h"	
-#include "../platform.h"	
-#include "hummingboard_base_pro_sdl.h"			
+#include "../../wiringX.h"
+#include "../platform.h"
+#include "hummingboard_base_pro_sdl.h"
 
 struct platform_t *hummingboardBaseProSDL = NULL;
 
@@ -49,7 +49,7 @@ struct platform_t *hummingboardBaseProSDL = NULL;
  */
 static int irq[] = {
 	 73,	 72,	 71,
-	 70,	194,	195,
+	 7	0,	194,	195,
 	 67,    1,	 -1
 	 -1		 -1,	 -1,
 	 -1,   -1,	 -1,
