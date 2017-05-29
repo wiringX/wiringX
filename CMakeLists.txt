@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.9)
 
 project(wiringX C)
 
-set(PROJECT_VERSION 1.0)
+set(PROJECT_VERSION 2.0)
 set(PROJECT_NAME wiringX)
 
 set(CMAKE_BUILD_TYPE Release)
@@ -137,13 +137,13 @@ configure_file("${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake.in"
 add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 
 set(CPACK_GENERATOR "DEB" "RPM")
-set(CPACK_PACKAGING_INSTALL_PREFIX "/usr/local")
+set(CPACK_PACKAGING_INSTALL_PREFIX "/usr/")
 set(CPACK_SOURCE_STRIP_FILES TRUE)
 set(CPACK_STRIP_FILES TRUE)
 set(CPACK_PACKAGE_CONTACT "CurlyMo <info@pilight.org>")
 set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION}-${git_commits}-g${git_ver})
 set(CPACK_PACKAGE_NAME "libwiringx")
-set(CPACK_PACKAGE_FILE_NAME libwiringx-${git_commits}-g${git_ver})
+set(CPACK_PACKAGE_FILE_NAME libwiringx_${git_commits}-g${git_ver}_${CPACK_SYSTEM_NAME})
 set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
 set(CPACK_PACKAGE_DESCRIPTION "Cross-platform GPIO Interface")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Cross-platform GPIO Interface")
