@@ -10,7 +10,7 @@
 #define __WIRINGX_A10_H_
 
 #include "../soc.h"
-#include "../../wiringX.h"
+#include "../../wiringx.h"
 
 extern struct soc_t *allwinnerA10;
 

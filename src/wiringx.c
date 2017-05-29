@@ -24,7 +24,7 @@
 	#include "i2c-dev.h"
 #endif
 
-#include "wiringX.h"
+#include "wiringx.h"
 
 #include "soc/allwinner/a10.h"
 #include "soc/allwinner/a31s.h"

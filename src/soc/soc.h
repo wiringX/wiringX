@@ -9,7 +9,7 @@
 #ifndef __WIRINGX_SOC_H_
 #define __WIRINGX_SOC_H_
 
-#include "../wiringX.h"
+#include "../wiringx.h"
 #include <stddef.h>
 #include <stdint.h>
 

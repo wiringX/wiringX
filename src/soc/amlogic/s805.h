@@ -10,7 +10,7 @@
 #define __WIRINGX_S805_H_
 
 #include "../soc.h"
-#include "../../wiringX.h"
+#include "../../wiringx.h"
 
 extern struct soc_t *amlogicS805;
 

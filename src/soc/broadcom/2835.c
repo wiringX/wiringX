@@ -16,7 +16,7 @@
 #include <ctype.h>
 
 #include "2835.h"
-#include "../../wiringX.h"
+#include "../../wiringx.h"
 #include "../soc.h"
 
 struct soc_t *broadcom2835 = NULL;

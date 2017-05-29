@@ -14,7 +14,7 @@
 #include <pthread.h>
 #include <sys/syscall.h>
 
-#include "wiringX.h"
+#include "wiringx.h"
 
 char *usage =
 	"Usage: %s platform GPIO GPIO\n"

@@ -10,7 +10,7 @@
 #define __WIRINGX_EXYNOS5422_H_
 
 #include "../soc.h"
-#include "../../wiringX.h"
+#include "../../wiringx.h"
 
 extern struct soc_t *exynos5422;
 

@@ -12,7 +12,7 @@
 #include <ctype.h>
 #include <unistd.h>
 
-#include "wiringX.h"
+#include "wiringx.h"
 #include "../src/platform/platform.h"
 
 char *usage =

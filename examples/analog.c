@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "wiringX.h"
+#include "wiringx.h"
 
 int main(void) {
 	int data = 0;

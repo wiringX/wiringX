@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <pthread.h>
 
-#include "wiringX.h"
+#include "wiringx.h"
 
 int main(void) {
 

@@ -16,7 +16,7 @@
 #include <ctype.h>
 
 #include "exynos5422.h"
-#include "../../wiringX.h"
+#include "../../wiringx.h"
 #include "../soc.h"
 
 struct soc_t *exynos5422 = NULL;

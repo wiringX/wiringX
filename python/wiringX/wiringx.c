@@ -24,7 +24,7 @@
 
 #include "Python.h"
 
-#include "wiringX.h"
+#include "wiringx.h"
 #include "platform/platform.h"
 
 PyThreadState *mainThreadState;

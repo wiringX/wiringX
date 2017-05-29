@@ -16,7 +16,7 @@
 #include <ctype.h>
 
 #include "imx6dqrm.h"
-#include "../../wiringX.h"
+#include "../../wiringx.h"
 #include "../soc.h"
 
 struct soc_t *nxpIMX6SDLRM = NULL;

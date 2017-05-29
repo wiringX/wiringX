@@ -11,7 +11,7 @@
 
 #include <limits.h>
 
-#include "../wiringX.h"
+#include "../wiringx.h"
 #include "../soc/soc.h"
 
 typedef struct platform_t {

@@ -10,7 +10,7 @@
 #define __WIRINGX_IMX6DSDLRM_H_
 
 #include "../soc.h"
-#include "../../wiringX.h"
+#include "../../wiringx.h"
 
 extern struct soc_t *nxpIMX6SDLRM;
 

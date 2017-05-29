@@ -18,7 +18,7 @@
 #include <stdlib.h>
 
 #include "a10.h"
-#include "../../wiringX.h"
+#include "../../wiringx.h"
 #include "../soc.h"
 
 struct soc_t *allwinnerH3 = NULL;

@@ -9,7 +9,7 @@ modules = [
 		sources=[
 			'wiringX/wiringx.c',
 			'../src/i2c-dev.c',
-			'../src/wiringX.c',
+			'../src/wiringx.c',
 			'../src/soc/soc.c',
 			'../src/soc/allwinner/a10.c',
 			'../src/soc/allwinner/a31s.c',

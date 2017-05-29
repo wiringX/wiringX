@@ -17,7 +17,7 @@
 #include <sys/ioctl.h>
 #include <sys/poll.h>
 
-#include "../wiringX.h"
+#include "../wiringx.h"
 #include "soc.h"
 
 static struct soc_t *socs = NULL;

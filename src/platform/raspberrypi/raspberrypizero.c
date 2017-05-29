@@ -17,7 +17,7 @@
 #include <signal.h>
 
 #include "../../soc/soc.h"
-#include "../../wiringX.h"
+#include "../../wiringx.h"
 #include "../platform.h"
 #include "raspberrypizero.h"
 

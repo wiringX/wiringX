@@ -16,7 +16,7 @@
 #include <ctype.h>
 
 #include "s905.h"
-#include "../../wiringX.h"
+#include "../../wiringx.h"
 #include "../soc.h"
 
 struct soc_t *amlogicS905 = NULL;

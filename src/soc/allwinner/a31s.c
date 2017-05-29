@@ -16,7 +16,7 @@
 #include <ctype.h>
 
 #include "a31s.h"
-#include "../../wiringX.h"
+#include "../../wiringx.h"
 #include "../soc.h"
 
 struct soc_t *allwinnerA31s = NULL;

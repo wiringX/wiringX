@@ -17,7 +17,7 @@
 #include <signal.h>
 
 #include "../../soc/soc.h"
-#include "../../wiringX.h"
+#include "../../wiringx.h"
 #include "../platform.h"
 #include "hummingboard_base_pro_dq.h"
 
