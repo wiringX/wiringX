@@ -57,9 +57,10 @@
 
 static struct platform_t *platform = NULL;
 static int namenr = 0;
-void (*wiringXLog)(int, const char *, ...) = NULL;
+void (*_wiringXLog)(int, char *, int, const char *, ...) = NULL;
 
 static int issetup = 0;
+static int isinit = 0;
 
 #ifndef __FreeBSD__
 /* SPI Bus Parameters */
@@ -120,7 +121,7 @@ static void delayMicrosecondsHard(unsigned int howLong) {
 	}
 }
 
-void delayMicroseconds(unsigned int howLong) {
+EXPORT void delayMicroseconds(unsigned int howLong) {
 	struct timespec sleeper;
 #ifdef _WIN32
 	long int uSecs = howLong % 1000000;
@@ -145,36 +146,36 @@ void delayMicroseconds(unsigned int howLong) {
 	}
 }
 
-void wiringXDefaultLog(int prio, const char *format_str, ...) {
+void wiringXDefaultLog(int prio, char *file, int line, const char *format_str, ...) {
 	va_list ap, apcpy;
-	char buf[64], *line = malloc(128);
+	char buf[64], *l = malloc(128);
 	int save_errno = -1, pos = 0, bytes = 0;
 
-	if(line == NULL) {
+	if(l == NULL) {
 		fprintf(stderr, "out of memory\n");
 		exit(-1);
 	}
 
 	save_errno = errno;
 
-	memset(line, '\0', 128);
+	memset(l, '\0', 128);
 	memset(buf, '\0',  64);
 
 	switch(prio) {
 		case LOG_WARNING:
-			pos += sprintf(line, "WARNING: ");
+			pos += sprintf(l, "WARNING: ");
 		break;
 		case LOG_ERR:
-			pos += sprintf(line, "ERROR: ");
+			pos += sprintf(l, "ERROR: ");
 		break;
 		case LOG_INFO:
-			pos += sprintf(line, "INFO: ");
+			pos += sprintf(l, "INFO: ");
 		break;
 		case LOG_NOTICE:
-			pos += sprintf(line, "NOTICE: ");
+			pos += sprintf(l, "NOTICE: ");
 		break;
 		case LOG_DEBUG:
-			pos += sprintf(line, "DEBUG: ");
+			pos += sprintf(l, "DEBUG: ");
 		break;
 		default:
 		break;
@@ -191,34 +192,28 @@ void wiringXDefaultLog(int prio, const char *format_str, ...) {
 		fprintf(stderr, "ERROR: unproperly formatted wiringX log message %s\n", format_str);
 	} else {
 		va_end(apcpy);
-		if((line = realloc(line, (size_t)bytes+(size_t)pos+3)) == NULL) {
+		if((l = realloc(l, (size_t)bytes+(size_t)pos+3)) == NULL) {
 			fprintf(stderr, "out of memory\n");
 			exit(-1);
 		}
 		va_start(ap, format_str);
-		pos += vsprintf(&line[pos], format_str, ap);
+		pos += vsprintf(&l[pos], format_str, ap);
 		va_end(ap);
 	}
-	line[pos++]='\n';
-	line[pos++]='\0';
+	l[pos++]='\n';
+	l[pos++]='\0';
 
-	fprintf(stderr, "%s", line);
+	fprintf(stderr, "%s", l);
 
-	free(line);
+	free(l);
 	errno = save_errno;
 }
 
-int wiringXSetup(const char *name, void (*func)(int, const char *, ...)) {
-	if(issetup == 0) {
-		issetup = 1;
+static void wiringXInit(void) {
+	if(isinit == 0) {
+		isinit = 1;
 	} else {
-		return 0;
-	}
-
-	if(func != NULL) {
-		wiringXLog = func;
-	} else {
-		wiringXLog = wiringXDefaultLog;
+		return;
 	}
 
 	/* Init all SoC's */
@@ -251,6 +246,22 @@ int wiringXSetup(const char *name, void (*func)(int, const char *, ...)) {
 	odroidc1Init();
 	odroidc2Init();
 	odroidxu4Init();
+}
+
+EXPORT int wiringXSetup(char *name, void (*func)(int, char *, int, const char *, ...)) {
+	if(issetup == 0) {
+		issetup = 1;
+	} else {
+		return 0;
+	}
+
+	if(func != NULL) {
+		_wiringXLog = func;
+	} else {
+		_wiringXLog = wiringXDefaultLog;
+	}
+
+	wiringXInit();
 
 	if((platform = platform_get_by_name(name, &namenr)) == NULL) {
 		char *tmp = NULL;
@@ -270,7 +281,7 @@ int wiringXSetup(const char *name, void (*func)(int, const char *, ...)) {
 	return 0;
 }
 
-char *wiringXPlatform(void) {
+EXPORT char *wiringXPlatform(void) {
 	if(platform == NULL) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
 		return NULL;
@@ -278,7 +289,7 @@ char *wiringXPlatform(void) {
 	return platform->name[namenr];
 }
 
-int pinMode(int pin, enum pinmode_t mode) {
+EXPORT int pinMode(int pin, enum pinmode_t mode) {
 	if(platform == NULL) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
 		return -1;
@@ -289,7 +300,7 @@ int pinMode(int pin, enum pinmode_t mode) {
 	return platform->pinMode(pin, mode);
 }
 
-int digitalWrite(int pin, enum digital_value_t value) {
+EXPORT int digitalWrite(int pin, enum digital_value_t value) {
 	if(platform == NULL) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
 		return -1;
@@ -300,7 +311,7 @@ int digitalWrite(int pin, enum digital_value_t value) {
 	return platform->digitalWrite(pin, value);
 }
 
-int digitalRead(int pin) {
+EXPORT int digitalRead(int pin) {
 	if(platform == NULL) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
 		return -1;
@@ -311,7 +322,7 @@ int digitalRead(int pin) {
 	return platform->digitalRead(pin);
 }
 
-int wiringXISR(int pin, enum isr_mode_t mode) {
+EXPORT int wiringXISR(int pin, enum isr_mode_t mode) {
 	if(platform == NULL) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
 		return -1;
@@ -322,7 +333,7 @@ int wiringXISR(int pin, enum isr_mode_t mode) {
 	return platform->isr(pin, mode);
 }
 
-int waitForInterrupt(int pin, int ms) {
+EXPORT int waitForInterrupt(int pin, int ms) {
 	if(platform == NULL) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
 		return -1;
@@ -333,7 +344,7 @@ int waitForInterrupt(int pin, int ms) {
 	return platform->waitForInterrupt(pin, ms);
 }
 
-int wiringXValidGPIO(int pin) {
+EXPORT int wiringXValidGPIO(int pin) {
 	if(platform == NULL) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
 		return -1;
@@ -345,31 +356,31 @@ int wiringXValidGPIO(int pin) {
 }
 
 #ifndef __FreeBSD__
-int wiringXI2CRead(int fd) {
+EXPORT int wiringXI2CRead(int fd) {
 	return i2c_smbus_read_byte(fd);
 }
 
-int wiringXI2CReadReg8(int fd, int reg) {
+EXPORT int wiringXI2CReadReg8(int fd, int reg) {
 	return i2c_smbus_read_byte_data(fd, reg);
 }
 
-int wiringXI2CReadReg16(int fd, int reg) {
+EXPORT int wiringXI2CReadReg16(int fd, int reg) {
 	return i2c_smbus_read_word_data(fd, reg);
 }
 
-int wiringXI2CWrite(int fd, int data) {
+EXPORT int wiringXI2CWrite(int fd, int data) {
 	return i2c_smbus_write_byte(fd, data);
 }
 
-int wiringXI2CWriteReg8(int fd, int reg, int data) {
+EXPORT int wiringXI2CWriteReg8(int fd, int reg, int data) {
 	return i2c_smbus_write_byte_data(fd, reg, data);
 }
 
-int wiringXI2CWriteReg16(int fd, int reg, int data) {
+EXPORT int wiringXI2CWriteReg16(int fd, int reg, int data) {
 	return i2c_smbus_write_word_data(fd, reg, data);
 }
 
-int wiringXI2CSetup(const char *path, int devId) {
+EXPORT int wiringXI2CSetup(const char *path, int devId) {
 	int fd = 0;
 
 	if((fd = open(path, O_RDWR)) < 0) {
@@ -385,11 +396,11 @@ int wiringXI2CSetup(const char *path, int devId) {
 	return fd;
 }
 
-int wiringXSPIGetFd(int channel) {
+EXPORT int wiringXSPIGetFd(int channel) {
 	return spi[channel & 1].fd;
 }
 
-int wiringXSPIDataRW(int channel, unsigned char *data, int len) {
+EXPORT int wiringXSPIDataRW(int channel, unsigned char *data, int len) {
 	struct spi_ioc_transfer tmp;
 	memset(&tmp, 0, sizeof(tmp));
 	channel &= 1;
@@ -414,7 +425,7 @@ int wiringXSPIDataRW(int channel, unsigned char *data, int len) {
 	return 0;
 }
 
-int wiringXSPISetup(int channel, int speed) {
+EXPORT int wiringXSPISetup(int channel, int speed) {
 	const char *device = NULL;
 
 	channel &= 1;
@@ -472,7 +483,7 @@ int wiringXSPISetup(int channel, int speed) {
 }
 #endif
 
-int wiringXSerialOpen(const char *device, struct wiringXSerial_t wiringXSerial) {
+EXPORT int wiringXSerialOpen(const char *device, struct wiringXSerial_t wiringXSerial) {
 	struct termios options;
 	speed_t myBaud;
 	int status = 0, fd = 0;
@@ -598,7 +609,7 @@ int wiringXSerialOpen(const char *device, struct wiringXSerial_t wiringXSerial) 
 	return fd;
 }
 
-void wiringXSerialFlush(int fd) {
+EXPORT void wiringXSerialFlush(int fd) {
 	if(fd > 0) {
 		tcflush(fd, TCIOFLUSH);
 	} else {
@@ -606,13 +617,13 @@ void wiringXSerialFlush(int fd) {
 	}
 }
 
-void wiringXSerialClose(int fd) {
+EXPORT void wiringXSerialClose(int fd) {
 	if(fd > 0) {
 		close(fd);
 	}
 }
 
-void wiringXSerialPutChar(int fd, unsigned char c) {
+EXPORT void wiringXSerialPutChar(int fd, unsigned char c) {
 	if(fd > 0) {
 		int x = write(fd, &c, 1);
 		if(x != 1) {
@@ -623,7 +634,7 @@ void wiringXSerialPutChar(int fd, unsigned char c) {
 	}
 }
 
-void wiringXSerialPuts(int fd, const char *s) {
+EXPORT void wiringXSerialPuts(int fd, const char *s) {
 	if(fd > 0) {
 		int x = write(fd, s, strlen(s));
 		if(x != strlen(s)) {
@@ -634,7 +645,7 @@ void wiringXSerialPuts(int fd, const char *s) {
 	}
 }
 
-void wiringXSerialPrintf(int fd, const char *message, ...) {
+EXPORT void wiringXSerialPrintf(int fd, const char *message, ...) {
 	va_list argp;
 	char buffer[1024];
 
@@ -651,7 +662,7 @@ void wiringXSerialPrintf(int fd, const char *message, ...) {
 	}
 }
 
-int wiringXSerialDataAvail(int fd) {
+EXPORT int wiringXSerialDataAvail(int fd) {
 	int result = 0;
 
 	if(fd > 0) {
@@ -665,7 +676,7 @@ int wiringXSerialDataAvail(int fd) {
 	}
 }
 
-int wiringXSerialGetChar(int fd) {
+EXPORT int wiringXSerialGetChar(int fd) {
 	uint8_t x = 0;
 
 	if(fd > 0) {
@@ -679,7 +690,7 @@ int wiringXSerialGetChar(int fd) {
 	}
 }
 
-int wiringXSelectableFd(int gpio) {
+EXPORT int wiringXSelectableFd(int gpio) {
 	if(platform == NULL) {
 		wiringXLog(LOG_ERR, "wiringX has not been properly setup (no platform has been selected)");
 		return -1;
@@ -690,7 +701,7 @@ int wiringXSelectableFd(int gpio) {
 	return platform->selectableFd(gpio);
 }
 
-int wiringXGC(void) {
+EXPORT int wiringXGC(void) {
 	if(platform != NULL) {
 		platform->gc();
 		platform = NULL;
@@ -699,4 +710,25 @@ int wiringXGC(void) {
 	soc_gc();
 	issetup = 0;
 	return 0;
+}
+
+EXPORT int wiringXSupportedPlatforms(char ***out) {
+	wiringXInit();
+	char *tmp = NULL;
+	int i = 0, x = 0;
+	while((tmp = platform_iterate_name(i++)) != NULL);
+
+	if((*out = malloc(sizeof(char *)*i)) == NULL) {
+		fprintf(stderr, "out of memory\n");
+		exit(-1);
+	}
+
+	i = 0;
+	while((tmp = platform_iterate_name(i++)) != NULL) {
+		if(((*out)[i-1] = strdup(tmp)) == NULL) {
+			fprintf(stderr, "out of memory\n");
+			exit(-1);
+		}
+	}
+	return i-1;
 }

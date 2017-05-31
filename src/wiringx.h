@@ -16,7 +16,11 @@ extern "C" {
 #include <errno.h>
 #include <syslog.h>
 
-extern void (*wiringXLog)(int, const char *, ...);
+#define wiringXLog(a, b, ...) _wiringXLog(a, __FILE__, __LINE__, b, ##__VA_ARGS__)
+
+extern void (*_wiringXLog)(int, char *, int, const char *, ...);
+
+#define EXPORT __attribute__((visibility("default")))
 
 #if !defined(PATH_MAX)
     #if defined(_POSIX_PATH_MAX)
@@ -64,7 +68,7 @@ typedef struct wiringXSerial_t {
 
 void delayMicroseconds(unsigned int);
 int pinMode(int, enum pinmode_t);
-int wiringXSetup(const char *, void (*)(int, const char *, ...));
+int wiringXSetup(char *name, void (*func)(int, char *, int, const char *, ...));
 int wiringXGC(void);
 
 // int analogRead(int channel);
@@ -97,7 +101,7 @@ int wiringXSerialGetChar(int);
 char *wiringXPlatform(void);
 int wiringXValidGPIO(int);
 int wiringXSelectableFd(int);
-
+int wiringXSupportedPlatforms(char ***);
 
 #ifdef __cplusplus
 }

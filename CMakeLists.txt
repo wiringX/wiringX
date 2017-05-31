@@ -108,10 +108,10 @@ file(GLOB wiringx
 	"${PROJECT_SOURCE_DIR}/src/soc/samsung/*.c"
 )
 
-add_library(sources OBJECT ${wiringx})
-add_library(wiringx_static STATIC $<TARGET_OBJECTS:sources>)
-add_library(wiringx_shared SHARED $<TARGET_OBJECTS:sources>)
+add_library(wiringx_static STATIC ${wiringx})
+add_library(wiringx_shared SHARED ${wiringx})
 
+set_target_properties(wiringx_shared PROPERTIES C_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN 1)
 set_target_properties(wiringx_shared wiringx_static PROPERTIES OUTPUT_NAME wiringx)
 
 add_executable(wiringx-blink ${PROJECT_SOURCE_DIR}/examples/blink.c)
@@ -143,7 +143,7 @@ set(CPACK_STRIP_FILES TRUE)
 set(CPACK_PACKAGE_CONTACT "CurlyMo <info@pilight.org>")
 set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION}-${git_commits}-g${git_ver})
 set(CPACK_PACKAGE_NAME "libwiringx")
-set(CPACK_PACKAGE_FILE_NAME libwiringx_${git_commits}-g${git_ver}_${CPACK_SYSTEM_NAME})
+set(CPACK_PACKAGE_FILE_NAME libwiringx_${git_commits}-g${git_ver})
 set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
 set(CPACK_PACKAGE_DESCRIPTION "Cross-platform GPIO Interface")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Cross-platform GPIO Interface")
