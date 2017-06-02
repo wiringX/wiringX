@@ -18,6 +18,12 @@ stripped so it only supports those features also supported by wiringX.
 Those features currently are:
 - GPIO reading, writing, and interrupts.
 - IC2 reading and writing.
+- Serial reading and writing.
+
+For radxa board, more features are added:
+- Analog input.
+- SPI reading and writing.
+- Hardware PWM output.
 
 The supported devices are:
 - Raspberry Pi
@@ -42,7 +48,7 @@ yum groupinstall "Development tools"
 
 mkdir build
 cd build
-cmake ..
+cmake .. -DCMAKE_C_FLAGS=-fPIC
 make
 #For Debian based linuxes
 cpack -G DEB

@@ -72,6 +72,8 @@ typedef struct platform_t {
 	int (*SPIGetFd)(int channel);
 	int (*SPIDataRW)(int channel, unsigned char *data, int len);
 	int (*SPISetup)(int channel, int speed);
+	int (*pwmEnable)(int pin, int enable);
+	int (*setPWM)(int pin, float period_ms, float duty);
 	int (*validGPIO)(int gpio);
 	int (*gc)(void);
 	struct platform_t *next;
@@ -115,6 +117,8 @@ void wiringXSerialPuts(int fd, char *s);
 void wiringXSerialPrintf(int fd, char *message, ...);
 int wiringXSerialDataAvail(int fd);
 int wiringXSerialGetChar(int fd);
+int wiringXPWMEnable (int pin, int enable);
+int wiringXSetPWM(int pin, float period_ms, float duty);
 char *wiringXPlatform(void);
 int wiringXValidGPIO(int gpio);
 
