@@ -55,9 +55,11 @@
 #include "platform/hardkernel/odroidc2.h"
 #include "platform/hardkernel/odroidxu4.h"
 
+void wiringXDefaultLog(int prio, char *file, int line, const char *format_str, ...);
+
 static struct platform_t *platform = NULL;
 static int namenr = 0;
-void (*_wiringXLog)(int, char *, int, const char *, ...) = NULL;
+void (*_wiringXLog)(int, char *, int, const char *, ...) = wiringXDefaultLog;
 
 static int issetup = 0;
 static int isinit = 0;
@@ -263,20 +265,22 @@ EXPORT int wiringXSetup(char *name, void (*func)(int, char *, int, const char *,
 
 	wiringXInit();
 
-	if((platform = platform_get_by_name(name, &namenr)) == NULL) {
-		char *tmp = NULL;
-		char message[1024];
-		int l = 0;
-		l = snprintf(message, 1023-l, "The %s is an unsupported or unknown platform\n", name);
-		l += snprintf(&message[l], 1023-l, "\tsupported wiringX platforms are:\n");
-		int i = 0;
-		while((tmp = platform_iterate_name(i++)) != NULL) {
-			l += snprintf(&message[l], 1023-l, "\t- %s\n", tmp);
+	if(name != NULL) {
+		if((platform = platform_get_by_name(name, &namenr)) == NULL) {
+			char *tmp = NULL;
+			char message[1024];
+			int l = 0;
+			l = snprintf(message, 1023-l, "The %s is an unsupported or unknown platform\n", name);
+			l += snprintf(&message[l], 1023-l, "\tsupported wiringX platforms are:\n");
+			int i = 0;
+			while((tmp = platform_iterate_name(i++)) != NULL) {
+				l += snprintf(&message[l], 1023-l, "\t- %s\n", tmp);
+			}
+			wiringXLog(LOG_ERR, message);
+			return -1;
 		}
-		wiringXLog(LOG_ERR, message);
-		return -1;
+		platform->setup();
 	}
-	platform->setup();
 
 	return 0;
 }
