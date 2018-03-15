@@ -17,11 +17,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "h3.h"
+#include "h5.h"
 #include "../../wiringx.h"
 #include "../soc.h"
 
-struct soc_t *allwinnerH3 = NULL;
+struct soc_t *allwinnerH5 = NULL;
 
 static struct layout_t {
 	char *name;
@@ -84,8 +84,8 @@ static struct layout_t {
  { "PC14", 0, { 0x4C, 24 }, { 0x58, 14 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
  { "PC15", 0, { 0x4C, 28 }, { 0x58, 15 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
  { "PC16", 0, { 0x50, 0 }, { 0x58, 16 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
- { "PC17", 0, { 0x50, 4 }, { 0x58, 17 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
- { "PC18", 0, { 0x50, 8 }, { 0x58, 18 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+ // { "PC17", 0, { 0x50, 4 }, { 0x58, 17 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
+ // { "PC18", 0, { 0x50, 8 }, { 0x58, 18 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
  { "PD0", 0, { 0x6C, 0 }, { 0x7C, 0 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
  { "PD1", 0, { 0x6C, 4 }, { 0x7C, 1 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
  { "PD2", 0, { 0x6C, 8 }, { 0x7C, 2 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
@@ -155,60 +155,60 @@ static struct layout_t {
  { "PL11", 1, { 0x04, 12 }, { 0x10, 11 }, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0 },
 };
 
-static int allwinnerH3Setup(void) {
-	if((allwinnerH3->fd = open("/dev/mem", O_RDWR | O_SYNC )) < 0) {
+static int allwinnerH5Setup(void) {
+	if((allwinnerH5->fd = open("/dev/mem", O_RDWR | O_SYNC )) < 0) {
 		wiringXLog(LOG_ERR, "wiringX failed to open /dev/mem for raw memory access");
 		return -1;
 	}
 
-	if((allwinnerH3->gpio[0] = (unsigned char *)mmap(0, allwinnerH3->page_size, PROT_READ|PROT_WRITE, MAP_SHARED, allwinnerH3->fd, allwinnerH3->base_addr[0])) == NULL) {
-		wiringXLog(LOG_ERR, "wiringX failed to map the %s %s GPIO memory address", allwinnerH3->brand, allwinnerH3->chip);
+	if((allwinnerH5->gpio[0] = (unsigned char *)mmap(0, allwinnerH5->page_size, PROT_READ|PROT_WRITE, MAP_SHARED, allwinnerH5->fd, allwinnerH5->base_addr[0])) == NULL) {
+		wiringXLog(LOG_ERR, "wiringX failed to map the %s %s GPIO memory address", allwinnerH5->brand, allwinnerH5->chip);
 		return -1;
 	}
 
-	if((allwinnerH3->gpio[1] = (unsigned char *)mmap(0, allwinnerH3->page_size, PROT_READ|PROT_WRITE, MAP_SHARED, allwinnerH3->fd, allwinnerH3->base_addr[1])) == NULL) {
-		wiringXLog(LOG_ERR, "wiringX failed to map the %s %s GPIO memory address", allwinnerH3->brand, allwinnerH3->chip);
+	if((allwinnerH5->gpio[1] = (unsigned char *)mmap(0, allwinnerH5->page_size, PROT_READ|PROT_WRITE, MAP_SHARED, allwinnerH5->fd, allwinnerH5->base_addr[1])) == NULL) {
+		wiringXLog(LOG_ERR, "wiringX failed to map the %s %s GPIO memory address", allwinnerH5->brand, allwinnerH5->chip);
 		return -1;
 	}
 
 	return 0;
 }
 
-static char *allwinnerH3GetPinName(int pin) {
-	return allwinnerH3->layout[pin].name;
+static char *allwinnerH5GetPinName(int pin) {
+	return allwinnerH5->layout[pin].name;
 }
 
-static void allwinnerH3SetMap(int *map, size_t size) {
-	allwinnerH3->map = map;
-	allwinnerH3->map_size = size;
+static void allwinnerH5SetMap(int *map, size_t size) {
+	allwinnerH5->map = map;
+	allwinnerH5->map_size = size;
 }
 
-static void allwinnerH3SetIRQ(int *irq, size_t size) {
-	allwinnerH3->irq = irq;
-	allwinnerH3->irq_size = size;
+static void allwinnerH5SetIRQ(int *irq, size_t size) {
+	allwinnerH5->irq = irq;
+	allwinnerH5->irq_size = size;
 }
 
-static int allwinnerH3DigitalWrite(int i, enum digital_value_t value) {
+static int allwinnerH5DigitalWrite(int i, enum digital_value_t value) {
 	struct layout_t *pin = NULL;
 	unsigned long addr = 0;
 	uint32_t val = 0;
 
-	pin = &allwinnerH3->layout[allwinnerH3->map[i]];
+	pin = &allwinnerH5->layout[allwinnerH5->map[i]];
 
-	if(allwinnerH3->map == NULL) {
-		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", allwinnerH3->brand, allwinnerH3->chip);
+	if(allwinnerH5->map == NULL) {
+		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", allwinnerH5->brand, allwinnerH5->chip);
 		return -1;
 	}
-	if(allwinnerH3->fd <= 0 || allwinnerH3->gpio == NULL) {
-		wiringXLog(LOG_ERR, "The %s %s has not yet been setup by wiringX", allwinnerH3->brand, allwinnerH3->chip);
+	if(allwinnerH5->fd <= 0 || allwinnerH5->gpio == NULL) {
+		wiringXLog(LOG_ERR, "The %s %s has not yet been setup by wiringX", allwinnerH5->brand, allwinnerH5->chip);
 		return -1;
 	}
 	if(pin->mode != PINMODE_OUTPUT) {
-		wiringXLog(LOG_ERR, "The %s %s GPIO %d is not set to output mode", allwinnerH3->brand, allwinnerH3->chip, i);
+		wiringXLog(LOG_ERR, "The %s %s GPIO %d is not set to output mode", allwinnerH5->brand, allwinnerH5->chip, i);
 		return -1;
 	}
 
-	addr = (unsigned long)(allwinnerH3->gpio[pin->addr] + allwinnerH3->base_offs[pin->addr] + pin->data.offset);
+	addr = (unsigned long)(allwinnerH5->gpio[pin->addr] + allwinnerH5->base_offs[pin->addr] + pin->data.offset);
 
 	val = soc_readl(addr);
 	if(value == HIGH) {
@@ -219,26 +219,26 @@ static int allwinnerH3DigitalWrite(int i, enum digital_value_t value) {
 	return 0;
 }
 
-static int allwinnerH3DigitalRead(int i) {
+static int allwinnerH5DigitalRead(int i) {
 	void *gpio = NULL;
 	struct layout_t *pin = NULL;
 	unsigned long addr = 0;
 	uint32_t val = 0;
 
-	pin = &allwinnerH3->layout[allwinnerH3->map[i]];
-	gpio = allwinnerH3->gpio[pin->addr];
-	addr = (unsigned long)(gpio + allwinnerH3->base_offs[pin->addr] + pin->data.offset);
+	pin = &allwinnerH5->layout[allwinnerH5->map[i]];
+	gpio = allwinnerH5->gpio[pin->addr];
+	addr = (unsigned long)(gpio + allwinnerH5->base_offs[pin->addr] + pin->data.offset);
 
-	if(allwinnerH3->map == NULL) {
-		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", allwinnerH3->brand, allwinnerH3->chip);
+	if(allwinnerH5->map == NULL) {
+		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", allwinnerH5->brand, allwinnerH5->chip);
 		return -1;
 	}
-	if(allwinnerH3->fd <= 0 || allwinnerH3->gpio == NULL) {
-		wiringXLog(LOG_ERR, "The %s %s has not yet been setup by wiringX", allwinnerH3->brand, allwinnerH3->chip);
+	if(allwinnerH5->fd <= 0 || allwinnerH5->gpio == NULL) {
+		wiringXLog(LOG_ERR, "The %s %s has not yet been setup by wiringX", allwinnerH5->brand, allwinnerH5->chip);
 		return -1;
 	}
 	if(pin->mode != PINMODE_INPUT) {
-		wiringXLog(LOG_ERR, "The %s %s GPIO %d is not set to input mode", allwinnerH3->brand, allwinnerH3->chip, i);
+		wiringXLog(LOG_ERR, "The %s %s GPIO %d is not set to input mode", allwinnerH5->brand, allwinnerH5->chip, i);
 		return -1;
 	}
 
@@ -246,22 +246,22 @@ static int allwinnerH3DigitalRead(int i) {
 	return (int)((val & (1 << pin->data.bit)) >> pin->data.bit);
 }
 
-static int allwinnerH3PinMode(int i, enum pinmode_t mode) {
+static int allwinnerH5PinMode(int i, enum pinmode_t mode) {
 	struct layout_t *pin = NULL;
 	unsigned long addr = 0;
 	uint32_t val = 0;
 
-	if(allwinnerH3->map == NULL) {
-		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", allwinnerH3->brand, allwinnerH3->chip);
+	if(allwinnerH5->map == NULL) {
+		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", allwinnerH5->brand, allwinnerH5->chip);
 		return -1;
 	}
-	if(allwinnerH3->fd <= 0 || allwinnerH3->gpio == NULL) {
-		wiringXLog(LOG_ERR, "The %s %s has not yet been setup by wiringX", allwinnerH3->brand, allwinnerH3->chip);
+	if(allwinnerH5->fd <= 0 || allwinnerH5->gpio == NULL) {
+		wiringXLog(LOG_ERR, "The %s %s has not yet been setup by wiringX", allwinnerH5->brand, allwinnerH5->chip);
 		return -1;
 	}
 
-	pin = &allwinnerH3->layout[allwinnerH3->map[i]];
-	addr = (unsigned long)(allwinnerH3->gpio[pin->addr] + allwinnerH3->base_offs[pin->addr] + pin->select.offset);
+	pin = &allwinnerH5->layout[allwinnerH5->map[i]];
+	addr = (unsigned long)(allwinnerH5->gpio[pin->addr] + allwinnerH5->base_offs[pin->addr] + pin->select.offset);
 	pin->mode = mode;
 
 	val = soc_readl(addr);
@@ -277,21 +277,21 @@ static int allwinnerH3PinMode(int i, enum pinmode_t mode) {
 }
 
 
-static int allwinnerH3ISR(int i, enum isr_mode_t mode) {
+static int allwinnerH5ISR(int i, enum isr_mode_t mode) {
 	struct layout_t *pin = NULL;
 	char path[PATH_MAX];
 	int x = 0;
 
-	if(allwinnerH3->irq == NULL) {
-		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", allwinnerH3->brand, allwinnerH3->chip);
+	if(allwinnerH5->irq == NULL) {
+		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", allwinnerH5->brand, allwinnerH5->chip);
 		return -1;
 	}
-	if(allwinnerH3->fd <= 0 || allwinnerH3->gpio == NULL) {
-		wiringXLog(LOG_ERR, "The %s %s has not yet been setup by wiringX", allwinnerH3->brand, allwinnerH3->chip);
+	if(allwinnerH5->fd <= 0 || allwinnerH5->gpio == NULL) {
+		wiringXLog(LOG_ERR, "The %s %s has not yet been setup by wiringX", allwinnerH5->brand, allwinnerH5->chip);
 		return -1;
 	}
 
-	pin = &allwinnerH3->layout[allwinnerH3->irq[i]];
+	pin = &allwinnerH5->layout[allwinnerH5->irq[i]];
 	char name[strlen(pin->name)+1];
 
 	memset(&name, '\0', strlen(pin->name)+1);
@@ -299,32 +299,32 @@ static int allwinnerH3ISR(int i, enum isr_mode_t mode) {
 		name[x] = tolower(pin->name[x]);
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d", allwinnerH3->irq[i]);
-	if((soc_sysfs_check_gpio(allwinnerH3, path)) == 0) {
+	sprintf(path, "/sys/class/gpio/gpio%d", allwinnerH5->irq[i]);
+	if((soc_sysfs_check_gpio(allwinnerH5, path)) == 0) {
 		sprintf(path, "/sys/class/gpio/unexport");
-		soc_sysfs_gpio_unexport(allwinnerH3, path, allwinnerH3->irq[i]);
+		soc_sysfs_gpio_unexport(allwinnerH5, path, allwinnerH5->irq[i]);
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d", allwinnerH3->irq[i]);
-	if((soc_sysfs_check_gpio(allwinnerH3, path)) == -1) {
+	sprintf(path, "/sys/class/gpio/gpio%d", allwinnerH5->irq[i]);
+	if((soc_sysfs_check_gpio(allwinnerH5, path)) == -1) {
 		sprintf(path, "/sys/class/gpio/export");
-		if(soc_sysfs_gpio_export(allwinnerH3, path, allwinnerH3->irq[i]) == -1) {
+		if(soc_sysfs_gpio_export(allwinnerH5, path, allwinnerH5->irq[i]) == -1) {
 			return -1;
 		}
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d/direction", allwinnerH3->irq[i]);
-	if(soc_sysfs_set_gpio_direction(allwinnerH3, path, "in") == -1) {
+	sprintf(path, "/sys/class/gpio/gpio%d/direction", allwinnerH5->irq[i]);
+	if(soc_sysfs_set_gpio_direction(allwinnerH5, path, "in") == -1) {
 		return -1;
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d/edge", allwinnerH3->irq[i]);
-	if(soc_sysfs_set_gpio_interrupt_mode(allwinnerH3, path, mode) == -1) {
+	sprintf(path, "/sys/class/gpio/gpio%d/edge", allwinnerH5->irq[i]);
+	if(soc_sysfs_set_gpio_interrupt_mode(allwinnerH5, path, mode) == -1) {
 		return -1;
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d/value", allwinnerH3->irq[i]);
-	if((pin->fd = soc_sysfs_gpio_reset_value(allwinnerH3, path)) == -1) {
+	sprintf(path, "/sys/class/gpio/gpio%d/value", allwinnerH5->irq[i]);
+	if((pin->fd = soc_sysfs_gpio_reset_value(allwinnerH5, path)) == -1) {
 		return -1;
 	}
 	pin->mode = PINMODE_INTERRUPT;
@@ -332,29 +332,29 @@ static int allwinnerH3ISR(int i, enum isr_mode_t mode) {
 	return 0;
 }
 
-static int allwinnerH3WaitForInterrupt(int i, int ms) {
-	struct layout_t *pin = &allwinnerH3->layout[allwinnerH3->irq[i]];
+static int allwinnerH5WaitForInterrupt(int i, int ms) {
+	struct layout_t *pin = &allwinnerH5->layout[allwinnerH5->irq[i]];
 
 	if(pin->mode != PINMODE_INTERRUPT) {
-		wiringXLog(LOG_ERR, "The %s %s GPIO %d is not set to interrupt mode", allwinnerH3->brand, allwinnerH3->chip, i);
+		wiringXLog(LOG_ERR, "The %s %s GPIO %d is not set to interrupt mode", allwinnerH5->brand, allwinnerH5->chip, i);
 		return -1;
 	}
 	if(pin->fd <= 0) {
-		wiringXLog(LOG_ERR, "The %s %s GPIO %d has not been opened for reading", allwinnerH3->brand, allwinnerH3->chip, i);
+		wiringXLog(LOG_ERR, "The %s %s GPIO %d has not been opened for reading", allwinnerH5->brand, allwinnerH5->chip, i);
 		return -1;
 	}
 
-	return soc_wait_for_interrupt(allwinnerH3, pin->fd, ms);
+	return soc_wait_for_interrupt(allwinnerH5, pin->fd, ms);
 }
 
-static int allwinnerH3GC(void) {
+static int allwinnerH5GC(void) {
 	struct layout_t *pin = NULL;
 	char path[PATH_MAX];
 	int i = 0, x = 0;
 
-	if(allwinnerH3->map != NULL) {
-		for(i=0;i<allwinnerH3->map_size;i++) {
-			pin = &allwinnerH3->layout[allwinnerH3->map[i]];
+	if(allwinnerH5->map != NULL) {
+		for(i=0;i<allwinnerH5->map_size;i++) {
+			pin = &allwinnerH5->layout[allwinnerH5->map[i]];
 			if(pin->mode == PINMODE_OUTPUT) {
 				pinMode(i, PINMODE_INPUT);
 			} else if(pin->mode == PINMODE_INTERRUPT) {
@@ -364,10 +364,10 @@ static int allwinnerH3GC(void) {
 				for(x = 0; pin->name[x]; x++){
 					name[x] = tolower(pin->name[x]);
 				}
-				sprintf(path, "/sys/class/gpio/gpio%d", allwinnerH3->irq[i]);
-				if((soc_sysfs_check_gpio(allwinnerH3, path)) == 0) {
+				sprintf(path, "/sys/class/gpio/gpio%d", allwinnerH5->irq[i]);
+				if((soc_sysfs_check_gpio(allwinnerH5, path)) == 0) {
 					sprintf(path, "/sys/class/gpio/unexport");
-					soc_sysfs_gpio_unexport(allwinnerH3, path, allwinnerH3->irq[i]);
+					soc_sysfs_gpio_unexport(allwinnerH5, path, allwinnerH5->irq[i]);
 				}
 			}
 			if(pin->fd > 0) {
@@ -376,54 +376,54 @@ static int allwinnerH3GC(void) {
 			}
 		}
 	}
-	if(allwinnerH3->gpio[0] != NULL) {
-		munmap(allwinnerH3->gpio[0], allwinnerH3->page_size);
+	if(allwinnerH5->gpio[0] != NULL) {
+		munmap(allwinnerH5->gpio[0], allwinnerH5->page_size);
 	}
 	return 0;
 }
 
-static int allwinnerH3SelectableFd(int i) {
+static int allwinnerH5SelectableFd(int i) {
 	struct layout_t *pin = NULL;
 
-	if(allwinnerH3->irq == NULL) {
-		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", allwinnerH3->brand, allwinnerH3->chip);
+	if(allwinnerH5->irq == NULL) {
+		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", allwinnerH5->brand, allwinnerH5->chip);
 		return -1;
 	}
 
-	if(allwinnerH3->fd <= 0 || allwinnerH3->gpio == NULL) {
-		wiringXLog(LOG_ERR, "The %s %s has not yet been setup by wiringX", allwinnerH3->brand, allwinnerH3->chip);
+	if(allwinnerH5->fd <= 0 || allwinnerH5->gpio == NULL) {
+		wiringXLog(LOG_ERR, "The %s %s has not yet been setup by wiringX", allwinnerH5->brand, allwinnerH5->chip);
 		return -1;
 	}
 
-	pin = &allwinnerH3->layout[allwinnerH3->irq[i]];
+	pin = &allwinnerH5->layout[allwinnerH5->irq[i]];
 	return pin->fd;
 }
 
-void allwinnerH3Init(void) {
-	soc_register(&allwinnerH3, "Allwinner", "H3");
+void allwinnerH5Init(void) {
+	soc_register(&allwinnerH5, "Allwinner", "H5");
 
-	allwinnerH3->layout = layout;
+	allwinnerH5->layout = layout;
 
-	allwinnerH3->support.isr_modes = ISR_MODE_RISING | ISR_MODE_FALLING | ISR_MODE_BOTH | ISR_MODE_NONE;
+	allwinnerH5->support.isr_modes = ISR_MODE_RISING | ISR_MODE_FALLING | ISR_MODE_BOTH | ISR_MODE_NONE;
 
-	allwinnerH3->page_size = (4*1024);
-	allwinnerH3->base_addr[0] = 0x01C20000;
-	allwinnerH3->base_offs[0] = 0x00000800;
+	allwinnerH5->page_size = (4*1024);
+	allwinnerH5->base_addr[0] = 0x01C20000;
+	allwinnerH5->base_offs[0] = 0x00000800;
 
-	allwinnerH3->base_addr[1] = 0x01F02000;
-	allwinnerH3->base_offs[1] = 0x00000C00;
+	allwinnerH5->base_addr[1] = 0x01F02000;
+	allwinnerH5->base_offs[1] = 0x00000C00;
 
-	allwinnerH3->gc = &allwinnerH3GC;
-	allwinnerH3->selectableFd = &allwinnerH3SelectableFd;
+	allwinnerH5->gc = &allwinnerH5GC;
+	allwinnerH5->selectableFd = &allwinnerH5SelectableFd;
 
-	allwinnerH3->pinMode = &allwinnerH3PinMode;
-	allwinnerH3->setup = &allwinnerH3Setup;
-	allwinnerH3->digitalRead = &allwinnerH3DigitalRead;
-	allwinnerH3->digitalWrite = &allwinnerH3DigitalWrite;
-	allwinnerH3->getPinName = &allwinnerH3GetPinName;
-	allwinnerH3->setMap = &allwinnerH3SetMap;
-	allwinnerH3->setIRQ = &allwinnerH3SetIRQ;
-	allwinnerH3->isr = &allwinnerH3ISR;
-	allwinnerH3->waitForInterrupt = &allwinnerH3WaitForInterrupt;
+	allwinnerH5->pinMode = &allwinnerH5PinMode;
+	allwinnerH5->setup = &allwinnerH5Setup;
+	allwinnerH5->digitalRead = &allwinnerH5DigitalRead;
+	allwinnerH5->digitalWrite = &allwinnerH5DigitalWrite;
+	allwinnerH5->getPinName = &allwinnerH5GetPinName;
+	allwinnerH5->setMap = &allwinnerH5SetMap;
+	allwinnerH5->setIRQ = &allwinnerH5SetIRQ;
+	allwinnerH5->isr = &allwinnerH5ISR;
+	allwinnerH5->waitForInterrupt = &allwinnerH5WaitForInterrupt;
 
 }

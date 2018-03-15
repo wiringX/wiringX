@@ -29,6 +29,7 @@
 #include "soc/allwinner/a10.h"
 #include "soc/allwinner/a31s.h"
 #include "soc/allwinner/h3.h"
+#include "soc/allwinner/h5.h"
 #include "soc/nxp/imx6dqrm.h"
 #include "soc/nxp/imx6sdlrm.h"
 #include "soc/broadcom/2835.h"
@@ -41,6 +42,7 @@
 #include "platform/lemaker/bananapi1.h"
 #include "platform/lemaker/bananapim2.h"
 #include "platform/xunlong/orangepipc+.h"
+#include "platform/xunlong/orangepipc2.h"
 #include "platform/solidrun/hummingboard_gate_edge_sdl.h"
 #include "platform/solidrun/hummingboard_gate_edge_dq.h"
 #include "platform/solidrun/hummingboard_base_pro_sdl.h"
@@ -222,6 +224,7 @@ static void wiringXInit(void) {
 	allwinnerA10Init();
 	allwinnerA31sInit();
 	allwinnerH3Init();
+	allwinnerH5Init();
 	nxpIMX6DQRMInit();
 	nxpIMX6SDLRMInit();
 	broadcom2835Init();
@@ -235,6 +238,7 @@ static void wiringXInit(void) {
 	bananapi1Init();
 	bananapiM2Init();
 	orangepipcpInit();
+	orangepipc2Init();
 	hummingboardBaseProSDLInit();
 	hummingboardBaseProDQInit();
 	hummingboardGateEdgeSDLInit();
