@@ -23,10 +23,10 @@ from time import sleep
 from wiringX import gpio
 
 # setup wiringX
-gpio.setup()
+gpio.setup(gpio.RASPBERRYPI1B2)
 
 # get a handle to the sensor, using the default I2C address
-fd = gpio.I2CSetup(0x48)
+fd = gpio.I2CSetup("/dev/i2c-0", 0x48)
 while True:
     # read from the default register
     data = gpio.I2CReadReg16(fd, 0x00)

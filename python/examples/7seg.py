@@ -22,7 +22,7 @@ from time import sleep
 from wiringX import gpio
 
 # setup wiringX
-gpio.setup()
+gpio.setup(gpio.RASPBERRYPI1B2)
 
 # set up the SPI device
 fd = gpio.SPISetup(0, 250000)

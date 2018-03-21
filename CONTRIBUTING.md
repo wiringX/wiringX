@@ -8,39 +8,101 @@ So if you don't know what you are doing than don't do it. Instead open an [forum
 New Modules
 ---------
 
-1. We only accept memory mapped GPIO reading and writing.
-2. The module must include at least support for:
-- wiringXSetup
+1. We only accept memory mapped GPIO reading and writing, interrupts can use sysfs.
+2. New platforms must be added two folded. A new SoC module and a platform module.
+If the SoC is already supported, you can use the existing implementation.
+3. The SoC used must be fully mapped in a `separate` module, and should be mapped
+as simple as possible. So no formulas, but direct memory areas. Look at the
+existing modules for examples. Also don't 'hack' things into the SoC module,
+because your platform needs it. Instead move it to the platform module.
+4. The new platform should map the SoC GPIO to the platform specific GPIO.
+5. The new platform module must use as much of the existing library as
+possible. Don't implement functionality that already exists, except when
+absolutely necessary.
+6. If your platform has (nearly) the same layout as already supported platforms,
+then make sure you use the same numbering.
+7. The platform module must include at least support for:
 - pinMode
 - digitalWrite
 - digitalRead
-- delayMicroseconds
 - waitForInterrupt
 - wiringXISR
 - wiringXValidGPIO
 - wiringXGC
-- wiringXPlatform
-3. Your module must pass the read, blink, and interrupt example tests.
-4. Your module must be able to discover it's own platform in whatever way. Most modules use /proc/cpuinfo for this.
-5. Add your new module to wiringX.c and wiringX.h.
-6. Add your new module to the sources list in python/setup.py
-7. Add your new module to README.md
-8. Add the GPIO mapping of your new module in index.html on the gh-pages branch.
+8. Your module must pass the read, blink, and interrupt example tests.
+9. Add your new module to wiringX.c and wiringX.h.
+10. Add your new module to the sources list in python/setup.py
+11. You agree to publish your code under the MPLv2 license, and
+have added the MPLv2 header accordingly as well as a copyright
+notice.
+
+The output of the `interrupt` example should look like this and nothing else
+(the GPIO numbers of course depend on the GPIO used):
+```
+Thread created succesfully
+  Writing to GPIO 1: High
+  Writing to GPIO 1: Low
+>>Interrupt on GPIO 0
+  Timeout on GPIO 0
+  Writing to GPIO 1: High
+>>Interrupt on GPIO 0
+  Writing to GPIO 1: Low
+>>Interrupt on GPIO 0
+  Timeout on GPIO 0
+  Writing to GPIO 1: High
+>>Interrupt on GPIO 0
+  Writing to GPIO 1: Low
+>>Interrupt on GPIO 0
+  Timeout on GPIO 0
+  Writing to GPIO 1: High
+>>Interrupt on GPIO 0
+  Writing to GPIO 1: Low
+>>Interrupt on GPIO 0
+  Timeout on GPIO 0
+  Writing to GPIO 1: High
+>>Interrupt on GPIO 0
+  Writing to GPIO 1: Low
+>>Interrupt on GPIO 0
+  Timeout on GPIO 0
+Main finished, waiting for thread ...
+  Timeout on GPIO 0
+  Timeout on GPIO 0
+  Timeout on GPIO 0
+  Timeout on GPIO 0
+  Timeout on GPIO 0
+```
+
+Documentation
+--------
+The wiringX documentation can be found here:
+https://manual.wiringx.org
+https://github.com/wiringX/wiringx-manual
+
+1. Create an OpenDocument fodg vector for your specific platform.
+Re-use vectors that already exists for the supported platforms.
+2. Create an OpenDocument fodt page in the same manner as the
+existing platforms. Include the platform vector as an SVG image
+and not as a binary.
+3. Don't embed the fonts in the OpenDocument fodt file.
+4. Concisely describe the function of each GPIO as found in the
+other platforms.
+5. Create an OpenDocument fodt SoC page that describes how a specific
+SoC was mapped into a wiringX module. Again look at existing
+examples and copy that structure.
 
 Extending existing modules
 --------
 If you extend existing modules make sure to:
 
-1. Add the GPIO mapping of your new module in index.html on the gh-pages branch.
-2. Document new methods in index.html on the gh-pages branch
-3. Add new methods to README.md
-4. Add Python bindings in python/wiringX/wiringx.c and test for compatibiity with Python2 and Python3
+1. Make sure to update the documentation.
+2. Add new methods to README.md
+3. Add Python bindings in python/wiringX/wiringx.c and test for compatibiity with Python2 and Python3
 
 Pull Request Checklist
 ---------
 When you are ready to do your pull-request, check the following list:
 
-1. Keep the coding style in sync with that of pilight (see below).
+1. Keep the coding style in sync with that of wiringX (see below).
 2. First merge with the latest wiringX code.
 3. Make a difference branch for each new feature you want to commit.
 5. Test how pull-requests work on your own test repositories.
@@ -48,6 +110,7 @@ When you are ready to do your pull-request, check the following list:
 7. Open a pull-request when you indeed want to contribute and follow-up on our comments. If you don't want to implemented our requested changes after reviewing your pull-request, don't bother opening one.
 8. Re-read this file before every pull-request, because it will be updated regularly.
 9. Don't forget to enjoy the appreciation of the end user!
+10. **If you don't follow-up on these rules, your PR will be closed and ignored**
 
 Coding style
 -----
@@ -100,5 +163,5 @@ memset(&a, 0, 10);
 double a = 0.0;
 int a = 0;
 ```
-- User the `static` keyword for all variables and function only use in the single C file your module consists of.
+- User the `static` keyword for all variables and functions appropriatly.
 - Always use tabs instead of spaces for inline markup.

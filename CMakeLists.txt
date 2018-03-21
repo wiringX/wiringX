@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8.9)
 
-project(wiringX C)
+project(wiringx C)
 
-set(PROJECT_VERSION 1.0)
-set(PROJECT_NAME wiringX)
+set(PROJECT_VERSION 2.0)
+set(PROJECT_NAME wiringx)
 
 set(CMAKE_BUILD_TYPE Release)
 
@@ -77,32 +77,57 @@ add_definitions(-DHASH="${git_ver}")
 
 include_directories(${PROJECT_SOURCE_DIR}/src/)
 
-file(GLOB wiringX
+file(GLOB wiringx
 	"${PROJECT_SOURCE_DIR}/src/*.h"
 	"${PROJECT_SOURCE_DIR}/src/*.c"
+	"${PROJECT_SOURCE_DIR}/src/platform/*.c"
+	"${PROJECT_SOURCE_DIR}/src/platform/*.h"
+	"${PROJECT_SOURCE_DIR}/src/platform/linksprite/*.c"
+	"${PROJECT_SOURCE_DIR}/src/platform/linksprite/*.h"
+	"${PROJECT_SOURCE_DIR}/src/platform/lemaker/*.c"
+	"${PROJECT_SOURCE_DIR}/src/platform/lemaker/*.h"
+	"${PROJECT_SOURCE_DIR}/src/platform/solidrun/*.c"
+	"${PROJECT_SOURCE_DIR}/src/platform/solidrun/*.h"
+	"${PROJECT_SOURCE_DIR}/src/platform/raspberrypi/*.c"
+	"${PROJECT_SOURCE_DIR}/src/platform/raspberrypi/*.h"
+	"${PROJECT_SOURCE_DIR}/src/platform/hardkernel/*.c"
+	"${PROJECT_SOURCE_DIR}/src/platform/hardkernel/*.h"
+	"${PROJECT_SOURCE_DIR}/src/platform/xunlong/*.c"
+	"${PROJECT_SOURCE_DIR}/src/platform/xunlong/*.h"
+	"${PROJECT_SOURCE_DIR}/src/soc/*.c"
+	"${PROJECT_SOURCE_DIR}/src/soc/*.h"
+	"${PROJECT_SOURCE_DIR}/src/soc/allwinner/*.c"
+	"${PROJECT_SOURCE_DIR}/src/soc/allwinner/*.h"
+	"${PROJECT_SOURCE_DIR}/src/soc/nxp/*.c"
+	"${PROJECT_SOURCE_DIR}/src/soc/nxp/*.h"
+	"${PROJECT_SOURCE_DIR}/src/soc/broadcom/*.c"
+	"${PROJECT_SOURCE_DIR}/src/soc/broadcom/*.h"
+	"${PROJECT_SOURCE_DIR}/src/soc/amlogic/*.h"
+	"${PROJECT_SOURCE_DIR}/src/soc/amlogic/*.c"
+	"${PROJECT_SOURCE_DIR}/src/soc/samsung/*.h"
+	"${PROJECT_SOURCE_DIR}/src/soc/samsung/*.c"
 )
 
-add_library(sources OBJECT ${wiringX})
-add_library(wiringx_static STATIC $<TARGET_OBJECTS:sources>)
-add_library(wiringx_shared SHARED $<TARGET_OBJECTS:sources>)
+add_library(wiringx_static STATIC ${wiringx})
+add_library(wiringx_shared SHARED ${wiringx})
 
-set_target_properties(wiringx_shared wiringx_static PROPERTIES OUTPUT_NAME wiringX)
+set_target_properties(wiringx_shared PROPERTIES C_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN 1)
+set_target_properties(wiringx_shared wiringx_static PROPERTIES OUTPUT_NAME wiringx)
 
 add_executable(wiringx-blink ${PROJECT_SOURCE_DIR}/examples/blink.c)
 add_executable(wiringx-interrupt ${PROJECT_SOURCE_DIR}/examples/interrupt.c)
-add_executable(wiringx-i2c-spi ${PROJECT_SOURCE_DIR}/examples/i2c_spi.c)
 add_executable(wiringx-read ${PROJECT_SOURCE_DIR}/examples/read.c)
+
 target_link_libraries(wiringx-blink wiringx_shared)
 target_link_libraries(wiringx-interrupt wiringx_shared pthread)
-target_link_libraries(wiringx-i2c-spi wiringx_shared)
 target_link_libraries(wiringx-read wiringx_shared)
 
-install(FILES ${CMAKE_BINARY_DIR}/libwiringX.so DESTINATION lib/ COMPONENT library)
-install(FILES ${CMAKE_BINARY_DIR}/libwiringX.a DESTINATION lib/ COMPONENT library)
-install(FILES ${PROJECT_SOURCE_DIR}/src/wiringX.h DESTINATION include/ COMPONENT library)
+install(FILES ${CMAKE_BINARY_DIR}/libwiringx.so DESTINATION lib/ COMPONENT library)
+install(FILES ${CMAKE_BINARY_DIR}/libwiringx.a DESTINATION lib/ COMPONENT library)
+install(FILES ${PROJECT_SOURCE_DIR}/src/wiringx.h DESTINATION include/ COMPONENT library)
+
 install(PROGRAMS ${CMAKE_BINARY_DIR}/wiringx-blink DESTINATION sbin/ COMPONENT library)
 install(PROGRAMS ${CMAKE_BINARY_DIR}/wiringx-interrupt DESTINATION sbin/ COMPONENT library)
-install(PROGRAMS ${CMAKE_BINARY_DIR}/wiringx-i2c-spi DESTINATION sbin/ COMPONENT library)
 install(PROGRAMS ${CMAKE_BINARY_DIR}/wiringx-read DESTINATION sbin/ COMPONENT library)
 
 WRITE_UNINSTALL_TARGET_SCRIPT()
@@ -111,17 +136,18 @@ configure_file("${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake.in"
     IMMEDIATE @ONLY)
 add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 
-set(CPACK_GENERATOR "DEB RPM")
-set(CPACK_PACKAGING_INSTALL_PREFIX "/usr/local")
+set(CPACK_GENERATOR "DEB" "RPM")
+set(CPACK_PACKAGING_INSTALL_PREFIX "/usr/")
 set(CPACK_SOURCE_STRIP_FILES TRUE)
 set(CPACK_STRIP_FILES TRUE)
 set(CPACK_PACKAGE_CONTACT "CurlyMo <info@pilight.org>")
 set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION}-${git_commits}-g${git_ver})
 set(CPACK_PACKAGE_NAME "libwiringx")
-set(CPACK_PACKAGE_FILE_NAME libwiringx-${git_commits}-g${git_ver})
+set(CPACK_PACKAGE_FILE_NAME libwiringx_${git_commits}-g${git_ver})
 set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
 set(CPACK_PACKAGE_DESCRIPTION "Cross-platform GPIO Interface")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Cross-platform GPIO Interface")
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA ${PROJECT_SOURCE_DIR}/res/deb/prerm;)
+set(CPACK_DEBIAN_PACKAGE_PROVIDES libwiringx-dev)
 
 include(CPack)
