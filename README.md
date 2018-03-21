@@ -1,6 +1,3 @@
-PULL REQUESTS ARE ONLY ACCEPTED TOWARDS THE REWRITE BRANCH, THIS BRANCH WILL BECOME OBSOLETE SOON
-=======
-
 wiringX
 ========
 
@@ -21,21 +18,7 @@ Those features currently are:
 - GPIO reading, writing, and interrupts.
 - IC2 reading and writing.
 
-The supported devices are:
-- Raspberry Pi
-- Hummingboard
-- BananaPi
-- Radxa Rock 
-- MIPS CI20 Creator
-- ODROID
-- OrangePi
-
-Currently mapped SoC:
-- Allwinner A10, A31s, H3
-- Amlogic s805, s905
-- Broadcom 2835, 2836
-- NXP imx6sqrm, imx6sdlrm
-- Samsung exynos5422
+Please refer to the documentation at https://manual.wiringx.org or in the docs folder.
 
 ### Donations
 
