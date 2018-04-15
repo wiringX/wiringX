@@ -88,6 +88,7 @@ int wiringXI2CSetup(const char *, int);
 
 int wiringXSPIGetFd(int handle);
 int wiringXSPIDataRW(int handle, unsigned char *data, int len);
+void wiringXSPIClose(int handle);
 int wiringXSPISetup(uint8_t device, uint8_t channel, int speed);
 
 int wiringXSerialOpen(const char *, struct wiringXSerial_t);

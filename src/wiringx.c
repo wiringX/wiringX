@@ -117,29 +117,42 @@ static int spi_new(struct spi_id_t id) {
 	void *tmp = NULL;
 	int i = 0;
 
-	// loop over existing states to detect potential duplicates
+	/* loop over existing states to detect potential duplicates and reusable entries */
 	for(i = 0; i < nrspilist; i++) {
+		/* detect dupplicate */
 		if(memcmp(&spilist[i].id, &id, sizeof(struct spi_id_t)) == 0) {
 			entry = i;
 
-			/* clear existing entry */
+			/* mark inactive */
 			if(spilist[entry].data.fd > 0) {
 				close(spilist[entry].data.fd);
 			}
 
-			/* return index of existing entry */
-			return entry;
+			/* reuse this existing entry */
+			break;
+		}
+		/* detect first inactive entry */
+		if(spilist[i].data.fd <= 0 && entry < 0) {
+			// remember this entry for reuse
+			entry = i;
+
+			/* continue duplicate detection */
+			continue;
 		}
 	}
 
-	/* reserve space for new entry (+1) */
-	entry = nrspilist++;
-	tmp = realloc(spilist, sizeof(struct spi_list_t)*nrspilist);
-	if(tmp == NULL) {
-		fprintf(stderr, "out of memory\n");
-		exit(EXIT_FAILURE);
+	/* reserve space for new entry (+1) when not reusing an existing entry */
+	if(entry < 0) {
+		entry = nrspilist++;
+		tmp = realloc(spilist, sizeof(struct spi_list_t)*nrspilist);
+		if(tmp == NULL) {
+			fprintf(stderr, "out of memory\n");
+			exit(EXIT_FAILURE);
+		}
+		spilist = tmp;
 	}
-	spilist = tmp;
+
+	/* initialize new or existing entry */
 	spilist[entry].id = id;
 	memset(&spilist[entry].data, 0, sizeof(struct spi_t));
 
@@ -476,6 +489,12 @@ EXPORT int wiringXSPIGetFd(int handle) {
 	}
 
 	state = &spilist[handle].data;
+
+	if(state->fd <= 0) {
+		wiringXLog(LOG_ERR, "wiringX trying to use a previously closed SPI connection handle: %i", handle);
+		return -1;
+	}
+
 	return state->fd;
 }
 
@@ -489,8 +508,13 @@ EXPORT int wiringXSPIDataRW(int handle, unsigned char *data, int len) {
 	}
 
 	state = &spilist[handle].data;
-	memset(&tmp, 0, sizeof(tmp));
 
+	if(state->fd <= 0) {
+		wiringXLog(LOG_ERR, "wiringX trying to use a previously closed SPI connection handle: %i", handle);
+		return -1;
+	}
+
+	memset(&tmp, 0, sizeof(tmp));
 	tmp.tx_buf = (uintptr_t)data;
 	tmp.rx_buf = (uintptr_t)data;
 	tmp.len = len;
@@ -509,6 +533,27 @@ EXPORT int wiringXSPIDataRW(int handle, unsigned char *data, int len) {
 		return -1;
 	}
 	return 0;
+}
+
+EXPORT void wiringXSPIClose(int handle) {
+	struct spi_t *state = NULL;
+
+	if(handle < 0 || handle >= nrspilist) {
+		wiringXLog(LOG_WARNING, "wiringX trying to use an unknown SPI connection handle: %i", handle);
+		return;
+	}
+
+	state = &spilist[handle].data;
+
+	if(state->fd <= 0) {
+		wiringXLog(LOG_WARNING, "wiringX trying to use a previously closed SPI connection handle: %i", handle);
+		return;
+	}
+
+	close(state->fd);
+	state->fd = 0;
+
+	return;
 }
 
 EXPORT int wiringXSPISetup(uint8_t device, uint8_t channel, int speed) {
