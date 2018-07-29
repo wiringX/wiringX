@@ -717,6 +717,7 @@ EXPORT int wiringXGC(void) {
 	platform_gc();
 	soc_gc();
 	issetup = 0;
+	isinit = 0;
 	return 0;
 }
 
