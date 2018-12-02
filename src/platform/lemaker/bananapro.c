@@ -19,9 +19,9 @@
 #include "../../soc/soc.h"
 #include "../../wiringx.h"
 #include "../platform.h"
-#include "bananapi1.h"
+#include "bananapro.h"
 
-struct platform_t *bananapi1 = NULL;
+struct platform_t *bananapro = NULL;
 
 /*
 3v|5v
@@ -59,7 +59,7 @@ static int map[] = {
 			168
 };
 
-static int bananapi1ValidGPIO(int pin) {
+static int bananaproValidGPIO(int pin) {
 	if(pin >= 0 && pin < (sizeof(map)/sizeof(map[0]))) {
 		return 0;
 	} else {
@@ -67,26 +67,26 @@ static int bananapi1ValidGPIO(int pin) {
 	}
 }
 
-static int bananapi1Setup(void) {
+static int bananaproSetup(void) {
 	const size_t size = sizeof(map) / sizeof(map[0]);
-	bananapi1->soc->setup();
-	bananapi1->soc->setMap(map, size);
-	bananapi1->soc->setIRQ(map, size);
+	bananapro->soc->setup();
+	bananapro->soc->setMap(map, size);
+	bananapro->soc->setIRQ(map, size);
 	return 0;
 }
 
-void bananapi1Init(void) {
-	platform_register(&bananapi1, "bananapi1");
+void bananaproInit(void) {
+	platform_register(&bananapro, "bananapro");
 
-	bananapi1->soc = soc_get("Allwinner", "A10");
+	bananapro->soc = soc_get("Allwinner", "A20");
 
-	bananapi1->digitalRead = bananapi1->soc->digitalRead;
-	bananapi1->digitalWrite = bananapi1->soc->digitalWrite;
-	bananapi1->pinMode = bananapi1->soc->pinMode;
-	bananapi1->setup = &bananapi1Setup;
+	bananapro->digitalRead = bananapro->soc->digitalRead;
+	bananapro->digitalWrite = bananapro->soc->digitalWrite;
+	bananapro->pinMode = bananapro->soc->pinMode;
+	bananapro->setup = &bananaproSetup;
 
-	bananapi1->selectableFd = bananapi1->soc->selectableFd;
-	bananapi1->gc = bananapi1->soc->gc;
+	bananapro->selectableFd = bananapro->soc->selectableFd;
+	bananapro->gc = bananapro->soc->gc;
 
-	bananapi1->validGPIO = &bananapi1ValidGPIO;
+	bananapro->validGPIO = &bananaproValidGPIO;
 }

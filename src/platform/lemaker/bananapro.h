@@ -6,13 +6,13 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-#ifndef __WIRINGX_BANANAPI_H_
-#define __WIRINGX_BANANAPI_H_
+#ifndef __WIRINGX_BANANAPRO_H_
+#define __WIRINGX_BANANAPRO_H_
 
 #include "../platform.h"
 
-extern struct platform_t *bananapi1;
+extern struct platform_t *bananapro;
 
-void bananapi1Init(void);
+void bananaproInit(void);
 
 #endif
