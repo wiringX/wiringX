@@ -6,14 +6,14 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-#ifndef __WIRINGX_A10_H_
-#define __WIRINGX_A10_H_
+#ifndef __WIRINGX_A20_H_
+#define __WIRINGX_A20_H_
 
 #include "../soc.h"
 #include "../../wiringx.h"
 
-extern struct soc_t *allwinnerA10;
+extern struct soc_t *allwinnerA20;
 
-void allwinnerA10Init(void);
+void allwinnerA20Init(void);
 
 #endif
