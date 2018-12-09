@@ -222,6 +222,7 @@ static void wiringXInit(void) {
 
 	/* Init all SoC's */
 	allwinnerA10Init();
+	allwinnerA20Init();
 	allwinnerA31sInit();
 	allwinnerH3Init();
 	allwinnerH5Init();
@@ -237,6 +238,7 @@ static void wiringXInit(void) {
 	pcduino1Init();
 	bananapi1Init();
 	bananapiM2Init();
+	bananaproInit();
 	orangepipcpInit();
 	orangepipc2Init();
 	hummingboardBaseProSDLInit();
