@@ -23,40 +23,40 @@
 
 struct platform_t *bananapro = NULL;
 
-/*
+/* Banana Pro CON 6
+ *  only IO-0 ... IO-8 are supported by this software
+
 3v|5v
- 8|5v
- 9|0v
- 7|15
-0v|16
- 0| 1
+ #|5v
+ #|0v
+ 1|#
+0v|#
+ 0| #
  2|0v
  3| 4
 3v| 5
-12|0v
-13| 6
-14|10
-0v|11
+ #|0v
+ #| 6
+ #|#
+0v|#
+ #|#
+ 7|0v
+ #|#
+ 8|0v
+ #|#
+ #|#
+0v|#
 
-5v|5v
-17|18
-19|20
-0v|0v
 */
 
+/* the GPIOs IO-0 ... IO-8 (in A20 layout, see a20.c) were double checked with A20 data sheet, all others not... */
 static int map[] = {
 	/*	PI19,	PH2,	PI18,	PI17	*/
 			167,	126,	166,	165,
-	/*	PH20,	PH21,	PI16,	PI3		*/
-			144,	145,	164,	151,
-	/*	PB21,	PB20,	PI10,	PI14	*/
-			 39,	 38,	158,	162,
-	/*	PI12,	PI13,	PI11,	PH0		*/
-			160,	161,	159,	124,
-	/*	PH1,	PH5,	PI21,	PH3		*/
-			125,	129,	169,	127,
-	/*	PI20	*/
-			168
+	/*	PH20,	PH21,	PI16, PB3		*/
+			144,	145,	164,	21,
+	/*	PB13	*/
+			 31
 };
 
 static int bananaproValidGPIO(int pin) {
