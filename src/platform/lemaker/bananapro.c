@@ -85,6 +85,9 @@ void bananaproInit(void) {
 	bananapro->pinMode = bananapro->soc->pinMode;
 	bananapro->setup = &bananaproSetup;
 
+	bananapro->isr = bananapro->soc->isr;
+	bananapro->waitForInterrupt = bananapro->soc->waitForInterrupt;
+
 	bananapro->selectableFd = bananapro->soc->selectableFd;
 	bananapro->gc = bananapro->soc->gc;
 
