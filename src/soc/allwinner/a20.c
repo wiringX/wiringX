@@ -228,6 +228,11 @@ static int allwinnerA20Setup(void) {
 		return -1;
 	}
 
+	if((allwinnerA20->gpio[1] = (unsigned char *)mmap(0, allwinnerA20->page_size, PROT_READ|PROT_WRITE, MAP_SHARED, allwinnerA20->fd, allwinnerA20->base_addr[1])) == NULL) {
+		wiringXLog(LOG_ERR, "wiringX failed to map the %s %s GPIO memory address", allwinnerA20->brand, allwinnerA20->chip);
+		return -1;
+	}
+
 	return 0;
 }
 
@@ -300,7 +305,6 @@ static int allwinnerA20DigitalRead(int i) {
 	}
 
 	val = soc_readl(addr);
-
 	return (int)((val & (1 << pin->data.bit)) >> pin->data.bit);
 }
 
@@ -330,18 +334,16 @@ static int allwinnerA20PinMode(int i, enum pinmode_t mode) {
 	}
 	val &= ~(1 << (pin->select.bit+1));
 	val &= ~(1 << (pin->select.bit+2));
-
 	soc_writel(addr, val);
 	return 0;
 }
-
 
 static int allwinnerA20ISR(int i, enum isr_mode_t mode) {
 	struct layout_t *pin = NULL;
 	char path[PATH_MAX];
 	int x = 0;
 
-	if(allwinnerA20->irq == NULL) {
+	if(allwinnerA20->map == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", allwinnerA20->brand, allwinnerA20->chip);
 		return -1;
 	}
@@ -350,7 +352,7 @@ static int allwinnerA20ISR(int i, enum isr_mode_t mode) {
 		return -1;
 	}
 
-	pin = &allwinnerA20->layout[allwinnerA20->irq[i]];
+	pin = &allwinnerA20->layout[allwinnerA20->map[i]];
 	char name[strlen(pin->name)+1];
 
 	memset(&name, '\0', strlen(pin->name)+1);
@@ -358,7 +360,13 @@ static int allwinnerA20ISR(int i, enum isr_mode_t mode) {
 		name[x] = tolower(pin->name[x]);
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d_%s", i, name);
+	sprintf(path, "/sys/class/gpio/gpio%d", i );
+	if((soc_sysfs_check_gpio(allwinnerA20, path)) == 0) {
+		sprintf(path, "/sys/class/gpio/unexport");
+		soc_sysfs_gpio_unexport(allwinnerA20, path, i);
+	}
+
+	sprintf(path, "/sys/class/gpio/gpio%d", i);
 	if((soc_sysfs_check_gpio(allwinnerA20, path)) == -1) {
 		sprintf(path, "/sys/class/gpio/export");
 		if(soc_sysfs_gpio_export(allwinnerA20, path, i) == -1) {
@@ -366,17 +374,17 @@ static int allwinnerA20ISR(int i, enum isr_mode_t mode) {
 		}
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d_%s/direction", i, name);
+	sprintf(path, "/sys/class/gpio/gpio%d/direction", i);
 	if(soc_sysfs_set_gpio_direction(allwinnerA20, path, "in") == -1) {
 		return -1;
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d_%s/edge", i, name);
+	sprintf(path, "/sys/class/gpio/gpio%d/edge", i);
 	if(soc_sysfs_set_gpio_interrupt_mode(allwinnerA20, path, mode) == -1) {
 		return -1;
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d_%s/value", i, name);
+	sprintf(path, "/sys/class/gpio/gpio%d/value", i);
 	if((pin->fd = soc_sysfs_gpio_reset_value(allwinnerA20, path)) == -1) {
 		return -1;
 	}
@@ -386,7 +394,7 @@ static int allwinnerA20ISR(int i, enum isr_mode_t mode) {
 }
 
 static int allwinnerA20WaitForInterrupt(int i, int ms) {
-	struct layout_t *pin = &allwinnerA20->layout[allwinnerA20->irq[i]];
+	struct layout_t *pin = &allwinnerA20->layout[allwinnerA20->map[i]];
 
 	if(pin->mode != PINMODE_INTERRUPT) {
 		wiringXLog(LOG_ERR, "The %s %s GPIO %d is not set to interrupt mode", allwinnerA20->brand, allwinnerA20->chip, i);
@@ -394,7 +402,7 @@ static int allwinnerA20WaitForInterrupt(int i, int ms) {
 	}
 	if(pin->fd <= 0) {
 		wiringXLog(LOG_ERR, "The %s %s GPIO %d has not been opened for reading", allwinnerA20->brand, allwinnerA20->chip, i);
-		return -1; 
+		return -1;
 	}
 
 	return soc_wait_for_interrupt(allwinnerA20, pin->fd, ms);
@@ -417,7 +425,7 @@ static int allwinnerA20GC(void) {
 				for(x = 0; pin->name[x]; x++){
 					name[x] = tolower(pin->name[x]);
 				}
-				sprintf(path, "/sys/class/gpio/gpio%d_%s", i, name);
+				sprintf(path, "/sys/class/gpio/gpio%d", i);
 				if((soc_sysfs_check_gpio(allwinnerA20, path)) == 0) {
 					sprintf(path, "/sys/class/gpio/unexport");
 					soc_sysfs_gpio_unexport(allwinnerA20, path, i);
@@ -438,16 +446,17 @@ static int allwinnerA20GC(void) {
 static int allwinnerA20SelectableFd(int i) {
 	struct layout_t *pin = NULL;
 
-	if(allwinnerA20->irq == NULL) {
+	if(allwinnerA20->map == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", allwinnerA20->brand, allwinnerA20->chip);
 		return -1;
 	}
+
 	if(allwinnerA20->fd <= 0 || allwinnerA20->gpio == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been setup by wiringX", allwinnerA20->brand, allwinnerA20->chip);
 		return -1;
 	}
 
-	pin = &allwinnerA20->layout[allwinnerA20->irq[i]];
+	pin = &allwinnerA20->layout[allwinnerA20->map[i]];
 	return pin->fd;
 }
 
@@ -462,6 +471,9 @@ void allwinnerA20Init(void) {
 	allwinnerA20->base_addr[0] = 0x01C20000;
 	allwinnerA20->base_offs[0] = 0x00000800;
 
+	allwinnerA20->base_addr[1] = 0x01F02000;
+	allwinnerA20->base_offs[1] = 0x00000C00;
+
 	allwinnerA20->gc = &allwinnerA20GC;
 	allwinnerA20->selectableFd = &allwinnerA20SelectableFd;
 
@@ -474,5 +486,79 @@ void allwinnerA20Init(void) {
 	allwinnerA20->setIRQ = &allwinnerA20SetIRQ;
 	allwinnerA20->isr = &allwinnerA20ISR;
 	allwinnerA20->waitForInterrupt = &allwinnerA20WaitForInterrupt;
-
 }
+
+/*
+ * folgendes Setup:
+ * Empfänger an CON6, Pin 7, GPIO 7
+ *
+ * root@bp:/usr/src/WiringBP/gpio# ./gpio readall
+ +-----+-----+---------+------+---+--Banana Pro--+---+------+---------+-----+-----+
+ | BCM | wPi |   Name  | Mode | V | Physical | V | Mode | Name    | wPi | BCM |
+ +-----+-----+---------+------+---+----++----+---+------+---------+-----+-----+
+ |     |     |    3.3v |      |   |  1 || 2  |   |      | 5v      |     |     |
+ |   2 |   8 |   SDA.1 |   IN | 1 |  3 || 4  |   |      | 5V      |     |     |
+ |   3 |   9 |   SCL.1 | ALT5 | 0 |  5 || 6  |   |      | 0v      |     |     |
+ |   4 |   7 | GPIO. 7 |   IN | 1 |  7 || 8  | 0 | ALT0 | TxD     | 15  | 14  |
+ |     |     |      0v |      |   |  9 || 10 | 0 | ALT0 | RxD     | 16  | 15  |
+ |  17 |   0 | GPIO. 0 |   IN | 0 | 11 || 12 | 0 | IN   | GPIO. 1 | 1   | 18  |
+ |  27 |   2 | GPIO. 2 | ALT4 | 0 | 13 || 14 |   |      | 0v      |     |     |
+ |  22 |   3 | GPIO. 3 | ALT4 | 0 | 15 || 16 | 0 | IN   | GPIO. 4 | 4   | 23  |
+ |     |     |    3.3v |      |   | 17 || 18 | 0 | IN   | GPIO. 5 | 5   | 24  |
+ |  10 |  12 |    MOSI |   IN | 0 | 19 || 20 |   |      | 0v      |     |     |
+ |   9 |  13 |    MISO |   IN | 0 | 21 || 22 | 0 | ALT4 | GPIO. 6 | 6   | 25  |
+ |  11 |  14 |    SCLK |   IN | 0 | 23 || 24 | 0 | IN   | CE0     | 10  | 8   |
+ |     |     |      0v |      |   | 25 || 26 | 0 | IN   | CE1     | 11  | 7   |
+ |   0 |  30 |   SDA.0 | ALT4 | 0 | 27 || 28 | 1 | IN   | SCL.0   | 31  | 1   |
+ |   5 |  21 | GPIO.21 |   IN | 0 | 29 || 30 |   |      | 0v      |     |     |
+ |   6 |  22 | GPIO.22 | ALT4 | 0 | 31 || 32 | 0 | ALT4 | GPIO.26 | 26  | 12  |
+ |  13 |  23 | GPIO.23 |   IN | 0 | 33 || 34 |   |      | 0v      |     |     |
+ |  19 |  24 | GPIO.24 |   IN | 0 | 35 || 36 | 0 | IN   | GPIO.27 | 27  | 16  |
+ |  26 |  25 | GPIO.25 |   IN | 0 | 37 || 38 | 0 | IN   | GPIO.28 | 28  | 20  |
+ |     |     |      0v |      |   | 39 || 40 | 0 | IN   | GPIO.29 | 29  | 21  |
+ +-----+-----+---------+------+---+----++----+---+------+---------+-----+-----+
+ | BCM | wPi |   Name  | Mode | V | Physical | V | Mode | Name    | wPi | BCM |
+ +-----+-----+---------+------+---+--Banana Pro--+---+------+---------+-----+-----+
+ *
+ *
+ * und:
+ *
+ * root@bp:/usr/src/WiringBP/gpio# ./gpio read 7
+1
+ *
+ * und mit Debugging:
+ * root@bp:/usr/src/WiringBP/gpio# export WIRINGPI_DEBUG=0
+root@bp:/usr/src/WiringBP/gpio# ./gpio read 7
+gpio: wiringPi debug mode enabled
+wiringPi: wiringPiSetup called
+piboardRev: Hardware string: Hardware	: sun7i
+Hardware:Hardware	: sun7i
+piboardRev:  3
+piboardRev: Hardware string: Hardware	: sun7i
+Hardware:Hardware	: sun7i
+piboardRev:  3
+piboardId: Revision string: Revision	: 0000
+func:sunxi_digitalRead pin:226,bank:7 index:2 phyaddr:0x1c2090c
+***** read reg val: 0x1,bank:7,index:2,line:1081
+1
+ *
+ * -> in sunxi_digitalRead() kann man die Berechnung des Offsets nachvollziehen...
+ *
+ *
+ *pilight verwendet die Funktion digitalread() offenbar gar nicht: hier ein Log-Ausschnitt:
+ *
+ *[Dec 19 22:13:51:110296] pilight-daemon: INFO: # allwinnerA20Init() finished
+[Dec 19 22:13:51:112208] pilight-daemon: INFO: # allwinnerA20Setup() finished
+[Dec 19 22:13:51:282800] pilight-daemon: INFO: version v8.1.4
+[Dec 19 22:13:51:381816] pilight-daemon: INFO: no pilight daemon found, daemonizing
+[Dec 19 22:13:52:655644] pilight-daemon: INFO: daemon listening to port: 60085
+[Dec 19 22:13:52:679688] pilight-daemon: INFO: new client, ip: 127.0.0.1, port: 33238
+[Dec 19 22:13:53:409683] pilight-daemon: INFO: # allwinnerA20ISR() finished, fd=13
+[Dec 19 22:13:53:410575] pilight-daemon: INFO: # allwinnerA20SelectableFd(7) finished -> PB3, fd=13
+[Dec 19 22:13:53:420473] pilight-daemon: INFO: secured webserver started on port: 5002 (fd 16)
+[Dec 19 22:13:53:423609] pilight-daemon: INFO: regular webserver started on port: 5001 (fd 18)
+[Dec 19 22:13:53:511188] pilight-daemon: INFO: new client, ip: 192.168.200.22, port: 60182
+ *
+ *-> der Rest geht dann über epoll_wait()
+ *
+ */

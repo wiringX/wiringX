@@ -59,6 +59,27 @@ static int map[] = {
 			 31
 };
 
+/*
+ *  ATTENTION:
+ *
+ *  The intentional use of the driver does not work for the following reason:
+ *  if the device is connected to a dedicated pin at CON6 of BananaPro, e.g. pin 7, then the corresponding GPIO is expected to be GPIO 1,
+ *  or (according to Wiki) pin 13 is expected to correspond to GPIO 2.
+ *  On the other hand, the driver uses (besides the memory mapped IO) the kernel interface /sys/class/gpio for "gpio-sunxi" platform.
+ *  For Receicer devices, this kernel interface is used to read values in. But the GPIO number of that interface does NOT correspond
+ *  to the expected GPIO according to the pin.
+ *  Test have shown, that pin 7 at CON6 of BananaPro corresponds to gpio 4: the value can be get from /sys/class/gpio/gpio4/value
+ *  Hence, a workaround (without modification of the driver) might be: use pin 7 to connect receiver, but configure GPIO 4 in pilight
+ *  "433gpio": {
+                        "sender": -1,
+                        "receiver": 4
+     }
+ * This worked in case of receiver (IN direction), but probably does not work in case of sender, since sending (direction OUT) might use
+ * memory mapped IO instead of  /sys/class/gpio/. But sending was not tested yet.
+ * I guess that "gpio-sunxi" might not be the right kernel driver for BananaPro.
+ *
+ * */
+
 static int bananaproValidGPIO(int pin) {
 	if(pin >= 0 && pin < (sizeof(map)/sizeof(map[0]))) {
 		return 0;
