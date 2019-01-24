@@ -1,5 +1,6 @@
 /*
-	Copyright (c) 2018
+	Copyright (c) 2016 CurlyMo <curlymoo1@gmail.com>
+	Copyright (c) 2018 Falk Nedwal
 
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. If a copy of the MPL was not distributed with this
