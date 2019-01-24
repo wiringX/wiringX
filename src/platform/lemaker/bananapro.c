@@ -1,5 +1,5 @@
 /*
-	Copyright (c) 2016 CurlyMo <curlymoo1@gmail.com>
+	Copyright (c) 2018
 
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -76,7 +76,7 @@ static int map[] = {
      }
  * This worked in case of receiver (IN direction), but probably does not work in case of sender, since sending (direction OUT) might use
  * memory mapped IO instead of  /sys/class/gpio/. But sending was not tested yet.
- * I guess that "gpio-sunxi" might not be the right kernel driver for BananaPro.
+ * I guess that "gpio-sunxi" might not be the right kernel driver for BananaPro (basis: Bananian Linux Kernel version 3.4.113).
  *
  * */
 
