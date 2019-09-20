@@ -9,4 +9,5 @@ Raspberry Pi
    raspberrypi1b+
    raspberrypi2
    raspberrypi3
+   raspberrypi4
    raspberrypizero
