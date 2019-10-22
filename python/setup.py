@@ -36,6 +36,7 @@ modules = [
 			'../src/platform/raspberrypi/raspberrypi1b+.c',
 			'../src/platform/raspberrypi/raspberrypi2.c',
 			'../src/platform/raspberrypi/raspberrypi3.c',
+			'../src/platform/raspberrypi/raspberrypi4.c',
 			'../src/platform/raspberrypi/raspberrypizero.c',
 			'../src/platform/solidrun/hummingboard_base_pro_dq.c',
 			'../src/platform/solidrun/hummingboard_base_pro_sdl.c',

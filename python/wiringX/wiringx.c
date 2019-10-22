@@ -399,6 +399,7 @@ PyMODINIT_FUNC initgpio(void) {
 	PyModule_AddObject(module, "RASPBERRYPI1B2", Py_BuildValue("s", "raspberrypi1b2"));
 	PyModule_AddObject(module, "RASPBERRYPI2", Py_BuildValue("s", "raspberrypi2"));
 	PyModule_AddObject(module, "RASPBERRYPI3", Py_BuildValue("s", "raspberrypi3"));
+	PyModule_AddObject(module, "RASPBERRYPI4", Py_BuildValue("s", "raspberrypi4"));
 	PyModule_AddObject(module, "HUMMINGBOARD_PRO_DQ", Py_BuildValue("s", "hummingboard_pro_dq"));
 	PyModule_AddObject(module, "HUMMINGBOARD_PRO_SDL", Py_BuildValue("s", "hummingboard_pro_sdl"));
 	PyModule_AddObject(module, "HUMMINGBOARD_BASE_DQ", Py_BuildValue("s", "hummingboard_base_dq"));

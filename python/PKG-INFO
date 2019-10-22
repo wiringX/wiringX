@@ -1,6 +1,6 @@
-Metadata-Version: 0.5
+Metadata-Version: 0.6
 Name: wiringX
-Version: 0.5
+Version: 0.6
 Summary: Python port for wiringX
 Home-page: http://www.wiringx.org
 Author: CurlyMo
