@@ -19,6 +19,7 @@ modules = [
 			'../src/soc/amlogic/s905.c',
 			'../src/soc/broadcom/2835.c',
 			'../src/soc/broadcom/2836.c',
+			'../src/soc/broadcom/2711.c',
 			'../src/soc/nxp/imx6sdlrm.c',
 			'../src/soc/nxp/imx6dqrm.c',
 			'../src/soc/samsung/exynos5422.c',
