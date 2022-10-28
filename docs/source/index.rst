@@ -79,5 +79,6 @@ Sitemap
    platforms/odroid/index
    platforms/orangepi/index
    platforms/pcduino/index
+   platforms/radxa/index
    platforms/raspberrypi/index
 
