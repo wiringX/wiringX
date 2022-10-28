@@ -106,6 +106,9 @@ file(GLOB wiringx
 	"${PROJECT_SOURCE_DIR}/src/soc/amlogic/*.c"
 	"${PROJECT_SOURCE_DIR}/src/soc/samsung/*.h"
 	"${PROJECT_SOURCE_DIR}/src/soc/samsung/*.c"
+	"${PROJECT_SOURCE_DIR}/src/soc/rockchip/*.c"
+	"${PROJECT_SOURCE_DIR}/src/soc/rockchip/*.h"
+
 )
 
 add_library(wiringx_static STATIC ${wiringx})

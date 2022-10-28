@@ -38,6 +38,7 @@
 #include "soc/amlogic/s805.h"
 #include "soc/amlogic/s905.h"
 #include "soc/samsung/exynos5422.h"
+#include "soc/rockchip/rk3399.h"
 
 #include "platform/linksprite/pcduino1.h"
 #include "platform/lemaker/bananapi1.h"
@@ -235,6 +236,7 @@ static void wiringXInit(void) {
 	amlogicS805Init();
 	amlogicS905Init();
 	exynos5422Init();
+	rk3399Init();
 
 	/* Init all platforms */
 	pcduino1Init();
