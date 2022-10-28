@@ -94,6 +94,9 @@ file(GLOB wiringx
 	"${PROJECT_SOURCE_DIR}/src/platform/hardkernel/*.h"
 	"${PROJECT_SOURCE_DIR}/src/platform/xunlong/*.c"
 	"${PROJECT_SOURCE_DIR}/src/platform/xunlong/*.h"
+	"${PROJECT_SOURCE_DIR}/src/platform/radxa/*.c"
+	"${PROJECT_SOURCE_DIR}/src/platform/radxa/*.h"
+
 	"${PROJECT_SOURCE_DIR}/src/soc/*.c"
 	"${PROJECT_SOURCE_DIR}/src/soc/*.h"
 	"${PROJECT_SOURCE_DIR}/src/soc/allwinner/*.c"

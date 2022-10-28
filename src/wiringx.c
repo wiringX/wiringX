@@ -59,6 +59,7 @@
 #include "platform/hardkernel/odroidc1.h"
 #include "platform/hardkernel/odroidc2.h"
 #include "platform/hardkernel/odroidxu4.h"
+#include "platform/radxa/rock4.h"
 
 void wiringXDefaultLog(int prio, char *file, int line, const char *format_str, ...);
 
@@ -258,6 +259,7 @@ static void wiringXInit(void) {
 	odroidc1Init();
 	odroidc2Init();
 	odroidxu4Init();
+	rock4Init();
 }
 
 EXPORT int wiringXSetup(char *name, void (*func)(int, char *, int, const char *, ...)) {
