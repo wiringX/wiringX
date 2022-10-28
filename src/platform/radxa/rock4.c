@@ -46,8 +46,8 @@ static int map[] = {
 #define _sizeof(arr) (sizeof(arr) / sizeof(arr[0]))
 
 static int rock4ValidGPIO(int pin) {
-	if (pin >= 0 && pin < _sizeof(map)) {
-		if (map[pin] == -1) {
+	if(pin >= 0 && pin < _sizeof(map)) {
+		if(map[pin] == -1) {
 			return -1;
 		}
 		return 0;

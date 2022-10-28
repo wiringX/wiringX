@@ -23,21 +23,23 @@
 
 #define GPIO_BANK_COUNT 5
 
-const uintptr_t gpio_register_physical_address[MAX_REG_AREA] = {0xff720000, 0xff730000, 0xff780000, 0xff788000, 0xff790000};
+const static uintptr_t gpio_register_physical_address[MAX_REG_AREA] = {0xff720000, 0xff730000, 0xff780000, 0xff788000, 0xff790000};
 #define GPIO_SWPORTA_DR     0x0000  // GPIO data register offset
 #define GPIO_SWPORTA_DDR    0x0004  // GPIO direction control register offset
 
-uintptr_t cru_register_virtual_address = NULL;
-uintptr_t pmugrf_register_virtual_address = NULL;
-uintptr_t grf_register_virtual_address = NULL;
+static uintptr_t cru_register_virtual_address = NULL;
+static uintptr_t pmugrf_register_virtual_address = NULL;
+static uintptr_t grf_register_virtual_address = NULL;
 #define CRU_REGISTER_PHYSICAL_ADDRESS       0xff760000
 #define PMUGRF_REGISTER_PHYSICAL_ADDRESS    0xff320000
 #define GRF_REGISTER_PHYSICAL_ADDRESS       0xff770000
 #define PMUCRU_CLKGATE_CON1 0x0104  // Internal clock gating register for GPIO 0/1
 #define CRU_CLKGATE_CON31   0x037c  // Internal clock gating register for GPIO 2/3/4
-#define PMUGRF_GPIOXX_IOMUX 0x0000  //GPIOXX means what nonexistent GPIOs
+#define GRF_UNDFEIND_IOMUX	0xffff
 #define PMUGRF_GPIO0A_IOMUX 0x0000  //GPIO0A iomux control
 #define PMUGRF_GPIO0B_IOMUX 0x0004  //GPIO0B iomux control
+#define PMUGRF_GPIO0C_IOMUX GRF_UNDFEIND_IOMUX  //GPIO0C is undefined on the hardware
+#define PMUGRF_GPIO0D_IOMUX GRF_UNDFEIND_IOMUX  //GPIO0D is undefined on the hardware 
 #define PMUGRF_GPIO1A_IOMUX 0x0010  //GPIO1A iomux control
 #define PMUGRF_GPIO1B_IOMUX 0x0014  //GPIO1B iomux control
 #define PMUGRF_GPIO1C_IOMUX 0x0018  //GPIO1C iomux control
@@ -54,7 +56,6 @@ uintptr_t grf_register_virtual_address = NULL;
 #define GRF_GPIO4B_IOMUX    0xe024  //GPIO4B iomux control
 #define GRF_GPIO4C_IOMUX    0xe028  //GPIO4C iomux control
 #define GRF_GPIO4D_IOMUX    0xe02c  //GPIO4D iomux control
-#define GRF_GPIOXX_IOMUX    0x0000
 #define REGISTER_WRITE_MASK 16 // High 16 bits are write mask,
 // with 1 enabling the coressponding lower bit
 // Set lower bit to 0 and higher bit (write mask) to 1
@@ -88,7 +89,6 @@ static struct layout_t {
 	int support;
 	enum pinmode_t mode;
 	int fd;
-
 } layout[] = {
 	{"GPIO0_A0", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIO0A_IOMUX,  0}, {GPIO_SWPORTA_DDR, 0}, {GPIO_SWPORTA_DR, 0}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
 	{"GPIO0_A1", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIO0A_IOMUX,  2}, {GPIO_SWPORTA_DDR, 1}, {GPIO_SWPORTA_DR, 1}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
@@ -106,22 +106,22 @@ static struct layout_t {
 	{"GPIO0_B5", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIO0B_IOMUX, 10}, {GPIO_SWPORTA_DDR, 13}, {GPIO_SWPORTA_DR, 13}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
 	{"GPIO0_B6", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIO0B_IOMUX, 12}, {GPIO_SWPORTA_DDR, 14}, {GPIO_SWPORTA_DR, 14}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
 	{"GPIO0_B7", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIO0B_IOMUX, 14}, {GPIO_SWPORTA_DDR, 15}, {GPIO_SWPORTA_DR, 15}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
-	{"GPIO0_C0", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIOXX_IOMUX,  0}, {GPIO_SWPORTA_DDR, 16}, {GPIO_SWPORTA_DR, 16}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
-	{"GPIO0_C1", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIOXX_IOMUX,  2}, {GPIO_SWPORTA_DDR, 17}, {GPIO_SWPORTA_DR, 17}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
-	{"GPIO0_C2", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIOXX_IOMUX,  4}, {GPIO_SWPORTA_DDR, 18}, {GPIO_SWPORTA_DR, 18}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
-	{"GPIO0_C3", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIOXX_IOMUX,  6}, {GPIO_SWPORTA_DDR, 19}, {GPIO_SWPORTA_DR, 19}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
-	{"GPIO0_C4", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIOXX_IOMUX,  8}, {GPIO_SWPORTA_DDR, 20}, {GPIO_SWPORTA_DR, 20}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
-	{"GPIO0_C5", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIOXX_IOMUX, 10}, {GPIO_SWPORTA_DDR, 21}, {GPIO_SWPORTA_DR, 21}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
-	{"GPIO0_C6", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIOXX_IOMUX, 12}, {GPIO_SWPORTA_DDR, 22}, {GPIO_SWPORTA_DR, 22}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
-	{"GPIO0_C7", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIOXX_IOMUX, 14}, {GPIO_SWPORTA_DDR, 23}, {GPIO_SWPORTA_DR, 23}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
-	{"GPIO0_D0", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIOXX_IOMUX,  0}, {GPIO_SWPORTA_DDR, 24}, {GPIO_SWPORTA_DR, 24}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
-	{"GPIO0_D1", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIOXX_IOMUX,  2}, {GPIO_SWPORTA_DDR, 25}, {GPIO_SWPORTA_DR, 25}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
-	{"GPIO0_D2", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIOXX_IOMUX,  4}, {GPIO_SWPORTA_DDR, 26}, {GPIO_SWPORTA_DR, 26}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
-	{"GPIO0_D3", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIOXX_IOMUX,  6}, {GPIO_SWPORTA_DDR, 27}, {GPIO_SWPORTA_DR, 27}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
-	{"GPIO0_D4", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIOXX_IOMUX,  8}, {GPIO_SWPORTA_DDR, 28}, {GPIO_SWPORTA_DR, 28}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
-	{"GPIO0_D5", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIOXX_IOMUX, 10}, {GPIO_SWPORTA_DDR, 29}, {GPIO_SWPORTA_DR, 29}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
-	{"GPIO0_D6", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIOXX_IOMUX, 12}, {GPIO_SWPORTA_DDR, 30}, {GPIO_SWPORTA_DR, 30}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
-	{"GPIO0_D7", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIOXX_IOMUX, 14}, {GPIO_SWPORTA_DDR, 31}, {GPIO_SWPORTA_DR, 31}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
+	{"GPIO0_C0", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIO0C_IOMUX,  0}, {GPIO_SWPORTA_DDR, 16}, {GPIO_SWPORTA_DR, 16}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
+	{"GPIO0_C1", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIO0C_IOMUX,  2}, {GPIO_SWPORTA_DDR, 17}, {GPIO_SWPORTA_DR, 17}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
+	{"GPIO0_C2", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIO0C_IOMUX,  4}, {GPIO_SWPORTA_DDR, 18}, {GPIO_SWPORTA_DR, 18}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
+	{"GPIO0_C3", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIO0C_IOMUX,  6}, {GPIO_SWPORTA_DDR, 19}, {GPIO_SWPORTA_DR, 19}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
+	{"GPIO0_C4", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIO0C_IOMUX,  8}, {GPIO_SWPORTA_DDR, 20}, {GPIO_SWPORTA_DR, 20}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
+	{"GPIO0_C5", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIO0C_IOMUX, 10}, {GPIO_SWPORTA_DDR, 21}, {GPIO_SWPORTA_DR, 21}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
+	{"GPIO0_C6", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIO0C_IOMUX, 12}, {GPIO_SWPORTA_DDR, 22}, {GPIO_SWPORTA_DR, 22}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
+	{"GPIO0_C7", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIO0C_IOMUX, 14}, {GPIO_SWPORTA_DDR, 23}, {GPIO_SWPORTA_DR, 23}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
+	{"GPIO0_D0", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIO0D_IOMUX,  0}, {GPIO_SWPORTA_DDR, 24}, {GPIO_SWPORTA_DR, 24}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
+	{"GPIO0_D1", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIO0D_IOMUX,  2}, {GPIO_SWPORTA_DDR, 25}, {GPIO_SWPORTA_DR, 25}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
+	{"GPIO0_D2", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIO0D_IOMUX,  4}, {GPIO_SWPORTA_DDR, 26}, {GPIO_SWPORTA_DR, 26}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
+	{"GPIO0_D3", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIO0D_IOMUX,  6}, {GPIO_SWPORTA_DDR, 27}, {GPIO_SWPORTA_DR, 27}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
+	{"GPIO0_D4", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIO0D_IOMUX,  8}, {GPIO_SWPORTA_DDR, 28}, {GPIO_SWPORTA_DR, 28}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
+	{"GPIO0_D5", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIO0D_IOMUX, 10}, {GPIO_SWPORTA_DDR, 29}, {GPIO_SWPORTA_DR, 29}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
+	{"GPIO0_D6", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIO0D_IOMUX, 12}, {GPIO_SWPORTA_DDR, 30}, {GPIO_SWPORTA_DR, 30}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
+	{"GPIO0_D7", 0, {PMUCRU_CLKGATE_CON1, 3}, {PMUGRF_GPIO0D_IOMUX, 14}, {GPIO_SWPORTA_DDR, 31}, {GPIO_SWPORTA_DR, 31}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
 	{"GPIO1_A0", 1, {PMUCRU_CLKGATE_CON1, 4}, {PMUGRF_GPIO1A_IOMUX,  0}, {GPIO_SWPORTA_DDR, 0}, {GPIO_SWPORTA_DR, 0}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
 	{"GPIO1_A1", 1, {PMUCRU_CLKGATE_CON1, 4}, {PMUGRF_GPIO1A_IOMUX,  2}, {GPIO_SWPORTA_DDR, 1}, {GPIO_SWPORTA_DR, 1}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
 	{"GPIO1_A2", 1, {PMUCRU_CLKGATE_CON1, 4}, {PMUGRF_GPIO1A_IOMUX,  4}, {GPIO_SWPORTA_DDR, 2}, {GPIO_SWPORTA_DR, 2}, FUNCTION_DIGITAL, PINMODE_NOT_SET, 0},
@@ -253,25 +253,25 @@ static struct layout_t {
 };
 
 static int rk3399Setup(void) {
-	if ((rk3399->fd = open("/dev/mem", O_RDWR | O_SYNC)) < 0) {
+	if((rk3399->fd = open("/dev/mem", O_RDWR | O_SYNC)) < 0) {
 		wiringXLog(LOG_ERR, "wiringX failed to open /dev/mem for raw memory access");
 		return -1;
 	}
-	for (int i = 0; i < GPIO_BANK_COUNT; i++) {
-		if ((rk3399->gpio[i] = (unsigned char *)mmap(0, rk3399->page_size, PROT_READ | PROT_WRITE, MAP_SHARED, rk3399->fd, rk3399->base_addr[i])) == NULL) {
+	for(int i = 0; i < GPIO_BANK_COUNT; i++) {
+		if((rk3399->gpio[i] = (unsigned char *)mmap(0, rk3399->page_size, PROT_READ | PROT_WRITE, MAP_SHARED, rk3399->fd, rk3399->base_addr[i])) == NULL) {
 			wiringXLog(LOG_ERR, "wiringX failed to map The %s %s GPIO memory address", rk3399->brand, rk3399->chip);
 			return -1;
 		}
 	}
-	if ((cru_register_virtual_address = (unsigned char *)mmap(0, rk3399->page_size, PROT_READ | PROT_WRITE, MAP_SHARED, rk3399->fd, CRU_REGISTER_PHYSICAL_ADDRESS)) == NULL) {
+	if((cru_register_virtual_address = (unsigned char *)mmap(0, rk3399->page_size, PROT_READ | PROT_WRITE, MAP_SHARED, rk3399->fd, CRU_REGISTER_PHYSICAL_ADDRESS)) == NULL) {
 		wiringXLog(LOG_ERR, "wiringX failed to map The %s %s CRU memory address", rk3399->brand, rk3399->chip);
 		return -1;
 	}
-	if ((pmugrf_register_virtual_address = (unsigned char *)mmap(0, rk3399->page_size, PROT_READ | PROT_WRITE, MAP_SHARED, rk3399->fd, PMUGRF_REGISTER_PHYSICAL_ADDRESS)) == NULL) {
+	if((pmugrf_register_virtual_address = (unsigned char *)mmap(0, rk3399->page_size, PROT_READ | PROT_WRITE, MAP_SHARED, rk3399->fd, PMUGRF_REGISTER_PHYSICAL_ADDRESS)) == NULL) {
 		wiringXLog(LOG_ERR, "wiringX failed to map The %s %s PMUGRF memory address", rk3399->brand, rk3399->chip);
 		return -1;
 	}
-	if ((grf_register_virtual_address = (unsigned char *)mmap(0, rk3399->page_size, PROT_READ | PROT_WRITE, MAP_SHARED, rk3399->fd, GRF_REGISTER_PHYSICAL_ADDRESS)) == NULL) {
+	if((grf_register_virtual_address = (unsigned char *)mmap(0, rk3399->page_size, PROT_READ | PROT_WRITE, MAP_SHARED, rk3399->fd, GRF_REGISTER_PHYSICAL_ADDRESS)) == NULL) {
 		wiringXLog(LOG_ERR, "wiringX failed to map The %s %s GRF memory address", rk3399->brand, rk3399->chip);
 		return -1;
 	}
@@ -297,22 +297,28 @@ struct layout_t * rk3399GetLayout(int i, int* mapping) {
 	struct layout_t *pin = NULL;
 	unsigned int *grf_reg = NULL;
 	unsigned int iomux_value = 0;
-	if (mapping == NULL) {
+	if(mapping == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", rk3399->brand, rk3399->chip);
 		return NULL;
 	}
-	if (wiringXValidGPIO(i) != 0) {
-		wiringXLog(LOG_ERR, "The %i is not the right GPIO number !\n");
+	if(wiringXValidGPIO(i) != 0) {
+		wiringXLog(LOG_ERR, "The %i is not the right GPIO number");
 		return NULL;
 	}
-	if (rk3399->fd <= 0 || rk3399->gpio == NULL) {
+	if(rk3399->fd <= 0 || rk3399->gpio == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been setup by wiringX", rk3399->brand, rk3399->chip);
 		return NULL;
 	}
 
 	pin = &rk3399->layout[mapping[i]];
 	if(pin->bank < 0 || pin->bank >= GPIO_BANK_COUNT) {
-		wiringXLog(LOG_ERR,"pin->bank out of range: %i, expect 0~4\n",pin->bank);
+		wiringXLog(LOG_ERR,"pin->bank out of range: %i, expect 0~4", pin->bank);
+		return NULL;
+	}
+
+	if(pin->grf.offset == GRF_UNDFEIND_IOMUX) {
+		wiringXLog(LOG_ERR,"Pin %i is mapped to undefined pin on the hardware", i);
+		return NULL;
 	}
 
 	return pin;
@@ -324,19 +330,19 @@ struct layout_t * rk3399GetLayout(int i, int* mapping) {
 static int rk3399DigitalWrite(int i, enum digital_value_t value) {
 	struct layout_t *pin = NULL;
 	unsigned int *data_reg = 0;
-	if ((pin = rk3399GetPinLayout(i)) == NULL) {
+	if((pin = rk3399GetPinLayout(i)) == NULL) {
 		return -1;
 	}
 
-	if (pin->mode != PINMODE_OUTPUT) {
+	if(pin->mode != PINMODE_OUTPUT) {
 		wiringXLog(LOG_ERR, "The %s %s GPIO%d is not set to output mode", rk3399->brand, rk3399->chip, i);
 		return -1;
 	}
 
 	data_reg = (volatile unsigned int *)(rk3399->gpio[pin->bank] + pin->data.offset);
-	if (value == HIGH) {
+	if(value == HIGH) {
 		*data_reg |= (1 << (pin->data.bit));
-	} else if (value == LOW) {
+	} else if(value == LOW) {
 		*data_reg &= ~(1 << (pin->data.bit));
 	} else {
 		wiringXLog(LOG_ERR, "invalid value %i for GPIO %i", value, i);
@@ -351,11 +357,11 @@ static int rk3399DigitalRead(int i) {
 	unsigned int *data_reg = NULL;
 	uint32_t val = 0;
 
-	if ((pin = rk3399GetPinLayout(i)) == NULL) {
+	if((pin = rk3399GetPinLayout(i)) == NULL) {
 		return -1;
 	}
 
-	if (pin->mode != PINMODE_INPUT) {
+	if(pin->mode != PINMODE_INPUT) {
 		wiringXLog(LOG_ERR, "The %s %s GPIO%d is not set to input mode", rk3399->brand, rk3399->chip, i);
 		return -1;
 	}
@@ -373,7 +379,7 @@ static int rk3399PinMode(int i, enum pinmode_t mode) {
 	unsigned int *dir_reg = NULL;
 	unsigned int mask = 0;
 
-	if ((pin = rk3399GetPinLayout(i)) == NULL) {
+	if((pin = rk3399GetPinLayout(i)) == NULL) {
 		return -1;
 	}
 
@@ -389,9 +395,9 @@ static int rk3399PinMode(int i, enum pinmode_t mode) {
 	*grf_reg = REGISTER_CLEAR_BITS(grf_reg, pin->grf.bit, 2);
 
 	dir_reg = (volatile unsigned int *)(rk3399->gpio[pin->bank] + pin->direction.offset);
-	if (mode == PINMODE_INPUT) {
+	if(mode == PINMODE_INPUT) {
 		*dir_reg &= ~(1 << pin->direction.bit);
-	} else if (mode == PINMODE_OUTPUT) {
+	} else if(mode == PINMODE_OUTPUT) {
 		*dir_reg |= (1 << pin->direction.bit);
 	} else {
 		wiringXLog(LOG_ERR, "invalid pin mode %i for GPIO %i", mode, i);
@@ -406,30 +412,30 @@ static int rk3399PinMode(int i, enum pinmode_t mode) {
 static int rk3399ISR(int i, enum isr_mode_t mode) {
 	struct layout_t *pin = NULL;
 	char path[PATH_MAX];
-	if ((pin = rk3399GetIrqLayout(i)) == NULL) {
+	if((pin = rk3399GetIrqLayout(i)) == NULL) {
 		return -1;
 	}
 
 	sprintf(path, "/sys/class/gpio/gpio%d", rk3399->irq[i]);
-	if ((soc_sysfs_check_gpio(rk3399, path)) == -1) {
+	if((soc_sysfs_check_gpio(rk3399, path)) == -1) {
 		sprintf(path, "/sys/class/gpio/export");
-		if (soc_sysfs_gpio_export(rk3399, path, rk3399->irq[i]) == -1) {
+		if(soc_sysfs_gpio_export(rk3399, path, rk3399->irq[i]) == -1) {
 			return -1;
 		}
 	}
 
 	sprintf(path, "/sys/class/gpio/gpio%d/direction", rk3399->irq[i]);
-	if (soc_sysfs_set_gpio_direction(rk3399, path, "in") == -1) {
+	if(soc_sysfs_set_gpio_direction(rk3399, path, "in") == -1) {
 		return -1;
 	}
 
 	sprintf(path, "/sys/class/gpio/gpio%d/edge", rk3399->irq[i]);
-	if (soc_sysfs_set_gpio_interrupt_mode(rk3399, path, mode) == -1) {
+	if(soc_sysfs_set_gpio_interrupt_mode(rk3399, path, mode) == -1) {
 		return -1;
 	}
 
 	sprintf(path, "/sys/class/gpio/gpio%d/value", rk3399->irq[i]);
-	if ((pin->fd = soc_sysfs_gpio_reset_value(rk3399, path)) == -1) {
+	if((pin->fd = soc_sysfs_gpio_reset_value(rk3399, path)) == -1) {
 		return -1;
 	}
 
@@ -441,11 +447,11 @@ static int rk3399ISR(int i, enum isr_mode_t mode) {
 static int rk3399WaitForInterrupt(int i, int ms) {
 	struct layout_t *pin = NULL;
 
-	if ((pin = rk3399GetIrqLayout(i)) == NULL) {
+	if((pin = rk3399GetIrqLayout(i)) == NULL) {
 		return -1;
 	}
 
-	if (pin->mode != PINMODE_INTERRUPT) {
+	if(pin->mode != PINMODE_INTERRUPT) {
 		wiringXLog(LOG_ERR, "The %s %s GPIO %d is not set to interrupt mode", rk3399->brand, rk3399->chip, i);
 		return -1;
 	}
@@ -457,40 +463,40 @@ static int rk3399GC(void) {
 	struct layout_t *pin = NULL;
 	char path[PATH_MAX];
 
-	if (rk3399->map != NULL) {
-		for (int i = 0; i < rk3399->map_size; i++) {
+	if(rk3399->map != NULL) {
+		for(int i = 0; i < rk3399->map_size; i++) {
 			pin = &rk3399->layout[rk3399->map[i]];
-			if (pin->mode == PINMODE_OUTPUT) {
+			if(pin->mode == PINMODE_OUTPUT) {
 				pinMode(i, PINMODE_INPUT);
-			} else if (pin->mode == PINMODE_INTERRUPT) {
+			} else if(pin->mode == PINMODE_INTERRUPT) {
 				sprintf(path, "/sys/class/gpio/gpio%d", rk3399->irq[i]);
-				if ((soc_sysfs_check_gpio(rk3399, path)) == 0) {
+				if((soc_sysfs_check_gpio(rk3399, path)) == 0) {
 					sprintf(path, "/sys/class/gpio/unexport");
 					soc_sysfs_gpio_unexport(rk3399, path, rk3399->irq[i]);
 				}
 			}
 
-			if (pin->fd > 0) {
+			if(pin->fd > 0) {
 				close(pin->fd);
 				pin->fd = 0;
 			}
 		}
 	}
 
-	if (cru_register_virtual_address != NULL) {
+	if(cru_register_virtual_address != NULL) {
 		munmap(cru_register_virtual_address, rk3399->page_size);
 		cru_register_virtual_address = NULL;
 	}
-	if (pmugrf_register_virtual_address != NULL) {
+	if(pmugrf_register_virtual_address != NULL) {
 		munmap(pmugrf_register_virtual_address, rk3399->page_size);
 		pmugrf_register_virtual_address = NULL;
 	}
-	if (grf_register_virtual_address != NULL) {
+	if(grf_register_virtual_address != NULL) {
 		munmap(grf_register_virtual_address, rk3399->page_size);
 		grf_register_virtual_address = NULL;
 	}
-	for (int i = 0; i < GPIO_BANK_COUNT; i++) {
-		if (rk3399->gpio[i] != NULL) {
+	for(int i = 0; i < GPIO_BANK_COUNT; i++) {
+		if(rk3399->gpio[i] != NULL) {
 			munmap(rk3399->gpio[i], rk3399->page_size);
 			rk3399->gpio[i] = NULL;
 		}
@@ -502,7 +508,7 @@ static int rk3399GC(void) {
 static int rk3399SelectableFd(int i) {
 	struct layout_t *pin = NULL;
 
-	if ((pin = rk3399GetIrqLayout(i)) == NULL) {
+	if((pin = rk3399GetIrqLayout(i)) == NULL) {
 		return -1;
 	}
 
