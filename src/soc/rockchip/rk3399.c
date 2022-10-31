@@ -320,7 +320,7 @@ struct layout_t *rk3399GetLayout(int i, int *mapping) {
 	}
 
 	if(pin->grf.offset == GRF_UNDFEIND_IOMUX) {
-		wiringXLog(LOG_ERR,"Pin %i is mapped to undefined pin on the hardware", i);
+		wiringXLog(LOG_ERR, "Pin %i is mapped to undefined pin on the hardware", i);
 		return NULL;
 	}
 
