@@ -253,11 +253,13 @@ static struct layout_t {
 };
 
 static int rk3399Setup(void) {
+	int i = 0;
+
 	if((rk3399->fd = open("/dev/mem", O_RDWR | O_SYNC)) < 0) {
 		wiringXLog(LOG_ERR, "wiringX failed to open /dev/mem for raw memory access");
 		return -1;
 	}
-	for(int i = 0; i < GPIO_BANK_COUNT; i++) {
+	for(i = 0; i < GPIO_BANK_COUNT; i++) {
 		if((rk3399->gpio[i] = (unsigned char *)mmap(0, rk3399->page_size, PROT_READ | PROT_WRITE, MAP_SHARED, rk3399->fd, rk3399->base_addr[i])) == NULL) {
 			wiringXLog(LOG_ERR, "wiringX failed to map The %s %s GPIO memory address", rk3399->brand, rk3399->chip);
 			return -1;
@@ -293,10 +295,11 @@ static void rk3399SetIRQ(int *irq, size_t size) {
 	rk3399->irq_size = size;
 }
 
-struct layout_t * rk3399GetLayout(int i, int* mapping) {
+struct layout_t *rk3399GetLayout(int i, int *mapping) {
 	struct layout_t *pin = NULL;
 	unsigned int *grf_reg = NULL;
 	unsigned int iomux_value = 0;
+
 	if(mapping == NULL) {
 		wiringXLog(LOG_ERR, "The %s %s has not yet been mapped", rk3399->brand, rk3399->chip);
 		return NULL;
@@ -312,7 +315,7 @@ struct layout_t * rk3399GetLayout(int i, int* mapping) {
 
 	pin = &rk3399->layout[mapping[i]];
 	if(pin->bank < 0 || pin->bank >= GPIO_BANK_COUNT) {
-		wiringXLog(LOG_ERR,"pin->bank out of range: %i, expect 0~4", pin->bank);
+		wiringXLog(LOG_ERR, "pin->bank out of range: %i, expect 0~4", pin->bank);
 		return NULL;
 	}
 
@@ -330,6 +333,7 @@ struct layout_t * rk3399GetLayout(int i, int* mapping) {
 static int rk3399DigitalWrite(int i, enum digital_value_t value) {
 	struct layout_t *pin = NULL;
 	unsigned int *data_reg = 0;
+
 	if((pin = rk3399GetPinLayout(i)) == NULL) {
 		return -1;
 	}
@@ -412,6 +416,8 @@ static int rk3399PinMode(int i, enum pinmode_t mode) {
 static int rk3399ISR(int i, enum isr_mode_t mode) {
 	struct layout_t *pin = NULL;
 	char path[PATH_MAX];
+	memset(path, 0, sizeof(path));
+
 	if((pin = rk3399GetIrqLayout(i)) == NULL) {
 		return -1;
 	}
@@ -462,9 +468,11 @@ static int rk3399WaitForInterrupt(int i, int ms) {
 static int rk3399GC(void) {
 	struct layout_t *pin = NULL;
 	char path[PATH_MAX];
+	int i = 0;
+	memset(path, 0, sizeof(path));
 
 	if(rk3399->map != NULL) {
-		for(int i = 0; i < rk3399->map_size; i++) {
+		for(i = 0; i < rk3399->map_size; i++) {
 			pin = &rk3399->layout[rk3399->map[i]];
 			if(pin->mode == PINMODE_OUTPUT) {
 				pinMode(i, PINMODE_INPUT);
@@ -495,7 +503,7 @@ static int rk3399GC(void) {
 		munmap(grf_register_virtual_address, rk3399->page_size);
 		grf_register_virtual_address = NULL;
 	}
-	for(int i = 0; i < GPIO_BANK_COUNT; i++) {
+	for(i = 0; i < GPIO_BANK_COUNT; i++) {
 		if(rk3399->gpio[i] != NULL) {
 			munmap(rk3399->gpio[i], rk3399->page_size);
 			rk3399->gpio[i] = NULL;
