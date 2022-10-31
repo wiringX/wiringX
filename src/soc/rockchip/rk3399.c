@@ -39,7 +39,7 @@ static uintptr_t grf_register_virtual_address = NULL;
 #define PMUGRF_GPIO0A_IOMUX	0x0000	//GPIO0A iomux control
 #define PMUGRF_GPIO0B_IOMUX	0x0004	//GPIO0B iomux control
 #define PMUGRF_GPIO0C_IOMUX	GRF_UNDFEIND_IOMUX	//GPIO0C is undefined on the hardware
-#define PMUGRF_GPIO0D_IOMUX	GRF_UNDFEIND_IOMUX	//GPIO0D is undefined on the hardware 
+#define PMUGRF_GPIO0D_IOMUX	GRF_UNDFEIND_IOMUX	//GPIO0D is undefined on the hardware
 #define PMUGRF_GPIO1A_IOMUX	0x0010	//GPIO1A iomux control
 #define PMUGRF_GPIO1B_IOMUX	0x0014	//GPIO1B iomux control
 #define PMUGRF_GPIO1C_IOMUX	0x0018	//GPIO1C iomux control
