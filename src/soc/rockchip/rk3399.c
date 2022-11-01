@@ -529,7 +529,7 @@ void rk3399Init(void) {
 	rk3399->layout = layout;
 
 	rk3399->support.isr_modes = ISR_MODE_RISING | ISR_MODE_FALLING | ISR_MODE_BOTH | ISR_MODE_NONE;
-	rk3399->page_size = sysconf(_SC_PAGESIZE);
+	rk3399->page_size = (1024*64);
 	memcpy(rk3399->base_addr, gpio_register_physical_address, sizeof(gpio_register_physical_address));
 
 	rk3399->gc = &rk3399GC;
