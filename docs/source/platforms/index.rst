@@ -9,4 +9,5 @@ Platforms
    odroid/index
    orangepi/index
    pcduino/index
+   radxa/index
    raspberrypi/index

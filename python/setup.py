@@ -23,6 +23,7 @@ modules = [
 			'../src/soc/nxp/imx6sdlrm.c',
 			'../src/soc/nxp/imx6dqrm.c',
 			'../src/soc/samsung/exynos5422.c',
+			'../src/soc/rockchip/rk3399.c',
 			'../src/platform/platform.c',
 			'../src/platform/hardkernel/odroidc1.c',
 			'../src/platform/hardkernel/odroidc2.c',
@@ -43,6 +44,7 @@ modules = [
 			'../src/platform/solidrun/hummingboard_base_pro_sdl.c',
 			'../src/platform/solidrun/hummingboard_gate_edge_dq.c',
 			'../src/platform/solidrun/hummingboard_gate_edge_sdl.c'
+			'../src/platform/radxa/rock4.c',
 		],
 		include_dirs=['../src/']
 	),

@@ -38,6 +38,7 @@
 #include "soc/amlogic/s805.h"
 #include "soc/amlogic/s905.h"
 #include "soc/samsung/exynos5422.h"
+#include "soc/rockchip/rk3399.h"
 
 #include "platform/linksprite/pcduino1.h"
 #include "platform/lemaker/bananapi1.h"
@@ -58,6 +59,7 @@
 #include "platform/hardkernel/odroidc1.h"
 #include "platform/hardkernel/odroidc2.h"
 #include "platform/hardkernel/odroidxu4.h"
+#include "platform/radxa/rock4.h"
 
 void wiringXDefaultLog(int prio, char *file, int line, const char *format_str, ...);
 
@@ -235,6 +237,7 @@ static void wiringXInit(void) {
 	amlogicS805Init();
 	amlogicS905Init();
 	exynos5422Init();
+	rk3399Init();
 
 	/* Init all platforms */
 	pcduino1Init();
@@ -256,6 +259,7 @@ static void wiringXInit(void) {
 	odroidc1Init();
 	odroidc2Init();
 	odroidxu4Init();
+	rock4Init();
 }
 
 EXPORT int wiringXSetup(char *name, void (*func)(int, char *, int, const char *, ...)) {
