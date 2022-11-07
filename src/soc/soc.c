@@ -59,7 +59,7 @@ void soc_register(struct soc_t **soc, char *brand, char *type) {
 	(*soc)->selectableFd = NULL;
 	(*soc)->gc = NULL;
 
-	for (i = 0; i < MAX_REG_AREA; ++i) {
+	for(i = 0; i < MAX_REG_AREA; ++i) {
 		(*soc)->gpio[i] = NULL;
 		(*soc)->base_addr[i] = 0;
 		(*soc)->base_offs[i] = 0;
