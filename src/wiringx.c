@@ -96,7 +96,7 @@ static struct spi_t spi[2] = {
 			++(result)->tv_sec; \
 			(result)->tv_usec -= 1000000L; \
 		} \
-	} while (0)
+	} while(0)
 
 #define timersub(a, b, result) \
 	do { \
@@ -106,7 +106,7 @@ static struct spi_t spi[2] = {
 			--(result)->tv_sec; \
 			(result)->tv_usec += 1000000L; \
 		} \
-	} while (0)
+	} while(0)
 #endif
 
 /* Both the delayMicroseconds and the delayMicrosecondsHard

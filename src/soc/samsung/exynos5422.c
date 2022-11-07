@@ -289,7 +289,7 @@ static int exynos5422Setup(void) {
 	 * Mapping the GPIO register areas.
 	 * -> 0: 0x13400000, 1: 0x13410000, 2: 0x14000000, 3: 0x14010000, 4: 0x03860000
 	 */
-	for (i = 0; i < 5; ++i) {
+	for(i = 0; i < 5; ++i) {
 		if((exynos5422->gpio[i] = mmap(0, exynos5422->page_size, PROT_READ|PROT_WRITE, MAP_SHARED, exynos5422->fd, exynos5422->base_addr[i])) == MAP_FAILED) {
 			wiringXLog(LOG_ERR, "wiringX failed to map the %s %s GPIO memory address", exynos5422->brand, exynos5422->chip);
 			return -1;
