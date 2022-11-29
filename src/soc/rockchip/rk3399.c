@@ -24,8 +24,9 @@
 #define GPIO_BANK_COUNT 5
 
 const static uintptr_t gpio_register_physical_address[MAX_REG_AREA] = {0xff720000, 0xff730000, 0xff780000, 0xff788000, 0xff790000};
-#define GPIO_SWPORTA_DR			0x0000	// GPIO data register offset
-#define GPIO_SWPORTA_DDR		0x0004	// GPIO direction control register offset
+#define GPIO_SWPORTA_DR			0x0000	// GPIO data write register offset
+#define GPIO_SWPORTA_DDR		0x0004  // GPIO direction control register offset
+#define GPIO_EXT_PORTA			0x0050	// GPIO data read register offset
 
 static uintptr_t cru_register_virtual_address = NULL;
 static uintptr_t pmugrf_register_virtual_address = NULL;
@@ -332,7 +333,7 @@ struct layout_t *rk3399GetLayout(int i, int *mapping) {
 
 static int rk3399DigitalWrite(int i, enum digital_value_t value) {
 	struct layout_t *pin = NULL;
-	unsigned int *data_reg = 0;
+	volatile uint32_t *data_reg = NULL;
 
 	if((pin = rk3399GetPinLayout(i)) == NULL) {
 		return -1;
@@ -343,7 +344,7 @@ static int rk3399DigitalWrite(int i, enum digital_value_t value) {
 		return -1;
 	}
 
-	data_reg = (volatile unsigned int *)(rk3399->gpio[pin->bank] + pin->data.offset);
+	data_reg = (volatile uint32_t *)(rk3399->gpio[pin->bank] + pin->data.offset + GPIO_SWPROTA_DR);
 	if(value == HIGH) {
 		*data_reg |= (1 << (pin->data.bit));
 	} else if(value == LOW) {
@@ -358,7 +359,7 @@ static int rk3399DigitalWrite(int i, enum digital_value_t value) {
 
 static int rk3399DigitalRead(int i) {
 	struct layout_t *pin = NULL;
-	unsigned int *data_reg = NULL;
+	volatile uint32_t *data_reg = NULL;
 	uint32_t val = 0;
 
 	if((pin = rk3399GetPinLayout(i)) == NULL) {
@@ -370,7 +371,7 @@ static int rk3399DigitalRead(int i) {
 		return -1;
 	}
 
-	data_reg = (volatile unsigned int *)(rk3399->gpio[pin->bank] + pin->data.offset);
+	data_reg = (volatile uint32_t *)(rk3399->gpio[pin->bank] + pin->data.offset + GPIO_EXT_PORTA);
 	val = *data_reg;
 
 	return (int)((val & (1 << pin->data.bit)) >> pin->data.bit);
