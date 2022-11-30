@@ -344,7 +344,7 @@ static int rk3399DigitalWrite(int i, enum digital_value_t value) {
 		return -1;
 	}
 
-	data_reg = (volatile uint32_t *)(rk3399->gpio[pin->bank] + pin->data.offset + GPIO_SWPROTA_DR);
+	data_reg = (volatile uint32_t *)(rk3399->gpio[pin->bank] + pin->data.offset + GPIO_SWPORTA_DR);
 	if(value == HIGH) {
 		*data_reg |= (1 << (pin->data.bit));
 	} else if(value == LOW) {
