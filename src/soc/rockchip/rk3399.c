@@ -28,9 +28,9 @@ const static uintptr_t gpio_register_physical_address[MAX_REG_AREA] = {0xff72000
 #define GPIO_SWPORTA_DDR		0x0004  // GPIO direction control register offset
 #define GPIO_EXT_PORTA			0x0050	// GPIO data read register offset
 
-static uintptr_t cru_register_virtual_address = NULL;
-static uintptr_t pmugrf_register_virtual_address = NULL;
-static uintptr_t grf_register_virtual_address = NULL;
+static unsigned char *cru_register_virtual_address = NULL;
+static unsigned char *pmugrf_register_virtual_address = NULL;
+static unsigned char *grf_register_virtual_address = NULL;
 #define CRU_REGISTER_PHYSICAL_ADDRESS			0xff760000
 #define PMUGRF_REGISTER_PHYSICAL_ADDRESS	0xff320000
 #define GRF_REGISTER_PHYSICAL_ADDRESS			0xff770000
@@ -379,9 +379,9 @@ static int rk3399DigitalRead(int i) {
 
 static int rk3399PinMode(int i, enum pinmode_t mode) {
 	struct layout_t *pin = NULL;
-	unsigned int *cru_reg = NULL;
-	unsigned int *grf_reg = NULL;
-	unsigned int *dir_reg = NULL;
+	volatile unsigned int *cru_reg = NULL;
+	volatile unsigned int *grf_reg = NULL;
+	volatile unsigned int *dir_reg = NULL;
 	unsigned int mask = 0;
 
 	if((pin = rk3399GetPinLayout(i)) == NULL) {
