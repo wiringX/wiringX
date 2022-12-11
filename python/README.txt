@@ -1,10 +1,9 @@
 This package export all wiringX function to python.
 
 To generate and install the python-wiringx run the following commands.
-mkdir build
+python setup.py build
 cd build
 cmake ..
-make
 #Debian based:
 cpack -G DEB
 dpkg -i python-wiringx*.deb
