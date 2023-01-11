@@ -24,13 +24,14 @@
 #define GPIO_BANK_COUNT 5
 
 const static uintptr_t gpio_register_physical_address[MAX_REG_AREA] = {0xff720000, 0xff730000, 0xff780000, 0xff788000, 0xff790000};
-#define GPIO_SWPORTA_DR			0x0000	// GPIO data write register offset
-#define GPIO_SWPORTA_DDR		0x0004  // GPIO direction control register offset
-#define GPIO_EXT_PORTA			0x0050	// GPIO data read register offset
+#define GPIO_SWPORTA_DR			0x0000	// GPIO data register offset
+#define GPIO_SWPORTA_DDR		0x0004	// GPIO direction control register offset
 
+static uintptr_t pmucru_register_virtual_address = NULL;
 static uintptr_t cru_register_virtual_address = NULL;
 static uintptr_t pmugrf_register_virtual_address = NULL;
 static uintptr_t grf_register_virtual_address = NULL;
+#define PMUCRU_REGISTER_PHYSICAL_ADDRESS			0xff750000
 #define CRU_REGISTER_PHYSICAL_ADDRESS			0xff760000
 #define PMUGRF_REGISTER_PHYSICAL_ADDRESS	0xff320000
 #define GRF_REGISTER_PHYSICAL_ADDRESS			0xff770000
@@ -270,6 +271,10 @@ static int rk3399Setup(void) {
 		wiringXLog(LOG_ERR, "wiringX failed to map The %s %s CRU memory address", rk3399->brand, rk3399->chip);
 		return -1;
 	}
+	if((pmucru_register_virtual_address = (unsigned char *)mmap(0, rk3399->page_size, PROT_READ | PROT_WRITE, MAP_SHARED, rk3399->fd, PMUCRU_REGISTER_PHYSICAL_ADDRESS)) == NULL) {
+		wiringXLog(LOG_ERR, "wiringX failed to map The %s %s CRU memory address", rk3399->brand, rk3399->chip);
+		return -1;
+	}	
 	if((pmugrf_register_virtual_address = (unsigned char *)mmap(0, rk3399->page_size, PROT_READ | PROT_WRITE, MAP_SHARED, rk3399->fd, PMUGRF_REGISTER_PHYSICAL_ADDRESS)) == NULL) {
 		wiringXLog(LOG_ERR, "wiringX failed to map The %s %s PMUGRF memory address", rk3399->brand, rk3399->chip);
 		return -1;
@@ -333,7 +338,7 @@ struct layout_t *rk3399GetLayout(int i, int *mapping) {
 
 static int rk3399DigitalWrite(int i, enum digital_value_t value) {
 	struct layout_t *pin = NULL;
-	volatile uint32_t *data_reg = NULL;
+	unsigned int *data_reg = 0;
 
 	if((pin = rk3399GetPinLayout(i)) == NULL) {
 		return -1;
@@ -344,7 +349,7 @@ static int rk3399DigitalWrite(int i, enum digital_value_t value) {
 		return -1;
 	}
 
-	data_reg = (volatile uint32_t *)(rk3399->gpio[pin->bank] + pin->data.offset + GPIO_SWPORTA_DR);
+	data_reg = (volatile unsigned int *)(rk3399->gpio[pin->bank] + pin->data.offset);
 	if(value == HIGH) {
 		*data_reg |= (1 << (pin->data.bit));
 	} else if(value == LOW) {
@@ -359,7 +364,7 @@ static int rk3399DigitalWrite(int i, enum digital_value_t value) {
 
 static int rk3399DigitalRead(int i) {
 	struct layout_t *pin = NULL;
-	volatile uint32_t *data_reg = NULL;
+	unsigned int *data_reg = NULL;
 	uint32_t val = 0;
 
 	if((pin = rk3399GetPinLayout(i)) == NULL) {
@@ -371,7 +376,7 @@ static int rk3399DigitalRead(int i) {
 		return -1;
 	}
 
-	data_reg = (volatile uint32_t *)(rk3399->gpio[pin->bank] + pin->data.offset + GPIO_EXT_PORTA);
+	data_reg = (volatile unsigned int *)(rk3399->gpio[pin->bank] + pin->data.offset);
 	val = *data_reg;
 
 	return (int)((val & (1 << pin->data.bit)) >> pin->data.bit);
@@ -388,7 +393,11 @@ static int rk3399PinMode(int i, enum pinmode_t mode) {
 		return -1;
 	}
 
-	cru_reg = (volatile unsigned int *)(cru_register_virtual_address + pin->cru.offset);
+	if(pin->bank == 0 || pin->bank == 1) {
+		cru_reg = (volatile unsigned int *)(pmucru_register_virtual_address + pin->cru.offset);
+	} else {
+		cru_reg = (volatile unsigned int *)(cru_register_virtual_address + pin->cru.offset);
+	}
 	// set to low to enable the clock for GPIO bank
 	*cru_reg = REGISTER_CLEAR_BITS(cru_reg, pin->cru.bit, 1);
 
@@ -495,6 +504,10 @@ static int rk3399GC(void) {
 	if(cru_register_virtual_address != NULL) {
 		munmap(cru_register_virtual_address, rk3399->page_size);
 		cru_register_virtual_address = NULL;
+	}
+	if(pmucru_register_virtual_address != NULL) {
+		munmap(pmucru_register_virtual_address, rk3399->page_size);
+		pmucru_register_virtual_address = NULL;
 	}
 	if(pmugrf_register_virtual_address != NULL) {
 		munmap(pmugrf_register_virtual_address, rk3399->page_size);
