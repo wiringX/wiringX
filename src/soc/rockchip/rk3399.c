@@ -26,6 +26,7 @@
 const static uintptr_t gpio_register_physical_address[MAX_REG_AREA] = {0xff720000, 0xff730000, 0xff780000, 0xff788000, 0xff790000};
 #define GPIO_SWPORTA_DR			0x0000	// GPIO data register offset
 #define GPIO_SWPORTA_DDR		0x0004	// GPIO direction control register offset
+#define GPIO_EXT_PORTA		0x0050  // GPIO data read register offset
 
 static uintptr_t pmucru_register_virtual_address = NULL;
 static uintptr_t cru_register_virtual_address = NULL;
@@ -376,7 +377,7 @@ static int rk3399DigitalRead(int i) {
 		return -1;
 	}
 
-	data_reg = (volatile unsigned int *)(rk3399->gpio[pin->bank] + pin->data.offset);
+	data_reg = (volatile unsigned int *)(rk3399->gpio[pin->bank] + pin->data.offset + GPIO_EXT_PORTA);
 	val = *data_reg;
 
 	return (int)((val & (1 << pin->data.bit)) >> pin->data.bit);
