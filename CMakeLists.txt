@@ -96,6 +96,8 @@ file(GLOB wiringx
 	"${PROJECT_SOURCE_DIR}/src/platform/xunlong/*.h"
 	"${PROJECT_SOURCE_DIR}/src/platform/radxa/*.c"
 	"${PROJECT_SOURCE_DIR}/src/platform/radxa/*.h"
+	"${PROJECT_SOURCE_DIR}/src/platform/milkv/*.c"
+	"${PROJECT_SOURCE_DIR}/src/platform/milkv/*.h"
 
 	"${PROJECT_SOURCE_DIR}/src/soc/*.c"
 	"${PROJECT_SOURCE_DIR}/src/soc/*.h"
@@ -111,6 +113,8 @@ file(GLOB wiringx
 	"${PROJECT_SOURCE_DIR}/src/soc/samsung/*.c"
 	"${PROJECT_SOURCE_DIR}/src/soc/rockchip/*.c"
 	"${PROJECT_SOURCE_DIR}/src/soc/rockchip/*.h"
+	"${PROJECT_SOURCE_DIR}/src/soc/sophgo/*.c"
+	"${PROJECT_SOURCE_DIR}/src/soc/sophgo/*.h"
 
 )
 

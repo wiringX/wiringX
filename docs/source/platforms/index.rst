@@ -6,6 +6,7 @@ Platforms
 
    bananapi/index
    hummingboard/index
+   milkv/index
    odroid/index
    orangepi/index
    pcduino/index

@@ -24,6 +24,7 @@ modules = [
 			'../src/soc/nxp/imx6dqrm.c',
 			'../src/soc/samsung/exynos5422.c',
 			'../src/soc/rockchip/rk3399.c',
+			'../src/soc/sophgo/cv180x.c',
 			'../src/platform/platform.c',
 			'../src/platform/hardkernel/odroidc1.c',
 			'../src/platform/hardkernel/odroidc2.c',
@@ -46,6 +47,7 @@ modules = [
 			'../src/platform/solidrun/hummingboard_gate_edge_sdl.c',
 			'../src/platform/radxa/rock4.c',
 			'../src/platform/radxa/rock5b.c',
+			'../src/platform/milkv/duo.c'
 		],
 		include_dirs=['../src/']
 	),
