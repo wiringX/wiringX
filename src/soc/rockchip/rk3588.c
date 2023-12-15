@@ -238,30 +238,30 @@ static struct layout_t layout[] = {
 };
 
 static int rk3588Setup(void) {
-	if ((rk3588->fd = open("/dev/mem", O_RDWR | O_SYNC)) < 0) {
+	if((rk3588->fd = open("/dev/mem", O_RDWR | O_SYNC)) < 0) {
 		wiringXLog(LOG_ERR, "wiringX failed to open /dev/mem for raw memory access");
 		return -1;
 	}
 	for (int i = 0; i < GPIO_BANK_COUNT; i++) {
-		if ((rk3588->gpio[i] = (unsigned char *)rockchip_mmap(rk3588, rk3588->base_addr[i])) == NULL) {
+		if((rk3588->gpio[i] = (unsigned char *)rockchip_mmap(rk3588, rk3588->base_addr[i])) == NULL) {
 			wiringXLog(LOG_ERR, "wiringX failed to map The %s %s GPIO memory address", rk3588->brand, rk3588->chip);
 			return -1;
 		}
 	}
 
-	if ((cru_ns_register_virtual_address = (unsigned char *)rockchip_mmap(rk3588, CRU_NS_REGISTER_PHYSICAL_ADDRESS)) == NULL) {
+	if((cru_ns_register_virtual_address = (unsigned char *)rockchip_mmap(rk3588, CRU_NS_REGISTER_PHYSICAL_ADDRESS)) == NULL) {
 		wiringXLog(LOG_ERR, "wiringX failed to map The %s %s CRU memory address", rk3588->brand, rk3588->chip);
 		return -1;
 	}
-	if ((pmu1_ioc_register_virtual_address = (unsigned char *)rockchip_mmap(rk3588, PMU1_IOC_REGISTER_PHYSICAL_ADDRESS)) == NULL) {
+	if((pmu1_ioc_register_virtual_address = (unsigned char *)rockchip_mmap(rk3588, PMU1_IOC_REGISTER_PHYSICAL_ADDRESS)) == NULL) {
 		wiringXLog(LOG_ERR, "wiringX failed to map The %s %s CRU memory address", rk3588->brand, rk3588->chip);
 		return -1;
 	}
-	if ((pmu2_ioc_register_virtual_address = (unsigned char *)rockchip_mmap(rk3588, PMU2_IOC_REGISTER_PHYSICAL_ADDRESS)) == NULL) {
+	if((pmu2_ioc_register_virtual_address = (unsigned char *)rockchip_mmap(rk3588, PMU2_IOC_REGISTER_PHYSICAL_ADDRESS)) == NULL) {
 		wiringXLog(LOG_ERR, "wiringX failed to map The %s %s CRU memory address", rk3588->brand, rk3588->chip);
 		return -1;
 	}
-	if ((bus_ioc_register_virtual_address = (unsigned char *)rockchip_mmap(rk3588, BUS_IOC_REGISTER_PHYSICAL_ADDRESS)) == NULL) {
+	if((bus_ioc_register_virtual_address = (unsigned char *)rockchip_mmap(rk3588, BUS_IOC_REGISTER_PHYSICAL_ADDRESS)) == NULL) {
 		wiringXLog(LOG_ERR, "wiringX failed to map The %s %s BUS_IOC memory address", rk3588->brand, rk3588->chip);
 		return -1;
 	}
@@ -289,20 +289,20 @@ static int rk3588DigitalWrite(int i, enum digital_value_t value) {
 	struct layout_t *pin = NULL;
 	unsigned int *out_reg = 0;
 
-	if( (pin = rockchipGetPinLayout(rk3588, i)) == NULL) {
+	if((pin = rockchipGetPinLayout(rk3588, i)) == NULL) {
 		return -1;
 	}
 
-	if (pin->mode != PINMODE_OUTPUT) {
+	if(pin->mode != PINMODE_OUTPUT) {
 		wiringXLog(LOG_ERR, "The %s %s GPIO%d is not set to output mode", rk3588->brand, rk3588->chip, i);
 		return -1;
 	}
 
 	out_reg = (volatile unsigned int *)(rk3588->gpio[pin->bank] + pin->out.offset);
 
-	if (value == HIGH) {
+	if(value == HIGH) {
 		REGISTER_SET_HIGH(out_reg, pin->out.bit, 1);
-	} else if (value == LOW) {
+	} else if(value == LOW) {
 		REGISTER_CLEAR_BITS(out_reg, pin->out.bit, 1);
 	} else {
 		wiringXLog(LOG_ERR, "invalid value %i for GPIO %i", value, i);
@@ -331,9 +331,9 @@ static int rk3588PinMode(int i, enum pinmode_t mode) {
 
 	if(pin->iomux_num == 0) {
 		grf_reg = (volatile unsigned int *)(pmu1_ioc_register_virtual_address + pin->grf.offset);
-	} else if (pin->iomux_num == 1) {
+	} else if(pin->iomux_num == 1) {
 		grf_reg = (volatile unsigned int *)(pmu2_ioc_register_virtual_address + pin->grf.offset);
-	} else if (pin->iomux_num == 2) {
+	} else if(pin->iomux_num == 2) {
 		grf_reg = (volatile unsigned int *)(bus_ioc_register_virtual_address + pin->grf.offset);
 	} else {
 		wiringXLog(LOG_ERR, "pin->iomux_num out of range %i, expect 0~2", i);
@@ -342,9 +342,9 @@ static int rk3588PinMode(int i, enum pinmode_t mode) {
 	REGISTER_CLEAR_BITS(grf_reg, pin->grf.bit, 4);
 
 	dir_reg = (volatile unsigned int *)(rk3588->gpio[pin->bank] + pin->direction.offset);
-	if (mode == PINMODE_INPUT) {
+	if(mode == PINMODE_INPUT) {
 		REGISTER_CLEAR_BITS(dir_reg, pin->direction.bit, 1);
-	} else if (mode == PINMODE_OUTPUT) {
+	} else if(mode == PINMODE_OUTPUT) {
 		REGISTER_SET_HIGH(dir_reg, pin->direction.bit, 1);
 	} else {
 		wiringXLog(LOG_ERR, "invalid pin mode %i for GPIO %i", mode, i);
@@ -367,24 +367,24 @@ static int rk3588WaitForInterrupt(int i, int ms) {
 static int rk3588GC(void) {
 	rockchipGC(rk3588);
 
-	if (cru_ns_register_virtual_address != NULL) {
+	if(cru_ns_register_virtual_address != NULL) {
 		munmap(cru_ns_register_virtual_address, rk3588->page_size);
 		cru_ns_register_virtual_address = NULL;
 	}
-	if (pmu1_ioc_register_virtual_address != NULL) {
+	if(pmu1_ioc_register_virtual_address != NULL) {
 		munmap(pmu1_ioc_register_virtual_address, rk3588->page_size);
 		pmu1_ioc_register_virtual_address = NULL;
 	}
-	if (pmu2_ioc_register_virtual_address != NULL) {
+	if(pmu2_ioc_register_virtual_address != NULL) {
 		munmap(pmu2_ioc_register_virtual_address, rk3588->page_size);
 		pmu2_ioc_register_virtual_address = NULL;
 	}
-	if (bus_ioc_register_virtual_address != NULL) {
+	if(bus_ioc_register_virtual_address != NULL) {
 		munmap(bus_ioc_register_virtual_address, rk3588->page_size);
 		bus_ioc_register_virtual_address = NULL;
 	}
 	for (int i = 0; i < GPIO_BANK_COUNT; i++) {
-		if (rk3588->gpio[i] != NULL) {
+		if(rk3588->gpio[i] != NULL) {
 			munmap(rk3588->gpio[i], rk3588->page_size);
 			rk3588->gpio[i] = NULL;
 		}

@@ -304,7 +304,7 @@ static int rk3399PinMode(int i, enum pinmode_t mode) {
 
 	if(pin->iomux_num == 0) {
 		cru_reg = (volatile unsigned int *)(pmucru_register_virtual_address + pin->cru.offset);
-	} else if (pin->iomux_num == 1) {
+	} else if(pin->iomux_num == 1) {
 		cru_reg = (volatile unsigned int *)(cru_register_virtual_address + pin->cru.offset);
 	} else {
 		wiringXLog(LOG_ERR, "pin->iomux_num out of range %i, expect 0~2", i);
@@ -314,7 +314,7 @@ static int rk3399PinMode(int i, enum pinmode_t mode) {
 
 	if(pin->iomux_num == 0) {
 		grf_reg = (volatile unsigned int *)(pmugrf_register_virtual_address + pin->grf.offset);
-	} else if (pin->iomux_num == 1) {
+	} else if(pin->iomux_num == 1) {
 		grf_reg = (volatile unsigned int *)(grf_register_virtual_address + pin->grf.offset);
 	} else {
 		wiringXLog(LOG_ERR, "pin->iomux_num out of range %i, expect 0~2", i);
