@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2022-2023 Radxa Ltd.
+  Copyright (c) 2023 Radxa Ltd.
   Author: Nascs <nascs@radxa.com>
           ZHANG Yuntian <yt@radxa.com>
 

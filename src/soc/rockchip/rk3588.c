@@ -1,10 +1,11 @@
 /*
-	Copyright (c) 2023 Radxa Ltd.
-	Author: Nascs <nascs@radxa.com>
+  Copyright (c) 2023 Radxa Ltd.
+  Author: Nascs <nascs@radxa.com>
+          ZHANG Yuntian <yt@radxa.com>
 
-	This Source Code Form is subject to the terms of the Mozilla Public
-	License, v. 2.0. If a copy of the MPL was not distributed with this
-	file, You can obtain one at http://mozilla.org/MPL/2.0/.
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
 #include "rk3588.h"
