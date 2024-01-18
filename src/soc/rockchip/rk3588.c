@@ -243,7 +243,7 @@ static int rk3588Setup(void) {
 		wiringXLog(LOG_ERR, "wiringX failed to open /dev/mem for raw memory access");
 		return -1;
 	}
-	for (int i = 0; i < GPIO_BANK_COUNT; i++) {
+	for(int i = 0; i < GPIO_BANK_COUNT; i++) {
 		if((rk3588->gpio[i] = (unsigned char *)rockchip_mmap(rk3588, rk3588->base_addr[i])) == NULL) {
 			wiringXLog(LOG_ERR, "wiringX failed to map The %s %s GPIO memory address", rk3588->brand, rk3588->chip);
 			return -1;
@@ -323,7 +323,7 @@ static int rk3588PinMode(int i, enum pinmode_t mode) {
 	unsigned int *grf_reg = NULL;
 	unsigned int *dir_reg = NULL;
 
-	if( (pin = rockchipGetPinLayout(rk3588, i)) == NULL) {
+	if((pin = rockchipGetPinLayout(rk3588, i)) == NULL) {
 		return -1;
 	}
 
@@ -384,7 +384,7 @@ static int rk3588GC(void) {
 		munmap(bus_ioc_register_virtual_address, rk3588->page_size);
 		bus_ioc_register_virtual_address = NULL;
 	}
-	for (int i = 0; i < GPIO_BANK_COUNT; i++) {
+	for(int i = 0; i < GPIO_BANK_COUNT; i++) {
 		if(rk3588->gpio[i] != NULL) {
 			munmap(rk3588->gpio[i], rk3588->page_size);
 			rk3588->gpio[i] = NULL;
