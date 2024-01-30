@@ -1,25 +1,13 @@
 /*
-  Copyright (c) 2022 Radxa Ltd.
+  Copyright (c) 2023 Radxa Ltd.
   Author: Nascs <nascs@radxa.com>
+          ZHANG Yuntian <yt@radxa.com>
 
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-#include <sys/mman.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/ioctl.h>
-#include <signal.h>
-
-#include "../../soc/soc.h"
-#include "../../wiringx.h"
-#include "../platform.h"
 #include "rock4.h"
 
 struct platform_t *rock4 = NULL;
@@ -43,24 +31,12 @@ static int map[] = {
 			134,			135,			64,				65
 };
 
-#define _sizeof(arr) (sizeof(arr) / sizeof(arr[0]))
-
 static int rock4ValidGPIO(int pin) {
-	if(pin >= 0 && pin < _sizeof(map)) {
-		if(map[pin] == -1) {
-			return -1;
-		}
-		return 0;
-	} else {
-		return -1;
-	}
+	return radxaValidGPIO(pin, map, _sizeof(map));
 }
 
 static int rock4Setup(void) {
-	rock4->soc->setup();
-	rock4->soc->setMap(map, _sizeof(map));
-	rock4->soc->setIRQ(map, _sizeof(map));
-	return 0;
+	return radxaSetup(rock4, map, _sizeof(map));
 }
 
 void rock4Init(void) {
@@ -69,16 +45,8 @@ void rock4Init(void) {
 	rock4->soc = soc_get("Rockchip", "RK3399");
 	rock4->soc->setMap(map, _sizeof(map));
 
-	rock4->digitalRead = rock4->soc->digitalRead;
-	rock4->digitalWrite = rock4->soc->digitalWrite;
-	rock4->pinMode = rock4->soc->pinMode;
+	radxaInit(rock4);
 	rock4->setup = &rock4Setup;
-
-	rock4->isr = rock4->soc->isr;
-	rock4->waitForInterrupt = rock4->soc->waitForInterrupt;
-
-	rock4->selectableFd = rock4->soc->selectableFd;
-	rock4->gc = rock4->soc->gc;
 
 	rock4->validGPIO = &rock4ValidGPIO;
 }

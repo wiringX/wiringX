@@ -409,6 +409,7 @@ PyMODINIT_FUNC initgpio(void) {
 	PyModule_AddObject(module, "HUMMINGBOARD_GATE_DQ", Py_BuildValue("s", "hummingboard_gate_dq"));
 	PyModule_AddObject(module, "HUMMINGBOARD_GATE_SDL", Py_BuildValue("s", "hummingboard_gate_sdl"));
 	PyModule_AddObject(module, "ROCK4", Py_BuildValue("s", "rock4"));
+	PyModule_AddObject(module, "ROCK5B", Py_BuildValue("s", "rock5b"));
 
 #if PY_MAJOR_VERSION >= 3
 	return module;

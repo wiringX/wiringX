@@ -8,13 +8,13 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-#ifndef __WIRINGX_ROCKCHIP3399_H
-#define __WIRINGX_ROCKCHIP3399_H
+#ifndef __WIRINGX_ROCKCHIP3588_H
+#define __WIRINGX_ROCKCHIP3588_H
 
 #include "common.h"
 
-extern struct soc_t *rk3399;
+extern struct soc_t *rk3588;
 
-void rk3399Init(void);
+void rk3588Init(void);
 
 #endif

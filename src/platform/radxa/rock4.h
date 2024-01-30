@@ -1,6 +1,7 @@
 /*
-  Copyright (c) 2022  Radxa Ltd.
+  Copyright (c) 2023 Radxa Ltd.
   Author: Nascs <nascs@radxa.com>
+          ZHANG Yuntian <yt@radxa.com>
 
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,6 +12,7 @@
 #define __WIRINGX_ROCK4_H_
 
 #include "../platform.h"
+#include "common.h"
 
 extern struct platform_t *rock4;
 
