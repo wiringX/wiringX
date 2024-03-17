@@ -40,6 +40,7 @@
 #include "soc/samsung/exynos5422.h"
 #include "soc/rockchip/rk3399.h"
 #include "soc/rockchip/rk3588.h"
+#include "soc/sophgo/cv180x.h"
 
 #include "platform/linksprite/pcduino1.h"
 #include "platform/lemaker/bananapi1.h"
@@ -62,6 +63,7 @@
 #include "platform/hardkernel/odroidxu4.h"
 #include "platform/radxa/rock4.h"
 #include "platform/radxa/rock5b.h"
+#include "platform/milkv/duo.h"
 
 void wiringXDefaultLog(int prio, char *file, int line, const char *format_str, ...);
 
@@ -241,6 +243,7 @@ static void wiringXInit(void) {
 	exynos5422Init();
 	rk3399Init();
 	rk3588Init();
+	cv180xInit();
 
 	/* Init all platforms */
 	pcduino1Init();
@@ -264,6 +267,7 @@ static void wiringXInit(void) {
 	odroidxu4Init();
 	rock4Init();
 	rock5bInit();
+	milkv_duoInit();
 }
 
 EXPORT int wiringXSetup(char *name, void (*func)(int, char *, int, const char *, ...)) {

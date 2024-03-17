@@ -76,6 +76,7 @@ Sitemap
 
    platforms/bananapi/index
    platforms/hummingboard/index
+   platforms/milkv/index
    platforms/odroid/index
    platforms/orangepi/index
    platforms/pcduino/index
