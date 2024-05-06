@@ -74,23 +74,6 @@ void (*_wiringXLog)(int, char *, int, const char *, ...) = wiringXDefaultLog;
 static int issetup = 0;
 static int isinit = 0;
 
-#ifndef __FreeBSD__
-/* SPI Bus Parameters */
-
-struct spi_t {
-	uint8_t mode;
-	uint8_t bits_per_word;
-	uint16_t delay;
-	uint32_t speed;
-	int fd;
-} spi_t;
-
-static struct spi_t spi[2] = {
-	{ 0, 0, 0, 0, 0 },
-	{ 0, 0, 0, 0, 0 }
-};
-#endif
-
 #ifdef _WIN32
 #define timeradd(a, b, result) \
 	do { \
@@ -111,6 +94,99 @@ static struct spi_t spi[2] = {
 			(result)->tv_usec += 1000000L; \
 		} \
 	} while(0)
+#endif
+
+#ifndef __FreeBSD__
+/* SPI Bus Parameters */
+struct spi_t {
+	uint8_t mode;
+	uint8_t bits_per_word;
+	uint16_t delay;
+	uint32_t speed;
+	int fd;
+} spi_t;
+
+/* SPI states list implementation */
+struct spi_id_t {
+	uint8_t device;
+	uint8_t channel;
+};
+
+struct spi_list_t {
+	struct spi_id_t id;
+	struct spi_t data;
+};
+
+static struct spi_list_t *spilist = NULL;
+static int nrspilist = 0;
+
+static int spi_new(struct spi_id_t id) {
+	int entry = -1;
+	void *tmp = NULL;
+	int i = 0;
+
+	/* loop over existing states to detect potential duplicates and reusable entries */
+	for(i = 0; i < nrspilist; i++) {
+		/* detect dupplicate */
+		if(memcmp(&spilist[i].id, &id, sizeof(struct spi_id_t)) == 0) {
+			entry = i;
+
+			/* mark inactive */
+			if(spilist[entry].data.fd > 0) {
+				close(spilist[entry].data.fd);
+			}
+
+			/* reuse this existing entry */
+			break;
+		}
+		/* detect first inactive entry */
+		if(spilist[i].data.fd <= 0 && entry < 0) {
+			// remember this entry for reuse
+			entry = i;
+
+			/* continue duplicate detection */
+			continue;
+		}
+	}
+
+	/* reserve space for new entry (+1) when not reusing an existing entry */
+	if(entry < 0) {
+		entry = nrspilist++;
+		tmp = realloc(spilist, sizeof(struct spi_list_t)*nrspilist);
+		if(tmp == NULL) {
+			fprintf(stderr, "out of memory\n");
+			exit(EXIT_FAILURE);
+		}
+		spilist = tmp;
+	}
+
+	/* initialize new or existing entry */
+	spilist[entry].id = id;
+	memset(&spilist[entry].data, 0, sizeof(struct spi_t));
+
+	/* return index of new entry */
+	return entry;
+}
+
+static void spi_clear() {
+	struct spi_list_t *entry = NULL;
+	int i = 0;
+
+	/* loop over all entries */
+	for(i = 0; i < nrspilist; i++) {
+		entry = &spilist[i];
+
+		/* clear */
+		if(entry->data.fd > 0) {
+			close(entry->data.fd);
+		}
+	}
+
+	/* free storage */
+	free(spilist);
+	spilist = NULL;
+	nrspilist = 0;
+}
 #endif
 
 /* Both the delayMicroseconds and the delayMicrosecondsHard
@@ -420,21 +496,47 @@ EXPORT int wiringXI2CSetup(const char *path, int devId) {
 	return fd;
 }
 
-EXPORT int wiringXSPIGetFd(int channel) {
-	return spi[channel & 1].fd;
+EXPORT int wiringXSPIGetFd(int handle) {
+	struct spi_t *state = NULL;
+
+	if(handle < 0 || handle >= nrspilist) {
+		wiringXLog(LOG_ERR, "wiringX trying to use an unknown SPI connection handle: %i", handle);
+		return -1;
+	}
+
+	state = &spilist[handle].data;
+
+	if(state->fd <= 0) {
+		wiringXLog(LOG_ERR, "wiringX trying to use a previously closed SPI connection handle: %i", handle);
+		return -1;
+	}
+
+	return state->fd;
 }
 
-EXPORT int wiringXSPIDataRW(int channel, unsigned char *data, int len) {
+EXPORT int wiringXSPIDataRW(int handle, unsigned char *data, int len) {
+	struct spi_t *state = NULL;
 	struct spi_ioc_transfer tmp;
-	memset(&tmp, 0, sizeof(tmp));
-	channel &= 1;
 
+	if(handle < 0 || handle >= nrspilist) {
+		wiringXLog(LOG_ERR, "wiringX trying to use an unknown SPI connection handle: %i", handle);
+		return -1;
+	}
+
+	state = &spilist[handle].data;
+
+	if(state->fd <= 0) {
+		wiringXLog(LOG_ERR, "wiringX trying to use a previously closed SPI connection handle: %i", handle);
+		return -1;
+	}
+
+	memset(&tmp, 0, sizeof(tmp));
 	tmp.tx_buf = (uintptr_t)data;
 	tmp.rx_buf = (uintptr_t)data;
 	tmp.len = len;
-	tmp.delay_usecs = spi[channel].delay;
-	tmp.speed_hz = spi[channel].speed;
-	tmp.bits_per_word = spi[channel].bits_per_word;
+	tmp.delay_usecs = state->delay;
+	tmp.speed_hz = state->speed;
+	tmp.bits_per_word = state->bits_per_word;
 #ifdef SPI_IOC_WR_MODE32
 	tmp.tx_nbits = 0;
 #endif
@@ -442,68 +544,100 @@ EXPORT int wiringXSPIDataRW(int channel, unsigned char *data, int len) {
 	tmp.rx_nbits = 0;
 #endif
 
-	if(ioctl(spi[channel].fd, SPI_IOC_MESSAGE(1), &tmp) < 0) {
-		wiringXLog(LOG_ERR, "wiringX is unable to read/write from channel %d (%s)", channel, strerror(errno));
+	if(ioctl(state->fd, SPI_IOC_MESSAGE(1), &tmp) < 0) {
+		wiringXLog(LOG_ERR, "wiringX is unable to read/write from SPI device /dev/spidev%u.%u (%s)", spilist[handle].id.device, spilist[handle].id.channel, strerror(errno));
 		return -1;
 	}
 	return 0;
 }
 
-EXPORT int wiringXSPISetup(int channel, int speed) {
-	const char *device = NULL;
+EXPORT void wiringXSPIClose(int handle) {
+	struct spi_t *state = NULL;
 
-	channel &= 1;
-
-	if(channel == 0) {
-		device = "/dev/spidev0.0";
-	} else {
-		device = "/dev/spidev0.1";
+	if(handle < 0 || handle >= nrspilist) {
+		wiringXLog(LOG_WARNING, "wiringX trying to use an unknown SPI connection handle: %i", handle);
+		return;
 	}
 
-	if((spi[channel].fd = open(device, O_RDWR)) < 0) {
-		wiringXLog(LOG_ERR, "wiringX is unable to open SPI device %s (%s)", device, strerror(errno));
+	state = &spilist[handle].data;
+
+	if(state->fd <= 0) {
+		wiringXLog(LOG_WARNING, "wiringX trying to use a previously closed SPI connection handle: %i", handle);
+		return;
+	}
+
+	close(state->fd);
+	state->fd = 0;
+
+	return;
+}
+
+EXPORT int wiringXSPISetup(uint8_t device, uint8_t channel, int speed) {
+	// maximum length of path to spidev: "/dev/spidev255.255\0"
+	char spidev[19] = { 0 };
+	struct spi_id_t id = { device, channel };
+	struct spi_t state = { 0 };
+	int entry = -1;
+
+	// The bad programmers stop here
+	if((device < 0 || 255 < device) || (channel < 0 || 255 < channel)) {
+		wiringXLog(LOG_ERR, "wiringX detected out of range value for SPI device or channel!");
+		return -1;
+	}
+	snprintf(spidev, sizeof(spidev), "/dev/spidev%u.%u", device, channel);
+
+	if((state.fd = open(spidev, O_RDWR)) < 0) {
+		wiringXLog(LOG_ERR, "wiringX is unable to open SPI device %s (%s)", spidev, strerror(errno));
 		return -1;
 	}
 
-	spi[channel].speed = speed;
-
-	if(ioctl(spi[channel].fd, SPI_IOC_WR_MODE, &spi[channel].mode) < 0) {
-		wiringXLog(LOG_ERR, "wiringX is unable to set write mode for device %s (%s)", device, strerror(errno));
-		close(spi[channel].fd);
+	state.mode = 0;
+	if(ioctl(state.fd, SPI_IOC_WR_MODE, &state.mode) < 0) {
+		wiringXLog(LOG_ERR, "wiringX is unable to set write mode for device %s (%s)", spidev, strerror(errno));
+		close(state.fd);
 		return -1;
 	}
 
-	if(ioctl(spi[channel].fd, SPI_IOC_RD_MODE, &spi[channel].mode) < 0) {
-		wiringXLog(LOG_ERR, "wiringX is unable to set read mode for device %s (%s)", device, strerror(errno));
-		close(spi[channel].fd);
+	if(ioctl(state.fd, SPI_IOC_RD_MODE, &state.mode) < 0) {
+		wiringXLog(LOG_ERR, "wiringX is unable to set read mode for device %s (%s)", spidev, strerror(errno));
+		close(state.fd);
 		return -1;
 	}
 
-	if(ioctl(spi[channel].fd, SPI_IOC_WR_BITS_PER_WORD, &spi[channel].bits_per_word) < 0) {
-		wiringXLog(LOG_ERR, "wiringX is unable to set write bits_per_word for device %s (%s)", device, strerror(errno));
-		close(spi[channel].fd);
+	state.bits_per_word = 0;
+	if(ioctl(state.fd, SPI_IOC_WR_BITS_PER_WORD, &state.bits_per_word) < 0) {
+		wiringXLog(LOG_ERR, "wiringX is unable to set write bits_per_word for device %s (%s)", spidev, strerror(errno));
+		close(state.fd);
 		return -1;
 	}
 
-	if(ioctl(spi[channel].fd, SPI_IOC_RD_BITS_PER_WORD, &spi[channel].bits_per_word) < 0) {
-		wiringXLog(LOG_ERR, "wiringX is unable to set read bits_per_word for device %s (%s)", device, strerror(errno));
-		close(spi[channel].fd);
+	if(ioctl(state.fd, SPI_IOC_RD_BITS_PER_WORD, &state.bits_per_word) < 0) {
+		wiringXLog(LOG_ERR, "wiringX is unable to set read bits_per_word for device %s (%s)", spidev, strerror(errno));
+		close(state.fd);
 		return -1;
 	}
 
-	if(ioctl(spi[channel].fd, SPI_IOC_WR_MAX_SPEED_HZ, &spi[channel].speed) < 0) {
-		wiringXLog(LOG_ERR, "wiringX is unable to set write max_speed for device %s (%s)", device, strerror(errno));
-		close(spi[channel].fd);
+	state.delay = 0;
+
+	state.speed = speed;
+	if(ioctl(state.fd, SPI_IOC_WR_MAX_SPEED_HZ, &state.speed) < 0) {
+		wiringXLog(LOG_ERR, "wiringX is unable to set write max_speed for device %s (%s)", spidev, strerror(errno));
+		close(state.fd);
 		return -1;
 	}
 
-	if(ioctl(spi[channel].fd, SPI_IOC_RD_MAX_SPEED_HZ, &spi[channel].speed) < 0) {
-		wiringXLog(LOG_ERR, "wirignX is unable to set read max_speed for device %s (%s)", device, strerror(errno));
-		close(spi[channel].fd);
+	if(ioctl(state.fd, SPI_IOC_RD_MAX_SPEED_HZ, &state.speed) < 0) {
+		wiringXLog(LOG_ERR, "wirignX is unable to set read max_speed for device %s (%s)", spidev, strerror(errno));
+		close(state.fd);
 		return -1;
 	}
 
-	return spi[channel].fd;
+	/* store state in internal list */
+	entry = spi_new(id);
+	spilist[entry].data = state;
+
+	/* return handle */
+	return entry;
 }
 #endif
 
@@ -726,6 +860,7 @@ EXPORT int wiringXSelectableFd(int gpio) {
 }
 
 EXPORT int wiringXGC(void) {
+	spi_clear();
 	if(platform != NULL) {
 		platform->gc();
 		platform = NULL;
