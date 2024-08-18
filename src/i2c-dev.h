@@ -34,5 +34,8 @@ inline __s32 i2c_smbus_read_byte_data(int fd, int cmd);
 inline __s32 i2c_smbus_write_byte_data(int fd, int cmd, int value);
 inline __s32 i2c_smbus_read_word_data(int fd, int cmd);
 inline __s32 i2c_smbus_write_word_data(int fd, int cmd, __u16 value);
+inline __s32 i2c_smbus_read_data_block(int fd, int cmd, unsigned char *block, int block_size);
+inline __s32 i2c_smbus_write_data_block(int fd, int cmd, unsigned char *block, int block_size);
+inline __s32 i2c_smbus_write_data_block_with_size(int fd, int cmd, unsigned char *block, int block_size);
 
 #endif

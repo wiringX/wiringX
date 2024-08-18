@@ -80,9 +80,13 @@ int wiringXISR(int, enum isr_mode_t);
 int wiringXI2CRead(int);
 int wiringXI2CReadReg8(int, int);
 int wiringXI2CReadReg16(int, int);
+int wiringXI2CReadBlockData(int, int, unsigned char*, int);
 int wiringXI2CWrite(int, int);
 int wiringXI2CWriteReg8(int, int, int);
 int wiringXI2CWriteReg16(int, int, int);
+int wiringXI2CWriteBlockData(int, int, unsigned char*, int);
+int wiringXI2CWriteBlockDataWithSize(int, int, unsigned char*, int);
+
 int wiringXI2CSetup(const char *, int);
 
 int wiringXSPIGetFd(int channel);
