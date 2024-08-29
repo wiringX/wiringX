@@ -408,7 +408,6 @@ EXPORT int wiringXI2CWriteReg16(int fd, int reg, int data) {
 	return i2c_smbus_write_word_data(fd, reg, data);
 }
 
-
 EXPORT int wiringXI2CWriteBlockData(int fd, int reg, unsigned char *block, int block_size) {
 	return i2c_smbus_write_data_block(fd, reg, block, block_size);
 }

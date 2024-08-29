@@ -70,7 +70,6 @@ extern inline __s32 i2c_smbus_write_word_data(int fd, int cmd, __u16 value) {
 	return i2c_smbus_access(fd, I2C_SMBUS_WRITE, cmd, I2C_SMBUS_WORD_DATA, &data);
 }
 
-
 extern inline __s32 i2c_smbus_read_data_block(int fd, int cmd, unsigned char *block, int block_size) {
 	union i2c_smbus_data data;
 	if (block_size > I2C_SMBUS_BLOCK_MAX) {
