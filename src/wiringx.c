@@ -113,6 +113,11 @@ static struct spi_t spi[2] = {
 	} while(0)
 #endif
 
+#ifdef __riscv
+typedef time_t __time_t;
+typedef suseconds_t __suseconds_t;
+#endif
+
 /* Both the delayMicroseconds and the delayMicrosecondsHard
    are taken from wiringPi */
 static void delayMicrosecondsHard(unsigned int howLong) {
@@ -123,8 +128,8 @@ static void delayMicrosecondsHard(unsigned int howLong) {
 	tLong.tv_sec  = howLong / 1000000;
 	tLong.tv_usec = howLong % 1000000;
 #else
-	tLong.tv_sec  = (time_t)howLong / 1000000;
-	tLong.tv_usec = (suseconds_t)howLong % 1000000;
+	tLong.tv_sec  = (__time_t)howLong / 1000000;
+	tLong.tv_usec = (__suseconds_t)howLong % 1000000;
 #endif
 	timeradd(&tNow, &tLong, &tEnd);
 
@@ -139,7 +144,7 @@ EXPORT void delayMicroseconds(unsigned int howLong) {
 	long int uSecs = howLong % 1000000;
 	unsigned int wSecs = howLong / 1000000;
 #else
-	long int uSecs = (time_t)howLong % 1000000;
+	long int uSecs = (__time_t)howLong % 1000000;
 	unsigned int wSecs = howLong / 1000000;
 #endif
 
@@ -151,7 +156,7 @@ EXPORT void delayMicroseconds(unsigned int howLong) {
 #ifdef _WIN32
 		sleeper.tv_sec = wSecs;
 #else
-		sleeper.tv_sec = (time_t)wSecs;	
+		sleeper.tv_sec = (__time_t)wSecs;
 #endif
 		sleeper.tv_nsec = (long)(uSecs * 1000L);
 		nanosleep(&sleeper, NULL);
