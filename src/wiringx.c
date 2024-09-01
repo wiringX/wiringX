@@ -14,9 +14,7 @@
 #include <errno.h>
 #include <string.h>
 #include <fcntl.h>
-#include <time.h>
 #include <termios.h>
-#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #ifndef __FreeBSD__
@@ -113,10 +111,7 @@ static struct spi_t spi[2] = {
 	} while(0)
 #endif
 
-#ifdef __riscv
-typedef time_t __time_t;
-typedef suseconds_t __suseconds_t;
-#endif
+
 
 /* Both the delayMicroseconds and the delayMicrosecondsHard
    are taken from wiringPi */

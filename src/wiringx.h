@@ -13,6 +13,9 @@
 extern "C" {
 #endif
 
+
+#include <time.h>
+#include <sys/time.h>
 #include <errno.h>
 #include <syslog.h>
 
@@ -65,6 +68,12 @@ typedef struct wiringXSerial_t {
 	unsigned int stopbits;
 	unsigned int flowcontrol;
 } wiringXSerial_t;
+
+
+#ifdef __riscv
+typedef time_t __time_t;
+typedef suseconds_t __suseconds_t;
+#endif
 
 void delayMicroseconds(unsigned int);
 int pinMode(int, enum pinmode_t);
