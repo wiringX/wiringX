@@ -13,6 +13,8 @@
 extern "C" {
 #endif
 
+#include <time.h>
+#include <sys/time.h>
 #include <errno.h>
 #include <syslog.h>
 
@@ -66,6 +68,11 @@ typedef struct wiringXSerial_t {
 	unsigned int flowcontrol;
 } wiringXSerial_t;
 
+#ifdef __riscv
+typedef time_t __time_t;
+typedef suseconds_t __suseconds_t;
+#endif
+
 void delayMicroseconds(unsigned int);
 int pinMode(int, enum pinmode_t);
 int wiringXSetup(char *name, void (*func)(int, char *, int, const char *, ...));
@@ -80,9 +87,13 @@ int wiringXISR(int, enum isr_mode_t);
 int wiringXI2CRead(int);
 int wiringXI2CReadReg8(int, int);
 int wiringXI2CReadReg16(int, int);
+int wiringXI2CReadBlockData(int, int, unsigned char*, int);
 int wiringXI2CWrite(int, int);
 int wiringXI2CWriteReg8(int, int, int);
 int wiringXI2CWriteReg16(int, int, int);
+int wiringXI2CWriteBlockData(int, int, unsigned char*, int);
+int wiringXI2CWriteBlockDataWithSize(int, int, unsigned char*, int);
+
 int wiringXI2CSetup(const char *, int);
 
 int wiringXSPIGetFd(int channel);

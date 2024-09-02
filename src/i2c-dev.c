@@ -70,4 +70,38 @@ extern inline __s32 i2c_smbus_write_word_data(int fd, int cmd, __u16 value) {
 	return i2c_smbus_access(fd, I2C_SMBUS_WRITE, cmd, I2C_SMBUS_WORD_DATA, &data);
 }
 
+extern inline __s32 i2c_smbus_read_data_block(int fd, int cmd, unsigned char *block, int block_size) {
+	union i2c_smbus_data data;
+	if (block_size > I2C_SMBUS_BLOCK_MAX) {
+		block_size = I2C_SMBUS_BLOCK_MAX;
+	}
+	data.block[0] = block_size;
+	if(i2c_smbus_access(fd, I2C_SMBUS_READ, cmd, I2C_SMBUS_I2C_BLOCK_DATA, &data) < 0) {
+		return -1;
+	} else {
+		memcpy(block, data.block+1, block_size);
+		return data.block[0];
+	}
+}
+
+extern inline __s32 i2c_smbus_write_data_block(int fd, int cmd, unsigned char *block, int block_size) {
+	union i2c_smbus_data data;
+	if (block_size > I2C_SMBUS_BLOCK_MAX) {
+		block_size = I2C_SMBUS_BLOCK_MAX;
+	}
+	data.block[0] = block_size;
+	memcpy(data.block+1, block, block_size);
+	return i2c_smbus_access(fd, I2C_SMBUS_WRITE, cmd, I2C_SMBUS_I2C_BLOCK_BROKEN, &data);
+}
+
+extern inline __s32 i2c_smbus_write_data_block_with_size(int fd, int cmd, unsigned char *block, int block_size) {
+	union i2c_smbus_data data;
+	if (block_size > I2C_SMBUS_BLOCK_MAX) {
+		block_size = I2C_SMBUS_BLOCK_MAX;
+	}
+	data.block[0] = block_size;
+	memcpy(data.block+1, block, block_size);
+	return i2c_smbus_access(fd, I2C_SMBUS_WRITE, cmd, I2C_SMBUS_I2C_BLOCK_DATA, &data);
+}
+
 #endif

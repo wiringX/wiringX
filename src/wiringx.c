@@ -14,9 +14,7 @@
 #include <errno.h>
 #include <string.h>
 #include <fcntl.h>
-#include <time.h>
 #include <termios.h>
-#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #ifndef __FreeBSD__
@@ -151,7 +149,7 @@ EXPORT void delayMicroseconds(unsigned int howLong) {
 #ifdef _WIN32
 		sleeper.tv_sec = wSecs;
 #else
-		sleeper.tv_sec = (__time_t)wSecs;	
+		sleeper.tv_sec = (__time_t)wSecs;
 #endif
 		sleeper.tv_nsec = (long)(uSecs * 1000L);
 		nanosleep(&sleeper, NULL);
@@ -392,6 +390,10 @@ EXPORT int wiringXI2CReadReg16(int fd, int reg) {
 	return i2c_smbus_read_word_data(fd, reg);
 }
 
+EXPORT int wiringXI2CReadBlockData(int fd, int reg, unsigned char *block, int block_size) {
+	return i2c_smbus_read_data_block(fd, reg, block, block_size);
+}
+
 EXPORT int wiringXI2CWrite(int fd, int data) {
 	return i2c_smbus_write_byte(fd, data);
 }
@@ -402,6 +404,14 @@ EXPORT int wiringXI2CWriteReg8(int fd, int reg, int data) {
 
 EXPORT int wiringXI2CWriteReg16(int fd, int reg, int data) {
 	return i2c_smbus_write_word_data(fd, reg, data);
+}
+
+EXPORT int wiringXI2CWriteBlockData(int fd, int reg, unsigned char *block, int block_size) {
+	return i2c_smbus_write_data_block(fd, reg, block, block_size);
+}
+
+EXPORT int wiringXI2CWriteBlockDataWithSize(int fd, int reg, unsigned char *block, int block_size) {
+	return i2c_smbus_write_data_block_with_size(fd, reg, block, block_size);
 }
 
 EXPORT int wiringXI2CSetup(const char *path, int devId) {
