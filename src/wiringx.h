@@ -13,7 +13,6 @@
 extern "C" {
 #endif
 
-
 #include <time.h>
 #include <sys/time.h>
 #include <errno.h>
@@ -68,7 +67,6 @@ typedef struct wiringXSerial_t {
 	unsigned int stopbits;
 	unsigned int flowcontrol;
 } wiringXSerial_t;
-
 
 #ifdef __riscv
 typedef time_t __time_t;

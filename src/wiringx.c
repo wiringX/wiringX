@@ -111,8 +111,6 @@ static struct spi_t spi[2] = {
 	} while(0)
 #endif
 
-
-
 /* Both the delayMicroseconds and the delayMicrosecondsHard
    are taken from wiringPi */
 static void delayMicrosecondsHard(unsigned int howLong) {
