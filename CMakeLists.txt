@@ -74,6 +74,7 @@ execute_process(COMMAND git log --oneline
 
 STRING(REGEX REPLACE "\n" "" git_ver "${git_ver}")
 add_definitions(-DHASH="${git_ver}")
+add_definitions(-fgnu89-inline)
 
 include_directories(${PROJECT_SOURCE_DIR}/src/)
 

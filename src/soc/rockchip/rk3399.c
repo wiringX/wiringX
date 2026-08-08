@@ -18,10 +18,10 @@ const static uintptr_t gpio_register_physical_address[MAX_REG_AREA] = {0xff72000
 #define GPIO_SWPORTA_DDR		0x0004	// GPIO direction control register offset
 #define GPIO_EXT_PORTA			0x0050	// GPIO data read register offset
 
-static uintptr_t pmucru_register_virtual_address = NULL;
-static uintptr_t cru_register_virtual_address = NULL;
-static uintptr_t pmugrf_register_virtual_address = NULL;
-static uintptr_t grf_register_virtual_address = NULL;
+static unsigned char *pmucru_register_virtual_address = NULL;
+static unsigned char *cru_register_virtual_address = NULL;
+static unsigned char *pmugrf_register_virtual_address = NULL;
+static unsigned char *grf_register_virtual_address = NULL;
 #define PMUCRU_REGISTER_PHYSICAL_ADDRESS	0xff750000
 #define CRU_REGISTER_PHYSICAL_ADDRESS			0xff760000
 #define PMUGRF_REGISTER_PHYSICAL_ADDRESS	0xff320000
@@ -265,7 +265,7 @@ struct layout_t *rk3399GetLayout(int i, int *mapping) {
 
 static int rk3399DigitalWrite(int i, enum digital_value_t value) {
 	struct layout_t *pin = NULL;
-	unsigned int *data_reg = 0;
+	volatile unsigned int *data_reg = 0;
 
 	if((pin = rockchipGetPinLayout(rk3399, i)) == NULL) {
 		return -1;
@@ -295,9 +295,9 @@ static int rk3399DigitalRead(int i) {
 
 static int rk3399PinMode(int i, enum pinmode_t mode) {
 	struct layout_t *pin = NULL;
-	unsigned int *cru_reg = NULL;
-	unsigned int *grf_reg = NULL;
-	unsigned int *dir_reg = NULL;
+	volatile unsigned int *cru_reg = NULL;
+	volatile unsigned int *grf_reg = NULL;
+	volatile unsigned int *dir_reg = NULL;
 
 	if((pin = rockchipGetPinLayout(rk3399, i)) == NULL) {
 		return -1;
@@ -349,19 +349,19 @@ static int rk3399GC(void) {
 	rockchipGC(rk3399);
 
 	if(cru_register_virtual_address != NULL) {
-		munmap(cru_register_virtual_address, rk3399->page_size);
+		munmap((void*)cru_register_virtual_address, rk3399->page_size);
 		cru_register_virtual_address = NULL;
 	}
 	if(pmucru_register_virtual_address != NULL) {
-		munmap(pmucru_register_virtual_address, rk3399->page_size);
+		munmap((void*)pmucru_register_virtual_address, rk3399->page_size);
 		pmucru_register_virtual_address = NULL;
 	}
 	if(pmugrf_register_virtual_address != NULL) {
-		munmap(pmugrf_register_virtual_address, rk3399->page_size);
+		munmap((void*)pmugrf_register_virtual_address, rk3399->page_size);
 		pmugrf_register_virtual_address = NULL;
 	}
 	if(grf_register_virtual_address != NULL) {
-		munmap(grf_register_virtual_address, rk3399->page_size);
+		munmap((void*)grf_register_virtual_address, rk3399->page_size);
 		grf_register_virtual_address = NULL;
 	}
 	for(int i = 0; i < GPIO_BANK_COUNT; i++) {

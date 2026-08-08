@@ -16,6 +16,7 @@
 #include <sys/ioctl.h>
 #include <linux/types.h>
 #include <linux/i2c.h>
+#include <string.h>
 
 #define I2C_SLAVE	0x0703
 #define I2C_SMBUS	0x0720

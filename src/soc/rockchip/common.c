@@ -54,7 +54,7 @@ struct layout_t *rockchipGetLayout(struct soc_t *soc, int i, int *mapping) {
 
 int rockchipDigitalRead(struct soc_t *soc, int i) {
 	struct layout_t *pin = NULL;
-	unsigned int *data_reg = NULL;
+	volatile unsigned int *data_reg = NULL;
 	uint32_t val = 0;
 
 	if((pin = rockchipGetPinLayout(soc, i)) == NULL) {
@@ -153,7 +153,7 @@ int rockchipGC(struct soc_t *soc) {
 int rockchipSelectableFd(struct soc_t *soc, int i) {
 	struct layout_t *pin = NULL;
 
-	if((pin = rockchipGetIrqLayout(soc, (i)) == NULL)) {
+	if((pin = rockchipGetIrqLayout(soc,i)) == NULL) {
 		return -1;
 	}
 

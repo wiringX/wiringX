@@ -15,10 +15,10 @@
 
 const uintptr_t rk3588_gpio_register_physical_address[MAX_REG_AREA] = {0xfd8a0000, 0xfec20000, 0xfec30000, 0xfec40000, 0xfec50000};
 
-uintptr_t cru_ns_register_virtual_address = NULL;
-uintptr_t pmu1_ioc_register_virtual_address = NULL;
-uintptr_t pmu2_ioc_register_virtual_address = NULL;
-uintptr_t bus_ioc_register_virtual_address = NULL;
+unsigned char *cru_ns_register_virtual_address = NULL;
+unsigned char *pmu1_ioc_register_virtual_address = NULL;
+unsigned char *pmu2_ioc_register_virtual_address = NULL;
+unsigned char *bus_ioc_register_virtual_address = NULL;
 #define CRU_NS_REGISTER_PHYSICAL_ADDRESS			0xfd7c0000
 #define PMU1_IOC_REGISTER_PHYSICAL_ADDRESS		0xfd5f0000
 #define PMU2_IOC_REGISTER_PHYSICAL_ADDRESS		0xfd5f4000
@@ -288,7 +288,7 @@ struct layout_t * rk3588GetLayout(int i, int* mapping) {
 
 static int rk3588DigitalWrite(int i, enum digital_value_t value) {
 	struct layout_t *pin = NULL;
-	unsigned int *out_reg = 0;
+	volatile unsigned int *out_reg = 0;
 
 	if((pin = rockchipGetPinLayout(rk3588, i)) == NULL) {
 		return -1;
@@ -319,9 +319,9 @@ static int rk3588DigitalRead(int i) {
 
 static int rk3588PinMode(int i, enum pinmode_t mode) {
 	struct layout_t *pin = NULL;
-	unsigned int *cru_reg = NULL;
-	unsigned int *grf_reg = NULL;
-	unsigned int *dir_reg = NULL;
+	volatile unsigned int *cru_reg = NULL;
+	volatile unsigned int *grf_reg = NULL;
+	volatile unsigned int *dir_reg = NULL;
 
 	if((pin = rockchipGetPinLayout(rk3588, i)) == NULL) {
 		return -1;
@@ -369,19 +369,19 @@ static int rk3588GC(void) {
 	rockchipGC(rk3588);
 
 	if(cru_ns_register_virtual_address != NULL) {
-		munmap(cru_ns_register_virtual_address, rk3588->page_size);
+		munmap((void*)cru_ns_register_virtual_address, rk3588->page_size);
 		cru_ns_register_virtual_address = NULL;
 	}
 	if(pmu1_ioc_register_virtual_address != NULL) {
-		munmap(pmu1_ioc_register_virtual_address, rk3588->page_size);
+		munmap((void*)pmu1_ioc_register_virtual_address, rk3588->page_size);
 		pmu1_ioc_register_virtual_address = NULL;
 	}
 	if(pmu2_ioc_register_virtual_address != NULL) {
-		munmap(pmu2_ioc_register_virtual_address, rk3588->page_size);
+		munmap((void*)pmu2_ioc_register_virtual_address, rk3588->page_size);
 		pmu2_ioc_register_virtual_address = NULL;
 	}
 	if(bus_ioc_register_virtual_address != NULL) {
-		munmap(bus_ioc_register_virtual_address, rk3588->page_size);
+		munmap((void*)bus_ioc_register_virtual_address, rk3588->page_size);
 		bus_ioc_register_virtual_address = NULL;
 	}
 	for(int i = 0; i < GPIO_BANK_COUNT; i++) {

@@ -34,7 +34,7 @@ const static uintptr_t gpio_register_physical_address[MAX_REG_AREA] = {0x0302000
 #define GPIO_SWPORTA_DDR		0x004
 #define GPIO_EXT_PORTA		0x050
 
-static uintptr_t pinmux_register_virtual_address = NULL;
+static unsigned char *pinmux_register_virtual_address = NULL;
 
 #define PINMUX_BASE		0x03001000	// pinmux group 1
 
@@ -270,7 +270,7 @@ struct layout_t *cv180xGetLayout(int i, int *mapping) {
 
 static int cv180xDigitalWrite(int i, enum digital_value_t value) {
 	struct layout_t *pin = NULL;
-	unsigned int *data_reg = 0;
+	volatile unsigned int *data_reg = 0;
 	uint32_t val = 0;
 
 	if((pin = cv180xGetPinLayout(i)) == NULL) {
@@ -297,7 +297,7 @@ static int cv180xDigitalWrite(int i, enum digital_value_t value) {
 
 static int cv180xDigitalRead(int i) {
 	struct layout_t *pin = NULL;
-	unsigned int *data_reg = NULL;
+	volatile unsigned int *data_reg = NULL;
 	uint32_t val = 0;
 
 	if((pin = cv180xGetPinLayout(i)) == NULL) {
@@ -317,8 +317,8 @@ static int cv180xDigitalRead(int i) {
 
 static int cv180xPinMode(int i, enum pinmode_t mode) {
 	struct layout_t *pin = NULL;
-	unsigned int *pinmux_reg = NULL;
-	unsigned int *dir_reg = NULL;
+	volatile unsigned int *pinmux_reg = NULL;
+	volatile unsigned int *dir_reg = NULL;
 	unsigned int mask = 0;
 
 	if((pin = cv180xGetPinLayout(i)) == NULL) {
@@ -360,17 +360,17 @@ static int cv180xISR(int i, enum isr_mode_t mode) {
 		}
 	}
 
-	sprintf(path, "/sys/devices/platform/%x.gpio/gpiochip%d/gpio/gpio%d/direction", gpio_register_physical_address[pin->gpio_group], pin->gpio_group, pin->num);
+	sprintf(path, "/sys/devices/platform/%lx.gpio/gpiochip%d/gpio/gpio%d/direction", gpio_register_physical_address[pin->gpio_group], pin->gpio_group, pin->num);
 	if(soc_sysfs_set_gpio_direction(cv180x, path, "in") == -1) {
 		return -1;
 	}
 
-	sprintf(path, "/sys/devices/platform/%x.gpio/gpiochip%d/gpio/gpio%d/edge", gpio_register_physical_address[pin->gpio_group], pin->gpio_group, pin->num);
+	sprintf(path, "/sys/devices/platform/%lx.gpio/gpiochip%d/gpio/gpio%d/edge", gpio_register_physical_address[pin->gpio_group], pin->gpio_group, pin->num);
 	if(soc_sysfs_set_gpio_interrupt_mode(cv180x, path, mode) == -1) {
 		return -1;
 	}
 
-	sprintf(path, "/sys/devices/platform/%x.gpio/gpiochip%d/gpio/gpio%d/value", gpio_register_physical_address[pin->gpio_group], pin->gpio_group, pin->num);
+	sprintf(path, "/sys/devices/platform/%lx.gpio/gpiochip%d/gpio/gpio%d/value", gpio_register_physical_address[pin->gpio_group], pin->gpio_group, pin->num);
 	if((pin->fd = soc_sysfs_gpio_reset_value(cv180x, path)) == -1) {
 		return -1;
 	}
@@ -422,7 +422,7 @@ static int cv180xGC(void) {
 	}
 
 	if(pinmux_register_virtual_address != NULL) {
-		munmap(pinmux_register_virtual_address, cv180x->page_size);
+		munmap((void*)pinmux_register_virtual_address, cv180x->page_size);
 		pinmux_register_virtual_address = NULL;
 	}
 	for(i = 0; i < CV180X_GPIO_GROUP_COUNT; i++) {
