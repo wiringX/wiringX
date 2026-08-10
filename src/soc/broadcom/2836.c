@@ -14,6 +14,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <dirent.h>
 
 #include "2836.h"
 #include "../../wiringx.h"
@@ -38,18 +39,68 @@ struct soc_t *broadcom2836 = NULL;
 #define GPLEV1	0x38
 
 /*
- * Current Raspberry Pi kernels reserve global sysfs GPIO numbers 0-511 for
- * hot-pluggable/expander chips; the on-board pin controller (pinctrl-bcm2835)
- * now registers at base 512 instead of 0, e.g.:
+ * Some kernels reserve global sysfs GPIO numbers below the on-board pin
+ * controller's chip for hot-pluggable/expander GPIOs, so pinctrl-bcm2835
+ * ends up registered as e.g. gpiochip512 instead of gpiochip0:
  *   $ cat /sys/class/gpio/gpiochip512/label
  *   pinctrl-bcm2835
- * The BCM pin numbers used for register-level access (GPFSELx/GPSETx/...)
- * and for indexing broadcom2836->layout[] are unaffected and must NOT be
- * offset. Only the sysfs paths built in broadcom2836ISR()/broadcom2836GC()
- * need this added, since they exist to open a /sys/class/gpio/gpioN%d
- * interface using the same global numbering as the kernel's gpiochip base.
+ *   $ cat /sys/class/gpio/gpiochip512/base
+ *   512
+ * Other (in particular older) kernels still use base 0. The sysfs paths
+ * built in broadcom2836ISR()/broadcom2836GC() need the real base added to
+ * the BCM pin number, detected at runtime below instead of assumed, so
+ * this keeps working across kernels either way. This is unrelated to the
+ * BCM pin numbers used for register-level access (GPFSELx/GPSETx/...) and
+ * for indexing broadcom2836->layout[], which are a separate numbering
+ * space and must NOT be offset.
  */
-#define GPIO_SYSFS_BASE 512
+static int gpioSysfsBase = 0;
+
+/* Scans /sys/class/gpio/gpiochipN for the on-board pin controller and
+   returns its base, or 0 if it cannot be determined (matching the
+   historical assumption). */
+static int broadcom2836GetSysfsGpioBase(void) {
+	DIR *dir = NULL;
+	struct dirent *entry = NULL;
+	char path[PATH_MAX], buf[64];
+	int fd = 0, n = 0, base = 0;
+
+	if((dir = opendir("/sys/class/gpio")) == NULL) {
+		return 0;
+	}
+
+	while((entry = readdir(dir)) != NULL) {
+		if(strncmp(entry->d_name, "gpiochip", 8) != 0) {
+			continue;
+		}
+
+		snprintf(path, PATH_MAX, "/sys/class/gpio/%s/label", entry->d_name);
+		if((fd = open(path, O_RDONLY)) == -1) {
+			continue;
+		}
+		memset(buf, 0, sizeof(buf));
+		n = read(fd, buf, sizeof(buf)-1);
+		close(fd);
+		if(n <= 0 || strncmp(buf, "pinctrl-bcm2835", 15) != 0) {
+			continue;
+		}
+
+		snprintf(path, PATH_MAX, "/sys/class/gpio/%s/base", entry->d_name);
+		if((fd = open(path, O_RDONLY)) == -1) {
+			continue;
+		}
+		memset(buf, 0, sizeof(buf));
+		n = read(fd, buf, sizeof(buf)-1);
+		close(fd);
+		if(n > 0) {
+			base = atoi(buf);
+		}
+		break;
+	}
+
+	closedir(dir);
+	return base;
+}
 
 static struct layout_t {
 	char *name;
@@ -149,6 +200,8 @@ static int broadcom2836Setup(void) {
 		wiringXLog(LOG_ERR, "wiringX failed to map the %s %s GPIO memory address", broadcom2836->brand, broadcom2836->chip);
 		return -1;
 	}
+
+	gpioSysfsBase = broadcom2836GetSysfsGpioBase();
 
 	return 0;
 }
@@ -270,25 +323,25 @@ static int broadcom2836ISR(int i, enum isr_mode_t mode) {
 
 	pin = &broadcom2836->layout[broadcom2836->irq[i]];
 
-	sprintf(path, "/sys/class/gpio/gpio%d", (broadcom2836->irq[i] + GPIO_SYSFS_BASE));
+	sprintf(path, "/sys/class/gpio/gpio%d", (broadcom2836->irq[i] + gpioSysfsBase));
 	if((soc_sysfs_check_gpio(broadcom2836, path)) == -1) {
 		sprintf(path, "/sys/class/gpio/export");
-		if(soc_sysfs_gpio_export(broadcom2836, path, (broadcom2836->irq[i] + GPIO_SYSFS_BASE)) == -1) {
+		if(soc_sysfs_gpio_export(broadcom2836, path, (broadcom2836->irq[i] + gpioSysfsBase)) == -1) {
 			return -1;
 		}
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d/direction", (broadcom2836->irq[i] + GPIO_SYSFS_BASE));
+	sprintf(path, "/sys/class/gpio/gpio%d/direction", (broadcom2836->irq[i] + gpioSysfsBase));
 	if(soc_sysfs_set_gpio_direction(broadcom2836, path, "in") == -1) {
 		return -1;
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d/edge", (broadcom2836->irq[i] + GPIO_SYSFS_BASE));
+	sprintf(path, "/sys/class/gpio/gpio%d/edge", (broadcom2836->irq[i] + gpioSysfsBase));
 	if(soc_sysfs_set_gpio_interrupt_mode(broadcom2836, path, mode) == -1) {
 		return -1;
 	}
 
-	sprintf(path, "/sys/class/gpio/gpio%d/value", (broadcom2836->irq[i] + GPIO_SYSFS_BASE));
+	sprintf(path, "/sys/class/gpio/gpio%d/value", (broadcom2836->irq[i] + gpioSysfsBase));
 	if((pin->fd = soc_sysfs_gpio_reset_value(broadcom2836, path)) == -1) {
 		return -1;
 	}
@@ -323,10 +376,10 @@ static int broadcom2836GC(void) {
 			if(pin->mode == PINMODE_OUTPUT) {
 				pinMode(i, PINMODE_INPUT);
 			} else if(pin->mode == PINMODE_INTERRUPT) {
-				sprintf(path, "/sys/class/gpio/gpio%d", (broadcom2836->irq[i] + GPIO_SYSFS_BASE));
+				sprintf(path, "/sys/class/gpio/gpio%d", (broadcom2836->irq[i] + gpioSysfsBase));
 				if((soc_sysfs_check_gpio(broadcom2836, path)) == 0) {
 					sprintf(path, "/sys/class/gpio/unexport");
-					soc_sysfs_gpio_unexport(broadcom2836, path, (broadcom2836->irq[i] + GPIO_SYSFS_BASE));
+					soc_sysfs_gpio_unexport(broadcom2836, path, (broadcom2836->irq[i] + gpioSysfsBase));
 				}
 			}
 			if(pin->fd > 0) {
