@@ -17,6 +17,7 @@ extern "C" {
 #include <sys/time.h>
 #include <errno.h>
 #include <syslog.h>
+#include <stdint.h>
 
 #define wiringXLog(a, b, ...) _wiringXLog(a, __FILE__, __LINE__, b, ##__VA_ARGS__)
 
@@ -96,9 +97,10 @@ int wiringXI2CWriteBlockDataWithSize(int, int, unsigned char*, int);
 
 int wiringXI2CSetup(const char *, int);
 
-int wiringXSPIGetFd(int channel);
-int wiringXSPIDataRW(int channel, unsigned char *data, int len);
-int wiringXSPISetup(int channel, int speed);
+int wiringXSPIGetFd(int handle);
+int wiringXSPIDataRW(int handle, unsigned char *data, int len);
+void wiringXSPIClose(int handle);
+int wiringXSPISetup(uint8_t device, uint8_t channel, int speed);
 
 int wiringXSerialOpen(const char *, struct wiringXSerial_t);
 void wiringXSerialFlush(int);
