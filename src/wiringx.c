@@ -43,6 +43,7 @@
 #include "platform/linksprite/pcduino1.h"
 #include "platform/lemaker/bananapi1.h"
 #include "platform/lemaker/bananapim2.h"
+#include "platform/lemaker/bananapro.h"
 #include "platform/xunlong/orangepipc+.h"
 #include "platform/xunlong/orangepipc2.h"
 #include "platform/solidrun/hummingboard_gate_edge_sdl.h"
@@ -228,6 +229,7 @@ static void wiringXInit(void) {
 
 	/* Init all SoC's */
 	allwinnerA10Init();
+	allwinnerA20Init();
 	allwinnerA31sInit();
 	allwinnerH3Init();
 	allwinnerH5Init();
@@ -247,6 +249,7 @@ static void wiringXInit(void) {
 	pcduino1Init();
 	bananapi1Init();
 	bananapiM2Init();
+	bananaproInit();
 	orangepipcpInit();
 	orangepipc2Init();
 	hummingboardBaseProSDLInit();
